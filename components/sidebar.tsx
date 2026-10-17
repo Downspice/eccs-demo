@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   RiApps2Line,
+  RiArrowLeftLine,
   RiArrowRightSLine,
   RiBarChartBoxLine,
   RiHeadphoneLine,
@@ -25,31 +26,33 @@ import { UserButton } from '@/components/user-button';
 import { settingsModalOpenAtom } from './settings-modal/settings-modal';
 import IconCmd from '~/icons/icon-cmd.svg';
 
-type NavigationLink = {
+export type NavigationLink = {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   href: string;
   disabled?: boolean;
 };
 
-export const navigationLinks: NavigationLink[] = [
-  { icon: RiLayoutGridLine, label: 'Overview', href: '/' },
-  { icon: RiBarChartBoxLine, label: 'Analytics', href: '/analytics' },
-  { icon: RiShoppingBag2Line, label: 'Products', href: '/products' },
-  { icon: RiHistoryLine, label: 'Orders', href: '/orders' },
-  {
-    icon: RiPriceTag3Line,
-    label: 'Discounts',
-    href: '#',
-    disabled: true,
-  },
-  {
-    icon: RiApps2Line,
-    label: 'Apps',
-    href: '#',
-    disabled: true,
-  },
+export const stockNavigationLinks: NavigationLink[] = [
+  { icon: RiArrowLeftLine, label: 'ECCS Home', href: '/' },
+  { icon: RiLayoutGridLine, label: 'Overview', href: '/stock-app' },
+  { icon: RiBarChartBoxLine, label: 'Analytics', href: '/stock-app/analytics' },
+  { icon: RiShoppingBag2Line, label: 'Products', href: '/stock-app/products' },
+  { icon: RiHistoryLine, label: 'Orders', href: '/stock-app/orders' },
 ];
+
+export const eccsNavigationLinks: NavigationLink[] = [
+  { icon: RiLayoutGridLine, label: 'ECCS Dashboard', href: '/' },
+  { icon: RiApps2Line, label: 'Stock App (Demo)', href: '/stock-app' },
+];
+
+export function getNavigationLinks(pathname: string): NavigationLink[] {
+  return pathname.startsWith('/stock-app')
+    ? stockNavigationLinks
+    : eccsNavigationLinks;
+}
+
+export const navigationLinks: NavigationLink[] = eccsNavigationLinks;
 
 function useCollapsedState({
   defaultCollapsed = false,
@@ -131,6 +134,8 @@ export function SidebarHeader({ collapsed }: { collapsed?: boolean }) {
 
 function NavigationMenu({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
+  const isStockApp = pathname.startsWith('/stock-app');
+  const currentLinks = isStockApp ? stockNavigationLinks : eccsNavigationLinks;
 
   return (
     <div className='space-y-2'>
@@ -139,55 +144,62 @@ function NavigationMenu({ collapsed }: { collapsed: boolean }) {
           '-mx-2.5 w-14 px-0 text-center': collapsed,
         })}
       >
-        Main
+        {isStockApp ? 'Stock Template' : 'Main'}
       </div>
       <div className='space-y-1'>
-        {navigationLinks.map(({ icon: Icon, label, href, disabled }, i) => (
-          <Link
-            key={i}
-            href={href}
-            aria-current={pathname === href ? 'page' : undefined}
-            aria-disabled={disabled}
-            className={cn(
-              'group relative flex items-center gap-2 whitespace-nowrap rounded-lg py-2 text-text-sub-600 hover:bg-bg-weak-50',
-              'transition duration-200 ease-out',
-              'aria-[current=page]:bg-bg-weak-50',
-              'aria-disabled:pointer-events-none aria-disabled:opacity-50',
-              {
-                'w-9 px-2': collapsed,
-                'w-full px-3': !collapsed,
-              },
-            )}
-          >
-            <div
+        {currentLinks.map(({ icon: Icon, label, href, disabled }, i) => {
+          const isActive =
+            href === '/' || href === '/stock-app'
+              ? pathname === href
+              : pathname.startsWith(href);
+
+          return (
+            <Link
+              key={i}
+              href={href}
+              aria-current={isActive ? 'page' : undefined}
+              aria-disabled={disabled}
               className={cn(
-                'absolute top-1/2 h-5 w-1 origin-left -translate-y-1/2 rounded-r-full bg-primary-base transition duration-200 ease-out',
+                'group relative flex items-center gap-2 whitespace-nowrap rounded-lg py-2 text-text-sub-600 hover:bg-bg-weak-50',
+                'transition duration-200 ease-out',
+                'aria-[current=page]:bg-bg-weak-50',
+                'aria-disabled:pointer-events-none aria-disabled:opacity-50',
                 {
-                  '-left-[22px]': collapsed,
-                  '-left-5': !collapsed,
-                  'scale-100': pathname === href,
-                  'scale-0': pathname !== href,
+                  'w-9 px-2': collapsed,
+                  'w-full px-3': !collapsed,
                 },
               )}
-            />
-            <Icon
-              className={cn(
-                'size-5 shrink-0 text-text-sub-600 transition duration-200 ease-out',
-                'group-aria-[current=page]:text-primary-base',
-              )}
-            />
-
-            <div
-              className='flex w-[180px] shrink-0 items-center gap-2'
-              data-hide-collapsed
             >
-              <div className='flex-1 text-label-sm'>{label}</div>
-              {pathname === href && (
-                <RiArrowRightSLine className='size-5 text-text-sub-600' />
-              )}
-            </div>
-          </Link>
-        ))}
+              <div
+                className={cn(
+                  'absolute top-1/2 h-5 w-1 origin-left -translate-y-1/2 rounded-r-full bg-primary-base transition duration-200 ease-out',
+                  {
+                    '-left-[22px]': collapsed,
+                    '-left-5': !collapsed,
+                    'scale-100': isActive,
+                    'scale-0': !isActive,
+                  },
+                )}
+              />
+              <Icon
+                className={cn(
+                  'size-5 shrink-0 text-text-sub-600 transition duration-200 ease-out',
+                  'group-aria-[current=page]:text-primary-base',
+                )}
+              />
+
+              <div
+                className='flex w-[180px] shrink-0 items-center gap-2'
+                data-hide-collapsed
+              >
+                <div className='flex-1 text-label-sm'>{label}</div>
+                {isActive && (
+                  <RiArrowRightSLine className='size-5 text-text-sub-600' />
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

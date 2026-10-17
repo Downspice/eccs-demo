@@ -16,7 +16,7 @@ import {
 import { cn } from '@/utils/cn';
 import useBreakpoint from '@/hooks/use-breakpoint';
 import { CompanySwitchMobile } from '@/components/company-switch';
-import { navigationLinks } from '@/components/sidebar';
+import { getNavigationLinks } from '@/components/sidebar';
 import * as TopbarItemButton from '@/components/topbar-item-button';
 import { UserButtonMobile } from '@/components/user-button';
 
@@ -99,33 +99,40 @@ export default function MobileMenu() {
             <div className='flex flex-1 flex-col'>
               <div className='flex-1 py-6'>
                 <div className='flex flex-col gap-5'>
-                  {navigationLinks.map(({ icon: Icon, label, href }, i) => (
-                    <Link
-                      key={i}
-                      href={href}
-                      aria-current={pathname === href ? 'page' : undefined}
-                      className={cn(
-                        'group relative flex w-full items-center gap-2.5 whitespace-nowrap px-5 text-text-sub-600',
-                      )}
-                    >
-                      <Icon
+                  {getNavigationLinks(pathname).map(({ icon: Icon, label, href }, i) => {
+                    const isActive =
+                      href === '/' || href === '/stock-app'
+                        ? pathname === href
+                        : pathname.startsWith(href);
+
+                    return (
+                      <Link
+                        key={i}
+                        href={href}
+                        aria-current={isActive ? 'page' : undefined}
                         className={cn(
-                          'size-[22px] shrink-0 text-text-sub-600 transition duration-200 ease-out',
-                          'group-aria-[current=page]:text-primary-base',
+                          'group relative flex w-full items-center gap-2.5 whitespace-nowrap px-5 text-text-sub-600',
                         )}
-                      />
-                      <div className='flex-1 text-label-md'>{label}</div>
-                      <div
-                        className={cn(
-                          'absolute left-0 top-1/2 h-5 w-1 origin-left -translate-y-1/2 rounded-r-full bg-primary-base transition duration-200 ease-out',
-                          {
-                            'scale-0': pathname !== href,
-                          },
-                        )}
-                      />
-                      <RiArrowRightSLine className='size-6 text-text-sub-600' />
-                    </Link>
-                  ))}
+                      >
+                        <Icon
+                          className={cn(
+                            'size-[22px] shrink-0 text-text-sub-600 transition duration-200 ease-out',
+                            'group-aria-[current=page]:text-primary-base',
+                          )}
+                        />
+                        <div className='flex-1 text-label-md'>{label}</div>
+                        <div
+                          className={cn(
+                            'absolute left-0 top-1/2 h-5 w-1 origin-left -translate-y-1/2 rounded-r-full bg-primary-base transition duration-200 ease-out',
+                            {
+                              'scale-0': !isActive,
+                            },
+                          )}
+                        />
+                        <RiArrowRightSLine className='size-6 text-text-sub-600' />
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             </div>
