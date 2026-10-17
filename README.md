@@ -1,16 +1,21 @@
-<p align="center">
-  <a href="https://alignui.com">
-    <img src="./logo.svg" height="96">
-    <h3 align="center">AlignUI Design System</h3>
-  </a>
-  <p align="center">The Design System You Need</p>
-</p>
+# ECCS Demo
 
-[Join the AlignUI Community](https://discord.gg/alignui)
+Enterprise Cargo & Commerce System (ECCS) application built with Next.js, Tailwind CSS, and the AlignUI Design System.
 
-## Introduction
+## Architecture & Routes
 
-Catalys - AlignUI Marketing & Sales Template for Next.js.
+### Main Application
+- **ECCS Platform Dashboard**: [`/`](http://localhost:3000) — Core operations console and service status.
+
+### Stock Template Application (Relocated)
+The original template demo components, widgets, and pages have been preserved under the `/stock-app` route:
+- **Stock Dashboard**: [`/stock-app`](http://localhost:3000/stock-app)
+- **Analytics**: [`/stock-app/analytics`](http://localhost:3000/stock-app/analytics)
+- **Products**: [`/stock-app/products`](http://localhost:3000/stock-app/products)
+- **Orders**: [`/stock-app/orders`](http://localhost:3000/stock-app/orders)
+- **Add Product Flow**: [`/add-product`](http://localhost:3000/add-product)
+
+*Note: Legacy routes (`/analytics`, `/products`, `/orders`) automatically redirect to their respective `/stock-app/...` destinations.*
 
 ## Getting Started
 
@@ -20,32 +25,10 @@ First, install dependencies:
 pnpm i
 ```
 
-Run the development server
+Run the development server:
 
 ```bash
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-## Pages
-
-- [Home](http://localhost:3000)
-- [Analytics](http://localhost:3000/analytics)
-- [Products](http://localhost:3000/products)
-- [Orders](http://localhost:3000/orders)
-- [Add Product Flow](http://localhost:3000/add-product)
-- [Login](http://localhost:3000/login)
-- [Register](http://localhost:3000/register)
-- [Reset Password](http://localhost:3000/reset-password)
-- [Verification](http://localhost:3000/verification)
-
-## Requests for new components
-
-If you have a request for a new component or a feature, please submit a feature request on our [Roadmap](https://alignui.com/roadmap).
-
-## Support
-
-If you require assistance, we're here to help! For development-related support, please feel free to open an issue on the template repository or contact us directly at [hi@alignui.com](mailto:hi@alignui.com).
-
-Thank you for choosing AlignUI.
