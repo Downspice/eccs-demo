@@ -14,6 +14,10 @@ When any component is needed or requested:
    - If a similar component exists, offer it or propose adapting it.
 3. **Explicit Confirmation Before Creating**:
    - If no matching or similar component exists in the upstream template, **ask the user explicitly for confirmation before creating a new component from scratch**.
+4. **Pristine Components Are Strictly Read-Only**:
+   - `components/ui-pristine/` is an immutable reference backup.
+   - **DO NOT modify, edit, delete, or write to files inside `components/ui-pristine/` under any circumstances.**
+   - All customizable components live in `components/ui/`. Application code must only import from `@/components/ui/`.
 
 ---
 
