@@ -8,9 +8,9 @@ export default function Layout({
   return (
     <div className='flex min-h-screen flex-col items-start lg:grid lg:grid-cols-[auto,minmax(0,1fr)] bg-bg-white-0'>
       <Sidebar />
-      <div className='relative z-10 mx-auto flex w-full max-w-[1360px] flex-1 flex-col self-stretch p-4 lg:p-8'>
+      <main className='relative z-10 flex w-full min-w-0 flex-1 flex-col self-stretch'>
         {children}
-      </div>
+      </main>
     </div>
   );
 }
