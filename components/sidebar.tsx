@@ -72,11 +72,6 @@ function NavigationMenu({ collapsed }: { collapsed: boolean }) {
 
   return (
     <div className='space-y-2'>
-      {!collapsed && (
-        <div className='px-3 py-1 text-subheading-xs uppercase tracking-wider text-text-soft-400'>
-          Navigation
-        </div>
-      )}
       <div className='space-y-1'>
         {navigationLinks.map(({ icon: Icon, label, href }) => {
           const isActive = pathname === href || pathname.startsWith(`${href}/`);
