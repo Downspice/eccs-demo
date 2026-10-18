@@ -41,6 +41,7 @@
     "@tanstack/react-query-devtools": "^5.104.4",
     "@tanstack/react-table": "^8.20.1",
     "@uidotdev/usehooks": "^2.4.1",
+    "axios": "^1.20.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "d3-scale": "^4.0.2",
