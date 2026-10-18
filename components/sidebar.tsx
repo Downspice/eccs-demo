@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation';
 import {
   RiArrowRightSLine,
   RiCloseLine,
+  RiEqualizerLine,
   RiMenu3Line,
-  RiStackLine,
 } from '@remixicon/react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
@@ -21,7 +21,7 @@ export type NavigationLink = {
 };
 
 export const navigationLinks: NavigationLink[] = [
-  { icon: RiStackLine, label: 'Levels', href: '/levels' },
+  { icon: RiEqualizerLine, label: 'Setups', href: '/setups' },
 ];
 
 function useCollapsedState({
@@ -51,7 +51,7 @@ export function SidebarHeader({ collapsed }: { collapsed?: boolean }) {
       })}
     >
       <div className='flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-base text-static-white shadow-sm'>
-        <RiStackLine className='size-5' />
+        <RiEqualizerLine className='size-5' />
       </div>
       {!collapsed && (
         <div className='flex flex-col truncate transition-opacity duration-300'>
@@ -149,7 +149,7 @@ export default function Sidebar({
       <div className='flex h-14 w-full items-center justify-between border-b border-stroke-soft-200 bg-bg-white-0 px-4 lg:hidden'>
         <div className='flex items-center gap-2.5'>
           <div className='flex size-8 items-center justify-center rounded-lg bg-primary-base text-static-white'>
-            <RiStackLine className='size-4' />
+            <RiEqualizerLine className='size-4' />
           </div>
           <span className='text-label-sm font-semibold text-text-strong-950'>
             ECCS
@@ -181,7 +181,7 @@ export default function Sidebar({
             <div className='mb-4 flex items-center justify-between'>
               <div className='flex items-center gap-2.5'>
                 <div className='flex size-8 items-center justify-center rounded-lg bg-primary-base text-static-white'>
-                  <RiStackLine className='size-4' />
+                  <RiEqualizerLine className='size-4' />
                 </div>
                 <span className='text-label-sm font-semibold text-text-strong-950'>
                   ECCS

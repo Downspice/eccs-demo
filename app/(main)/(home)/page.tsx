@@ -7,7 +7,7 @@ export default function PageHome() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/levels');
+    router.replace('/setups');
   }, [router]);
 
   return null;

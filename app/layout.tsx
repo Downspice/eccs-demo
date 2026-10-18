@@ -21,8 +21,8 @@ const interVar = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'ECCS - Levels',
-  description: 'Enterprise Cloud Compliance & Security Levels',
+  title: 'ECCS - Setups',
+  description: 'Enterprise Cloud Compliance & Security Setups',
 };
 
 export default function RootLayout({
