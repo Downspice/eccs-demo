@@ -4,64 +4,31 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  RiApps2Line,
-  RiArrowLeftLine,
   RiArrowRightSLine,
-  RiBarChartBoxLine,
-  RiHeadphoneLine,
-  RiHistoryLine,
-  RiLayoutGridLine,
-  RiPriceTag3Line,
-  RiSettings2Line,
-  RiShoppingBag2Line,
+  RiCloseLine,
+  RiMenu3Line,
+  RiStackLine,
 } from '@remixicon/react';
-import { useSetAtom } from 'jotai';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { cn } from '@/utils/cn';
 import * as Divider from '@/components/ui/divider';
-import { CompanySwitch } from '@/components/company-switch';
-import { UserButton } from '@/components/user-button';
-
-import { settingsModalOpenAtom } from './settings-modal/settings-modal';
-import IconCmd from '~/icons/icon-cmd.svg';
 
 export type NavigationLink = {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   href: string;
-  disabled?: boolean;
 };
 
-export const stockNavigationLinks: NavigationLink[] = [
-  { icon: RiArrowLeftLine, label: 'ECCS Home', href: '/' },
-  { icon: RiLayoutGridLine, label: 'Overview', href: '/stock-app' },
-  { icon: RiBarChartBoxLine, label: 'Analytics', href: '/stock-app/analytics' },
-  { icon: RiShoppingBag2Line, label: 'Products', href: '/stock-app/products' },
-  { icon: RiHistoryLine, label: 'Orders', href: '/stock-app/orders' },
+export const navigationLinks: NavigationLink[] = [
+  { icon: RiStackLine, label: 'Levels', href: '/levels' },
 ];
-
-export const eccsNavigationLinks: NavigationLink[] = [
-  { icon: RiLayoutGridLine, label: 'ECCS Dashboard', href: '/' },
-  { icon: RiApps2Line, label: 'Stock App (Demo)', href: '/stock-app' },
-];
-
-export function getNavigationLinks(pathname: string): NavigationLink[] {
-  return pathname.startsWith('/stock-app')
-    ? stockNavigationLinks
-    : eccsNavigationLinks;
-}
-
-export const navigationLinks: NavigationLink[] = eccsNavigationLinks;
 
 function useCollapsedState({
   defaultCollapsed = false,
 }: {
   defaultCollapsed?: boolean;
-}): {
-  collapsed: boolean;
-  sidebarRef: React.RefObject<HTMLDivElement>;
-} {
+} = {}) {
   const [collapsed, setCollapsed] = React.useState(defaultCollapsed);
   const sidebarRef = React.useRef<HTMLDivElement>(null);
 
@@ -72,267 +39,96 @@ function useCollapsedState({
     [collapsed],
   );
 
-  React.useEffect(() => {
-    if (!sidebarRef.current) return;
-
-    const elementsToHide = sidebarRef.current.querySelectorAll(
-      '[data-hide-collapsed]',
-    );
-
-    const listeners: { el: Element; listener: EventListener }[] = [];
-
-    elementsToHide.forEach((el) => {
-      const hideListener = () => {
-        el.classList.add('hidden');
-        el.classList.remove('transition', 'duration-300');
-      };
-
-      const showListener = () => {
-        el.classList.remove('transition', 'duration-300');
-      };
-
-      if (collapsed) {
-        el.classList.add('opacity-0', 'transition', 'duration-300');
-        el.addEventListener('transitionend', hideListener, { once: true });
-        listeners.push({ el, listener: hideListener });
-      } else {
-        el.classList.add('transition', 'duration-300');
-        el.classList.remove('hidden');
-        setTimeout(() => {
-          el.classList.remove('opacity-0');
-        }, 1);
-        el.addEventListener('transitionend', showListener, { once: true });
-        listeners.push({ el, listener: showListener });
-      }
-    });
-
-    return () => {
-      listeners.forEach(({ el, listener }) => {
-        el.removeEventListener('transitionend', listener);
-      });
-    };
-  }, [collapsed]);
-
-  return { collapsed, sidebarRef };
+  return { collapsed, setCollapsed, sidebarRef };
 }
 
 export function SidebarHeader({ collapsed }: { collapsed?: boolean }) {
   return (
     <div
-      className={cn('lg:p-3', {
-        'lg:px-2': collapsed,
+      className={cn('flex items-center gap-3 p-4 transition-all duration-300', {
+        'justify-center px-2': collapsed,
+        'px-5': !collapsed,
       })}
     >
-      <CompanySwitch
-        className={cn('transition-all-default', {
-          'w-16': collapsed,
-        })}
-      />
+      <div className='flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-base text-static-white shadow-sm'>
+        <RiStackLine className='size-5' />
+      </div>
+      {!collapsed && (
+        <div className='flex flex-col truncate transition-opacity duration-300'>
+          <span className='text-label-sm font-semibold text-text-strong-950'>
+            ECCS
+          </span>
+          <span className='text-paragraph-xs text-text-sub-600 truncate'>
+            Compliance & Security
+          </span>
+        </div>
+      )}
     </div>
   );
 }
 
 function NavigationMenu({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
-  const isStockApp = pathname.startsWith('/stock-app');
-  const currentLinks = isStockApp ? stockNavigationLinks : eccsNavigationLinks;
 
   return (
     <div className='space-y-2'>
-      <div
-        className={cn('p-1 text-subheading-xs uppercase text-text-soft-400', {
-          '-mx-2.5 w-14 px-0 text-center': collapsed,
-        })}
-      >
-        {isStockApp ? 'Stock Template' : 'Main'}
-      </div>
+      {!collapsed && (
+        <div className='px-3 py-1 text-subheading-xs uppercase tracking-wider text-text-soft-400'>
+          Navigation
+        </div>
+      )}
       <div className='space-y-1'>
-        {currentLinks.map(({ icon: Icon, label, href, disabled }, i) => {
-          const isActive =
-            href === '/' || href === '/stock-app'
-              ? pathname === href
-              : pathname.startsWith(href);
+        {navigationLinks.map(({ icon: Icon, label, href }) => {
+          const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
           return (
             <Link
-              key={i}
+              key={href}
               href={href}
               aria-current={isActive ? 'page' : undefined}
-              aria-disabled={disabled}
               className={cn(
-                'group relative flex items-center gap-2 whitespace-nowrap rounded-lg py-2 text-text-sub-600 hover:bg-bg-weak-50',
+                'group relative flex items-center gap-3 whitespace-nowrap rounded-lg py-2.5 text-text-sub-600 hover:bg-bg-weak-50 hover:text-text-strong-950',
                 'transition duration-200 ease-out',
-                'aria-[current=page]:bg-bg-weak-50',
-                'aria-disabled:pointer-events-none aria-disabled:opacity-50',
+                'aria-[current=page]:bg-bg-weak-50 aria-[current=page]:text-primary-base font-medium',
                 {
-                  'w-9 px-2': collapsed,
+                  'justify-center px-2 w-10 mx-auto': collapsed,
                   'w-full px-3': !collapsed,
                 },
               )}
             >
-              <div
-                className={cn(
-                  'absolute top-1/2 h-5 w-1 origin-left -translate-y-1/2 rounded-r-full bg-primary-base transition duration-200 ease-out',
-                  {
-                    '-left-[22px]': collapsed,
-                    '-left-5': !collapsed,
-                    'scale-100': isActive,
-                    'scale-0': !isActive,
-                  },
-                )}
-              />
-              <Icon
-                className={cn(
-                  'size-5 shrink-0 text-text-sub-600 transition duration-200 ease-out',
-                  'group-aria-[current=page]:text-primary-base',
-                )}
-              />
-
-              <div
-                className='flex w-[180px] shrink-0 items-center gap-2'
-                data-hide-collapsed
-              >
-                <div className='flex-1 text-label-sm'>{label}</div>
-                {isActive && (
-                  <RiArrowRightSLine className='size-5 text-text-sub-600' />
-                )}
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function SettingsAndSupport({ collapsed }: { collapsed: boolean }) {
-  const setSettingsModalOpen = useSetAtom(settingsModalOpenAtom);
-  const pathname = usePathname();
-
-  const links = [
-    {
-      href: '#',
-      icon: RiHeadphoneLine,
-      label: 'Support',
-      disabled: true,
-    },
-  ];
-
-  return (
-    <div className='space-y-2'>
-      <div
-        className={cn('p-1 text-subheading-xs uppercase text-text-soft-400', {
-          '-mx-2.5 w-14 px-0 text-center': collapsed,
-        })}
-      >
-        Others
-      </div>
-      <div className='space-y-1'>
-        <button
-          type='button'
-          onClick={() => setSettingsModalOpen(true)}
-          className={cn(
-            'group relative flex items-center gap-2 whitespace-nowrap rounded-lg py-2 text-left text-text-sub-600 hover:bg-bg-weak-50',
-            'transition duration-200 ease-out',
-            {
-              'w-9 px-2': collapsed,
-              'w-full px-3': !collapsed,
-            },
-          )}
-        >
-          <RiSettings2Line
-            className={cn(
-              'size-5 shrink-0 text-text-sub-600 transition duration-200 ease-out',
-              'group-aria-[current=page]:text-primary-base',
-            )}
-          />
-
-          <div
-            className='flex w-[180px] shrink-0 items-center gap-2'
-            data-hide-collapsed
-          >
-            <div className='flex-1 text-label-sm'>Settings</div>
-          </div>
-        </button>
-        {links.map(({ icon: Icon, label, href, disabled }, i) => {
-          const isActivePage = pathname.startsWith(href);
-
-          return (
-            <Link
-              key={i}
-              href={href}
-              aria-current={isActivePage ? 'page' : undefined}
-              aria-disabled={disabled}
-              className={cn(
-                'group relative flex items-center gap-2 whitespace-nowrap rounded-lg py-2 text-text-sub-600 hover:bg-bg-weak-50',
-                'transition duration-200 ease-out',
-                'aria-[current=page]:bg-bg-weak-50',
-                'aria-disabled:pointer-events-none aria-disabled:opacity-50',
-                {
-                  'w-9 px-2': collapsed,
-                  'w-full px-3': !collapsed,
-                },
+              {isActive && (
+                <div
+                  className={cn(
+                    'absolute top-1/2 h-5 w-1 origin-left -translate-y-1/2 rounded-r-full bg-primary-base',
+                    {
+                      '-left-2': collapsed,
+                      '-left-3': !collapsed,
+                    },
+                  )}
+                />
               )}
-            >
-              <div
-                className={cn(
-                  'absolute top-1/2 h-5 w-1 origin-left -translate-y-1/2 rounded-r-full bg-primary-base transition duration-200 ease-out',
-                  {
-                    '-left-[22px]': collapsed,
-                    '-left-5': !collapsed,
-                    'scale-100': isActivePage,
-                    'scale-0': !isActivePage,
-                  },
-                )}
-              />
+
               <Icon
                 className={cn(
-                  'size-5 shrink-0 text-text-sub-600 transition duration-200 ease-out',
-                  'group-aria-[current=page]:text-primary-base',
+                  'size-5 shrink-0 transition duration-200 ease-out',
+                  isActive
+                    ? 'text-primary-base'
+                    : 'text-text-sub-600 group-hover:text-text-strong-950',
                 )}
               />
 
-              <div
-                className='flex w-[180px] shrink-0 items-center gap-2'
-                data-hide-collapsed
-              >
-                <div className='flex-1 text-label-sm'>{label}</div>
-                {isActivePage && (
-                  <RiArrowRightSLine className='size-5 text-text-sub-600' />
-                )}
-              </div>
+              {!collapsed && (
+                <div className='flex flex-1 items-center justify-between'>
+                  <span className='text-label-sm'>{label}</span>
+                  {isActive && (
+                    <RiArrowRightSLine className='size-4 text-primary-base' />
+                  )}
+                </div>
+              )}
             </Link>
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function UserProfile({ collapsed }: { collapsed: boolean }) {
-  return (
-    <div
-      className={cn('p-3', {
-        'px-2': collapsed,
-      })}
-    >
-      <UserButton
-        className={cn('transition-all-default', {
-          'w-auto': collapsed,
-        })}
-      />
-    </div>
-  );
-}
-
-function SidebarDivider({ collapsed }: { collapsed: boolean }) {
-  return (
-    <div className='px-5'>
-      <Divider.Root
-        className={cn('transition-all-default', {
-          'w-10': collapsed,
-        })}
-      />
     </div>
   );
 }
@@ -341,52 +137,134 @@ export default function Sidebar({
   defaultCollapsed = false,
 }: {
   defaultCollapsed?: boolean;
-}) {
-  const { collapsed, sidebarRef } = useCollapsedState({ defaultCollapsed });
+} = {}) {
+  const { collapsed, setCollapsed, sidebarRef } = useCollapsedState({
+    defaultCollapsed,
+  });
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const pathname = usePathname();
+
+  React.useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
     <>
-      <div
+      {/* Mobile Topbar */}
+      <div className='flex h-14 w-full items-center justify-between border-b border-stroke-soft-200 bg-bg-white-0 px-4 lg:hidden'>
+        <div className='flex items-center gap-2.5'>
+          <div className='flex size-8 items-center justify-center rounded-lg bg-primary-base text-static-white'>
+            <RiStackLine className='size-4' />
+          </div>
+          <span className='text-label-sm font-semibold text-text-strong-950'>
+            ECCS
+          </span>
+        </div>
+
+        <button
+          type='button'
+          onClick={() => setMobileOpen((prev) => !prev)}
+          className='flex size-9 items-center justify-center rounded-lg border border-stroke-soft-200 text-text-sub-600 hover:bg-bg-weak-50 hover:text-text-strong-950'
+          aria-label='Toggle menu'
+        >
+          {mobileOpen ? (
+            <RiCloseLine className='size-5' />
+          ) : (
+            <RiMenu3Line className='size-5' />
+          )}
+        </button>
+      </div>
+
+      {/* Mobile Menu Backdrop & Drawer */}
+      {mobileOpen && (
+        <div className='fixed inset-0 z-40 lg:hidden'>
+          <div
+            className='fixed inset-0 bg-overlay'
+            onClick={() => setMobileOpen(false)}
+          />
+          <div className='fixed inset-y-0 left-0 z-50 w-64 bg-bg-white-0 p-4 shadow-xl'>
+            <div className='mb-4 flex items-center justify-between'>
+              <div className='flex items-center gap-2.5'>
+                <div className='flex size-8 items-center justify-center rounded-lg bg-primary-base text-static-white'>
+                  <RiStackLine className='size-4' />
+                </div>
+                <span className='text-label-sm font-semibold text-text-strong-950'>
+                  ECCS
+                </span>
+              </div>
+              <button
+                type='button'
+                onClick={() => setMobileOpen(false)}
+                className='flex size-8 items-center justify-center rounded-lg text-text-sub-600 hover:bg-bg-weak-50'
+              >
+                <RiCloseLine className='size-5' />
+              </button>
+            </div>
+            <Divider.Root className='my-3' />
+            <NavigationMenu collapsed={false} />
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <aside
         className={cn(
-          'transition-all-default fixed left-0 top-0 z-40 hidden h-full overflow-hidden border-r border-stroke-soft-200 bg-bg-white-0 duration-300 lg:block',
+          'fixed left-0 top-0 z-40 hidden h-full overflow-hidden border-r border-stroke-soft-200 bg-bg-white-0 transition-all duration-300 lg:block',
           {
-            'w-20': collapsed,
-            'w-[272px]': !collapsed,
-            '[&_[data-hide-collapsed]]:hidden': !collapsed
-              ? false
-              : defaultCollapsed,
+            'w-18': collapsed,
+            'w-64': !collapsed,
           },
         )}
       >
         <div
           ref={sidebarRef}
-          className='flex h-full w-[272px] min-w-[272px] flex-col overflow-auto'
+          className='flex h-full w-full flex-col justify-between overflow-y-auto'
         >
-          <SidebarHeader collapsed={collapsed} />
-
-          <SidebarDivider collapsed={collapsed} />
-
-          <div
-            className={cn('flex flex-1 flex-col gap-5 pb-4 pt-5', {
-              'px-[22px]': collapsed,
-              'px-5': !collapsed,
-            })}
-          >
-            <NavigationMenu collapsed={collapsed} />
-            <SettingsAndSupport collapsed={collapsed} />
+          <div>
+            <SidebarHeader collapsed={collapsed} />
+            <div className='px-4'>
+              <Divider.Root />
+            </div>
+            <div className='p-3'>
+              <NavigationMenu collapsed={collapsed} />
+            </div>
           </div>
 
-          <SidebarDivider collapsed={collapsed} />
-
-          <UserProfile collapsed={collapsed} />
+          {/* Bottom collapse toggle button */}
+          <div className='p-3'>
+            <div className='px-1 pb-3'>
+              <Divider.Root />
+            </div>
+            <button
+              type='button'
+              onClick={() => setCollapsed((prev) => !prev)}
+              className={cn(
+                'flex w-full items-center gap-2 rounded-lg py-2 text-text-soft-400 hover:bg-bg-weak-50 hover:text-text-sub-600 transition-colors',
+                {
+                  'justify-center px-0': collapsed,
+                  'px-3': !collapsed,
+                },
+              )}
+              title={
+                collapsed ? 'Expand sidebar (⌘B)' : 'Collapse sidebar (⌘B)'
+              }
+            >
+              <kbd className='rounded border border-stroke-soft-200 bg-bg-weak-50 px-1.5 py-0.5 text-[10px] font-medium text-text-sub-600'>
+                ⌘B
+              </kbd>
+              {!collapsed && (
+                <span className='text-paragraph-xs'>Collapse sidebar</span>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      </aside>
 
-      {/* a necessary placeholder because of sidebar is fixed */}
+      {/* Spacer to offset fixed sidebar on desktop */}
       <div
-        className={cn('shrink-0', {
-          'w-[272px]': !collapsed,
-          'w-20': collapsed,
+        className={cn('hidden shrink-0 transition-all duration-300 lg:block', {
+          'w-18': collapsed,
+          'w-64': !collapsed,
         })}
       />
     </>
