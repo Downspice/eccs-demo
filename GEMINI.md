@@ -54,3 +54,23 @@ When any component is needed or requested:
 4. **Flat Sibling Structure**:
    - Keep siblings in the page folder (`filters.tsx`, `filters-mobile.tsx`, `tabs.tsx`) without adding premature `modals/` or `hooks/` subfolders unless the subfeature is exceptionally large.
    - Reusable UI primitives belong in `components/ui/`; the page folder glues the screen together.
+
+---
+
+## Forms & Validation (Formik + Yup)
+
+All forms across the application MUST use **Formik** for form state management and **Yup** for validation schemas:
+
+1. **Yup Validation Schema**:
+   - Defined in `create.tsx` using `yup.object({ ... })` and exported for reuse in `update.tsx`.
+   - Every input field must have explicit validation (types, required messages, string lengths, boundaries).
+
+2. **Formik in Action Modals (`create.tsx` & `update.tsx`)**:
+   - `create.tsx`: Initializes Formik with blank `initialValues`, applies `validationSchema`, and triggers creation mutation in `onSubmit`.
+   - `update.tsx`: Initializes Formik with `enableReinitialize: true`, hydrates from active item/query data, applies the same `validationSchema`, and triggers update mutation in `onSubmit`.
+
+3. **Field Presentation in `form.tsx`**:
+   - `form.tsx` renders fields, sections, and grids using Formik state (`values`, `errors`, `touched`, `handleChange`, `handleBlur`, `setFieldValue`).
+   - Displays inline validation error messages beneath inputs when `touched[fieldName] && errors[fieldName]`.
+   - Pass `hasError={Boolean(touched[fieldName] && errors[fieldName])}` to input components for visual error states.
+

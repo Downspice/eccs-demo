@@ -1,7 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import type { FormikErrors, FormikTouched } from 'formik';
 
+import * as Hint from '@/components/ui/hint';
 import * as Input from '@/components/ui/input';
 import * as Label from '@/components/ui/label';
 import * as Switch from '@/components/ui/switch';
@@ -10,114 +12,163 @@ import * as Textarea from '@/components/ui/textarea';
 import type { SetupFormData } from './types';
 
 interface SetupFormProps {
-  formData: SetupFormData;
-  onChange: (fields: Partial<SetupFormData>) => void;
+  values: SetupFormData;
+  errors: FormikErrors<SetupFormData>;
+  touched: FormikTouched<SetupFormData>;
+  handleChange: (e: React.ChangeEvent<any>) => void;
+  handleBlur: (e: React.FocusEvent<any>) => void;
+  setFieldValue: (field: string, value: any) => void;
   disabled?: boolean;
 }
 
-const CATEGORY_OPTIONS = [
-  { value: 'equipment', label: 'Equipment & Assets' },
-  { value: 'security', label: 'Security & Access' },
-  { value: 'maintenance', label: 'Maintenance & Inspections' },
-  { value: 'vendors', label: 'Vendors & Contracts' },
-  { value: 'general', label: 'General & Codes' },
-];
-
-export function SetupForm({ formData, onChange, disabled }: SetupFormProps) {
+export function SetupForm({
+  values,
+  errors,
+  touched,
+  handleChange,
+  handleBlur,
+  setFieldValue,
+  disabled,
+}: SetupFormProps) {
   return (
     <div className='flex flex-col gap-4'>
-      {/* Title / Name Field */}
-      <div className='flex flex-col gap-1.5'>
-        <Label.Root htmlFor='setup-name'>Setup Name</Label.Root>
-        <Input.Root>
-          <Input.Wrapper>
-            <input
-              id='setup-name'
-              type='text'
-              disabled={disabled}
-              placeholder='e.g. Server Hardware Tier'
-              value={formData.name}
-              onChange={(e) => onChange({ name: e.target.value })}
-              className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
-              required
-            />
-          </Input.Wrapper>
-        </Input.Root>
-      </div>
-
-      {/* Code and Category Grid */}
+      {/* Level Name & Code Grid */}
       <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
         <div className='flex flex-col gap-1.5'>
-          <Label.Root htmlFor='setup-code'>Unique Code</Label.Root>
-          <Input.Root>
+          <Label.Root htmlFor='name'>Level Identifier</Label.Root>
+          <Input.Root hasError={Boolean(touched.name && errors.name)}>
             <Input.Wrapper>
               <input
-                id='setup-code'
+                id='name'
+                name='name'
                 type='text'
                 disabled={disabled}
-                placeholder='e.g. HW-SRV'
-                value={formData.code}
-                onChange={(e) =>
-                  onChange({ code: e.target.value.toUpperCase() })
-                }
-                className='w-full bg-transparent px-3 py-2 font-mono text-paragraph-sm uppercase text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
-                required
+                placeholder='e.g. Level 1'
+                value={values.name}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
               />
             </Input.Wrapper>
           </Input.Root>
+          {touched.name && errors.name && (
+            <Hint.Root hasError>{errors.name}</Hint.Root>
+          )}
         </div>
 
         <div className='flex flex-col gap-1.5'>
-          <Label.Root htmlFor='setup-category'>Category Group</Label.Root>
-          <div className='relative'>
-            <select
-              id='setup-category'
-              disabled={disabled}
-              value={formData.category}
-              onChange={(e) => onChange({ category: e.target.value })}
-              className='h-10 w-full rounded-xl border border-stroke-soft-200 bg-bg-white-0 px-3 text-paragraph-sm text-text-strong-950 shadow-xs focus:border-stroke-strong-950 focus:outline-none disabled:opacity-50'
-            >
-              {CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Label.Root htmlFor='code'>Level Code</Label.Root>
+          <Input.Root hasError={Boolean(touched.code && errors.code)}>
+            <Input.Wrapper>
+              <input
+                id='code'
+                name='code'
+                type='text'
+                disabled={disabled}
+                placeholder='e.g. LVL-01'
+                value={values.code}
+                onChange={(e) =>
+                  setFieldValue('code', e.target.value.toUpperCase())
+                }
+                onBlur={handleBlur}
+                className='w-full bg-transparent px-3 py-2 font-mono text-paragraph-sm uppercase text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+              />
+            </Input.Wrapper>
+          </Input.Root>
+          {touched.code && errors.code && (
+            <Hint.Root hasError>{errors.code}</Hint.Root>
+          )}
         </div>
+      </div>
+
+      {/* Level Title */}
+      <div className='flex flex-col gap-1.5'>
+        <Label.Root htmlFor='title'>Classification Title</Label.Root>
+        <Input.Root hasError={Boolean(touched.title && errors.title)}>
+          <Input.Wrapper>
+            <input
+              id='title'
+              name='title'
+              type='text'
+              disabled={disabled}
+              placeholder='e.g. Foundational Hygiene'
+              value={values.title}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+            />
+          </Input.Wrapper>
+        </Input.Root>
+        {touched.title && errors.title && (
+          <Hint.Root hasError>{errors.title}</Hint.Root>
+        )}
+      </div>
+
+      {/* Minimum Controls Required */}
+      <div className='flex flex-col gap-1.5'>
+        <Label.Root htmlFor='controlsCount'>Controls Required</Label.Root>
+        <Input.Root
+          hasError={Boolean(touched.controlsCount && errors.controlsCount)}
+        >
+          <Input.Wrapper>
+            <input
+              id='controlsCount'
+              name='controlsCount'
+              type='number'
+              min='1'
+              disabled={disabled}
+              placeholder='e.g. 18'
+              value={values.controlsCount || ''}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+            />
+          </Input.Wrapper>
+        </Input.Root>
+        {touched.controlsCount && errors.controlsCount && (
+          <Hint.Root hasError>{errors.controlsCount}</Hint.Root>
+        )}
       </div>
 
       {/* Description Field */}
       <div className='flex flex-col gap-1.5'>
-        <Label.Root htmlFor='setup-desc'>Description</Label.Root>
+        <Label.Root htmlFor='description'>Description & Scope</Label.Root>
         <Textarea.Root
-          id='setup-desc'
+          id='description'
+          name='description'
           simple
+          hasError={Boolean(touched.description && errors.description)}
           disabled={disabled}
-          placeholder='Detailed purpose, classification criteria, or auditing notes...'
-          value={formData.description || ''}
-          onChange={(e) => onChange({ description: e.target.value })}
+          placeholder='Safeguarding criteria, control objectives, and auditing guidance for this level...'
+          value={values.description || ''}
+          onChange={handleChange}
+          onBlur={handleBlur}
           rows={3}
         />
+        {touched.description && errors.description && (
+          <Hint.Root hasError>{errors.description}</Hint.Root>
+        )}
       </div>
 
       {/* Active Status Switch */}
       <div className='mt-1 flex items-center justify-between rounded-xl border border-stroke-soft-200 bg-bg-weak-50/50 p-3'>
         <div className='flex flex-col'>
           <span className='text-label-sm font-medium text-text-strong-950'>
-            Enable Setup Classification
+            Activate Level Certification
           </span>
           <span className='text-paragraph-xs text-text-sub-600'>
-            When active, this classification is available across all forms and
-            reporting.
+            When active, this level is enforced in compliance audits and
+            certification scoring.
           </span>
         </div>
         <Switch.Root
-          checked={formData.isEnabled}
-          onCheckedChange={(checked) => onChange({ isEnabled: checked })}
+          checked={values.isEnabled}
+          onCheckedChange={(checked) => setFieldValue('isEnabled', checked)}
           disabled={disabled}
         />
       </div>
     </div>
   );
 }
+
+export default SetupForm;

@@ -3,6 +3,8 @@
 import * as React from 'react';
 import { useCreateSetup, type SetupItem } from '@/services/setups';
 import { RiAddLine } from '@remixicon/react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
@@ -16,11 +18,35 @@ interface CreateSetupModalProps {
   onSuccess?: (item: SetupItem) => void;
 }
 
+export const levelValidationSchema = Yup.object().shape({
+  name: Yup.string()
+    .trim()
+    .required('Level identifier is required (e.g. Level 1)'),
+  title: Yup.string().trim().required('Classification title is required'),
+  code: Yup.string()
+    .trim()
+    .matches(
+      /^[A-Z0-9_-]+$/,
+      'Code must be uppercase alphanumeric (e.g. LVL-01)',
+    )
+    .required('Unique level code is required'),
+  controlsCount: Yup.number()
+    .typeError('Controls must be a valid number')
+    .min(1, 'At least 1 control is required')
+    .required('Control threshold is required'),
+  description: Yup.string().max(
+    500,
+    'Description cannot exceed 500 characters',
+  ),
+  isEnabled: Yup.boolean().default(true),
+});
+
 const INITIAL_FORM_DATA: SetupFormData = {
   name: '',
+  title: '',
   code: '',
-  category: 'equipment',
   description: '',
+  controlsCount: 15,
   isEnabled: true,
 };
 
@@ -29,45 +55,46 @@ export function CreateSetupModal({
   onClose,
   onSuccess,
 }: CreateSetupModalProps) {
-  const [formData, setFormData] =
-    React.useState<SetupFormData>(INITIAL_FORM_DATA);
   const createSetup = useCreateSetup();
 
-  const handleFieldChange = (fields: Partial<SetupFormData>) => {
-    setFormData((prev) => ({ ...prev, ...fields }));
-  };
+  const formik = useFormik<SetupFormData>({
+    initialValues: INITIAL_FORM_DATA,
+    validationSchema: levelValidationSchema,
+    validateOnBlur: true,
+    validateOnChange: true,
+    onSubmit: (values) => {
+      createSetup.mutate(values, {
+        onSuccess: (newItem) => {
+          onSuccess?.(newItem);
+          handleClose();
+        },
+      });
+    },
+  });
 
   const handleClose = () => {
-    setFormData(INITIAL_FORM_DATA);
+    formik.resetForm();
     onClose();
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim() || !formData.code.trim()) return;
-
-    createSetup.mutate(formData, {
-      onSuccess: (newItem) => {
-        onSuccess?.(newItem);
-        handleClose();
-      },
-    });
   };
 
   return (
     <Modal.Root open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <Modal.Content className='max-w-[540px]'>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={formik.handleSubmit}>
           <Modal.Header
             icon={RiAddLine}
-            title='Create New Setup'
-            description='Add a new category, lookup, or classification item to the ECCS system.'
+            title='Create New Level'
+            description='Add a new security or compliance level threshold to the ECCS framework.'
           />
 
           <Modal.Body className='py-5'>
             <SetupForm
-              formData={formData}
-              onChange={handleFieldChange}
+              values={formik.values}
+              errors={formik.errors}
+              touched={formik.touched}
+              handleChange={formik.handleChange}
+              handleBlur={formik.handleBlur}
+              setFieldValue={formik.setFieldValue}
               disabled={createSetup.isPending}
             />
           </Modal.Body>
@@ -88,13 +115,9 @@ export function CreateSetupModal({
               variant='primary'
               mode='filled'
               size='small'
-              disabled={
-                createSetup.isPending ||
-                !formData.name.trim() ||
-                !formData.code.trim()
-              }
+              disabled={createSetup.isPending || !formik.isValid}
             >
-              {createSetup.isPending ? 'Saving...' : 'Create Setup'}
+              {createSetup.isPending ? 'Saving...' : 'Create Level'}
             </Button.Root>
           </Modal.Footer>
         </form>

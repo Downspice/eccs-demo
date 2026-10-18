@@ -4,8 +4,6 @@ import * as React from 'react';
 import { useGetSetups, type SetupItem } from '@/services/setups';
 import {
   RiAddLine,
-  RiCheckLine,
-  RiCloseLine,
   RiDeleteBinLine,
   RiEditLine,
   RiEqualizerLine,
@@ -25,13 +23,10 @@ import type { ModalState } from './types';
 import { UpdateSetupModal } from './update';
 import { ViewSetupModal } from './view';
 
-const CATEGORY_TABS: TabItem[] = [
-  { id: 'all', label: 'All Setups' },
-  { id: 'equipment', label: 'Equipment & Assets' },
-  { id: 'security', label: 'Security & Access' },
-  { id: 'maintenance', label: 'Maintenance' },
-  { id: 'vendors', label: 'Vendors' },
-  { id: 'general', label: 'General' },
+const LEVEL_TABS: TabItem[] = [
+  { id: 'all', label: 'All Levels' },
+  { id: 'active', label: 'Active & Enforced' },
+  { id: 'disabled', label: 'Draft / Target' },
 ];
 
 export default function SetupsPage() {
@@ -50,11 +45,10 @@ export default function SetupsPage() {
   const filteredSetups = React.useMemo(() => {
     return setups.filter((item) => {
       // Tab filter
-      if (activeTab !== 'all' && item.category !== activeTab) {
-        return false;
-      }
+      if (activeTab === 'active' && !item.isEnabled) return false;
+      if (activeTab === 'disabled' && item.isEnabled) return false;
 
-      // Status filter
+      // Status pill filter
       if (filters.status === 'active' && !item.isEnabled) return false;
       if (filters.status === 'disabled' && item.isEnabled) return false;
 
@@ -62,9 +56,11 @@ export default function SetupsPage() {
       if (filters.search.trim()) {
         const query = filters.search.toLowerCase();
         const matchesName = item.name.toLowerCase().includes(query);
+        const matchesTitle = item.title?.toLowerCase().includes(query);
         const matchesCode = item.code.toLowerCase().includes(query);
         const matchesDesc = item.description?.toLowerCase().includes(query);
-        if (!matchesName && !matchesCode && !matchesDesc) return false;
+        if (!matchesName && !matchesTitle && !matchesCode && !matchesDesc)
+          return false;
       }
 
       return true;
@@ -73,12 +69,14 @@ export default function SetupsPage() {
 
   // Tab counts
   const tabsWithCounts = React.useMemo(() => {
-    return CATEGORY_TABS.map((tab) => ({
+    return LEVEL_TABS.map((tab) => ({
       ...tab,
       count:
         tab.id === 'all'
           ? setups.length
-          : setups.filter((s) => s.category === tab.id).length,
+          : tab.id === 'active'
+            ? setups.filter((s) => s.isEnabled).length
+            : setups.filter((s) => !s.isEnabled).length,
     }));
   }, [setups]);
 
@@ -96,12 +94,12 @@ export default function SetupsPage() {
                 System Setups
               </h1>
               <Badge.Root variant='lighter' color='blue' size='small'>
-                Configuration
+                Levels
               </Badge.Root>
             </div>
             <p className='text-paragraph-sm text-text-sub-600'>
-              Manage standardized classifications, status codes, categories, and
-              audit parameters.
+              Configure security maturity levels, classification codes, and
+              mandatory control thresholds.
             </p>
           </div>
 
@@ -113,7 +111,7 @@ export default function SetupsPage() {
               onClick={() => setModalState({ type: 'create' })}
             >
               <Button.Icon as={RiAddLine} />
-              <span>New Setup</span>
+              <span>New Level</span>
             </Button.Root>
           </div>
         </div>
@@ -142,12 +140,11 @@ export default function SetupsPage() {
           <Table.Root>
             <Table.Header>
               <Table.Row>
-                <Table.Head className='w-[130px]'>Code</Table.Head>
-                <Table.Head>Name & Description</Table.Head>
-                <Table.Head className='w-[140px]'>Category</Table.Head>
-                <Table.Head className='w-[110px]'>Status</Table.Head>
-                <Table.Head className='w-[100px] text-right'>
-                  Records
+                <Table.Head className='w-[120px]'>Code</Table.Head>
+                <Table.Head>Level & Classification</Table.Head>
+                <Table.Head className='w-[140px]'>Controls</Table.Head>
+                <Table.Head className='w-[160px]'>
+                  Certification Status
                 </Table.Head>
                 <Table.Head className='w-[120px] text-right'>
                   Actions
@@ -159,20 +156,20 @@ export default function SetupsPage() {
               {isLoading ? (
                 <Table.Row>
                   <Table.Cell
-                    colSpan={6}
+                    colSpan={5}
                     className='py-12 text-center text-text-sub-600'
                   >
-                    Loading setups...
+                    Loading levels...
                   </Table.Cell>
                 </Table.Row>
               ) : filteredSetups.length === 0 ? (
                 <Table.Row>
-                  <Table.Cell colSpan={6} className='py-12 text-center'>
+                  <Table.Cell colSpan={5} className='py-12 text-center'>
                     <p className='text-label-sm font-semibold text-text-strong-950'>
-                      No setups found
+                      No levels found
                     </p>
                     <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                      Try adjusting your search criteria or category filter.
+                      Try adjusting your search criteria or status filter.
                     </p>
                   </Table.Cell>
                 </Table.Row>
@@ -182,29 +179,35 @@ export default function SetupsPage() {
                     key={item.id}
                     className='transition-colors hover:bg-bg-weak-50/50'
                   >
-                    {/* Code */}
+                    {/* Level Code */}
                     <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
                       {item.code}
                     </Table.Cell>
 
-                    {/* Name & Description */}
+                    {/* Level Name & Title & Description */}
                     <Table.Cell>
                       <div className='flex flex-col'>
-                        <span className='text-label-sm font-semibold text-text-strong-950'>
-                          {item.name}
-                        </span>
+                        <div className='flex items-center gap-2'>
+                          <span className='text-label-sm font-semibold text-text-strong-950'>
+                            {item.name}
+                          </span>
+                          <span className='text-text-soft-400'>•</span>
+                          <span className='text-paragraph-sm font-medium text-text-sub-600'>
+                            {item.title}
+                          </span>
+                        </div>
                         {item.description && (
-                          <span className='text-paragraph-xs text-text-sub-600 line-clamp-1'>
+                          <span className='text-paragraph-xs text-text-soft-400 line-clamp-1 mt-0.5'>
                             {item.description}
                           </span>
                         )}
                       </div>
                     </Table.Cell>
 
-                    {/* Category */}
+                    {/* Controls Required */}
                     <Table.Cell>
                       <Badge.Root variant='lighter' color='gray' size='small'>
-                        {item.category}
+                        {item.controlsCount || 0} Controls
                       </Badge.Root>
                     </Table.Cell>
 
@@ -215,13 +218,10 @@ export default function SetupsPage() {
                         variant='stroke'
                       >
                         <StatusBadge.Dot />
-                        {item.isEnabled ? 'Active' : 'Disabled'}
+                        {item.isEnabled
+                          ? 'Active & Enforced'
+                          : 'Inactive / Draft'}
                       </StatusBadge.Root>
-                    </Table.Cell>
-
-                    {/* Records Count */}
-                    <Table.Cell className='text-right font-medium text-text-sub-600 text-paragraph-sm'>
-                      {item.itemCount || 0}
                     </Table.Cell>
 
                     {/* Actions */}
@@ -241,7 +241,7 @@ export default function SetupsPage() {
                             setModalState({ type: 'update', item })
                           }
                           className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
-                          title='Edit setup'
+                          title='Edit level'
                         >
                           <RiEditLine className='size-4' />
                         </button>
@@ -251,7 +251,7 @@ export default function SetupsPage() {
                             setModalState({ type: 'delete', item })
                           }
                           className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-error-base transition-colors'
-                          title='Delete setup'
+                          title='Delete level'
                         >
                           <RiDeleteBinLine className='size-4' />
                         </button>

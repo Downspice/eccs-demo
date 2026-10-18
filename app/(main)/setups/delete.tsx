@@ -41,19 +41,21 @@ export function DeleteSetupModal({
       <Modal.Content className='max-w-[420px]'>
         <Modal.Header
           icon={RiDeleteBinLine}
-          title='Delete Setup'
-          description='Are you sure you want to delete this configuration item?'
+          title='Delete Level Setup'
+          description='Are you sure you want to remove this compliance level?'
         />
 
         <Modal.Body className='py-4'>
           <div className='rounded-xl bg-error-lighter/20 border border-error-base/20 p-3.5 text-paragraph-sm text-text-strong-950'>
-            <p className='font-semibold text-error-base'>{item.name}</p>
+            <p className='font-semibold text-error-base'>
+              {item.name}: {item.title}
+            </p>
             <p className='mt-1 text-paragraph-xs text-text-sub-600'>
               Code: <span className='font-mono font-medium'>{item.code}</span>
             </p>
             <p className='mt-2 text-paragraph-xs text-text-sub-600'>
-              This action cannot be undone. Assets or compliance controls linked
-              to this setup will be unassigned.
+              Deleting this level will unassign any mapped controls or audit
+              checkpoints. This action cannot be undone.
             </p>
           </div>
         </Modal.Body>

@@ -11,91 +11,86 @@ import type { PaginationParams } from '@/types/api';
 
 export interface SetupItem {
   id: string;
-  name: string;
-  code: string;
-  category: string;
+  name: string; // e.g. 'Level 1'
+  title: string; // e.g. 'Foundational Hygiene'
+  code: string; // e.g. 'LVL-01'
+  category: string; // 'levels'
   description?: string;
   isEnabled: boolean;
-  itemCount?: number;
+  controlsCount?: number;
   updatedAt?: string;
 }
 
 export interface CreateSetupPayload {
   name: string;
+  title: string;
   code: string;
-  category: string;
+  category?: string;
   description?: string;
   isEnabled: boolean;
+  controlsCount?: number;
 }
 
 export interface UpdateSetupPayload extends Partial<CreateSetupPayload> {
   id: TId;
 }
 
-// Default initial mock data for immediate UI rendering & offline development
+// Initial Level setups
 export const INITIAL_SETUPS: SetupItem[] = [
   {
     id: '1',
-    name: 'Hardware Components & Assets',
-    code: 'HW-ASSETS',
-    category: 'equipment',
+    name: 'Level 1',
+    title: 'Foundational Hygiene',
+    code: 'LVL-01',
+    category: 'levels',
     description:
-      'Physical server racks, workstations, routers, and peripheral inventory classifications.',
+      'Basic safeguarding of organizational assets, access control, identity hygiene, and core endpoint protection.',
     isEnabled: true,
-    itemCount: 48,
+    controlsCount: 18,
     updatedAt: '2026-10-18',
   },
   {
     id: '2',
-    name: 'Critical Security Safeguards',
-    code: 'SEC-CRIT',
-    category: 'security',
+    name: 'Level 2',
+    title: 'Controlled & Documented',
+    code: 'LVL-02',
+    category: 'levels',
     description:
-      'Tier-1 baseline controls, biometric access restrictions, and privileged credential vaults.',
+      'Standardized operational processes, encrypted communication protocols, incident response readiness, and supply chain review.',
     isEnabled: true,
-    itemCount: 16,
+    controlsCount: 34,
     updatedAt: '2026-10-16',
   },
   {
     id: '3',
-    name: 'Preventive Maintenance Schedules',
-    code: 'PM-SCHED',
-    category: 'maintenance',
+    name: 'Level 3',
+    title: 'Standardized & Automated',
+    code: 'LVL-03',
+    category: 'levels',
     description:
-      'Automated recurring maintenance cycles, telemetry threshold audits, and cooling diagnostic logs.',
+      'Institutionalized security policies, continuous automated compliance verification, threat modeling, and unified telemetry.',
     isEnabled: true,
-    itemCount: 24,
+    controlsCount: 46,
     updatedAt: '2026-10-14',
   },
   {
     id: '4',
-    name: 'Vendor & Service Provider Directory',
-    code: 'VND-TIER',
-    category: 'vendors',
+    name: 'Level 4',
+    title: 'Optimized & Continuous Assurance',
+    code: 'LVL-04',
+    category: 'levels',
     description:
-      'External SLA contracts, hardware warranty providers, and emergency repair contacts.',
+      'Proactive security posture, machine-learning assisted threat anticipation, autonomous incident containment, and executive governance.',
     isEnabled: false,
-    itemCount: 9,
+    controlsCount: 60,
     updatedAt: '2026-10-10',
-  },
-  {
-    id: '5',
-    name: 'Facility Incident Severity Codes',
-    code: 'INC-SEV',
-    category: 'general',
-    description:
-      'Standardized classification codes for infrastructure alerts, power fluctuations, and environmental risks.',
-    isEnabled: true,
-    itemCount: 12,
-    updatedAt: '2026-10-08',
   },
 ];
 
 // --- Queries ---
 
 export function useGetSetups() {
-  return useBaseQuery<SetupItem[]>(['setups'], '/api/setups', {
-    // Provide fallback mock data if local Next.js /api is empty
+  return useBaseQuery<SetupItem[]>(['setups', 'levels'], '/api/setups/levels', {
     placeholderData: {
       data: INITIAL_SETUPS,
       message: 'OK',
@@ -106,43 +101,58 @@ export function useGetSetups() {
 
 export function useGetSetupsPaginated(params?: PaginationParams) {
   return useBasePaginatedQuery<SetupItem>(
-    ['setups-paginated'],
-    '/api/setups',
+    ['setups-paginated', 'levels'],
+    '/api/setups/levels',
     params,
   );
 }
 
 export function useGetSetup(id?: TId) {
-  return useBaseQuery<SetupItem>(['setup', id], `/api/setups/${id}`, {
-    enabled: Boolean(id),
-  });
+  return useBaseQuery<SetupItem>(
+    ['setup', 'level', id],
+    `/api/setups/levels/${id}`,
+    {
+      enabled: Boolean(id),
+    },
+  );
 }
 
 // --- Mutations ---
 
 export function useCreateSetup() {
   return useBaseMutation<SetupItem, CreateSetupPayload>(
-    ['create-setup'],
-    '/api/setups',
+    ['create-level-setup'],
+    '/api/setups/levels',
     'post',
-    () => [['setups'], ['setups-paginated']],
+    () => [
+      ['setups', 'levels'],
+      ['setups-paginated', 'levels'],
+    ],
   );
 }
 
 export function useUpdateSetup() {
   return useBaseMutation<SetupItem, UpdateSetupPayload>(
-    ['update-setup'],
-    (payload) => `/api/setups/${payload.id}`,
+    ['update-level-setup'],
+    (payload) => `/api/setups/levels/${payload.id}`,
     'put',
-    (payload) => [['setups'], ['setup', payload.id], ['setups-paginated']],
+    (payload) => [
+      ['setups', 'levels'],
+      ['setup', 'level', payload.id],
+      ['setups-paginated', 'levels'],
+    ],
   );
 }
 
 export function useDeleteSetup() {
   return useBaseMutation<void, { id: TId }>(
-    ['delete-setup'],
-    (payload) => `/api/setups/${payload.id}`,
+    ['delete-level-setup'],
+    (payload) => `/api/setups/levels/${payload.id}`,
     'delete',
-    (payload) => [['setups'], ['setup', payload.id], ['setups-paginated']],
+    (payload) => [
+      ['setups', 'levels'],
+      ['setup', 'level', payload.id],
+      ['setups-paginated', 'levels'],
+    ],
   );
 }

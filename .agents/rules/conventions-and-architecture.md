@@ -49,3 +49,21 @@ Organization philosophy: **Apps route; pages orchestrate; modals mutate and insp
   - `filters.tsx`, `filters-mobile.tsx`, `tabs.tsx`, etc.
 - Avoid prematurely creating nested `modals/` or `hooks/` subfolders unless a feature is genuinely large (e.g., complex analytics widgets, dedicated subflows).
 - Reusable UI primitives live in `components/ui/`; the page folder acts as the glue orchestrating the screen.
+
+---
+
+## 3. Forms & Validation (Formik + Yup)
+
+All forms across the application MUST use **Formik** for state management and **Yup** for validation schemas:
+
+- **Yup Validation Schema**:
+  - Defined in `create.tsx` using `yup.object({ ... })` and exported for reuse in `update.tsx`.
+  - Every input field must have explicit validation (types, required messages, string lengths, boundaries).
+- **Formik in Action Modals (`create.tsx` & `update.tsx`)**:
+  - `create.tsx`: Initializes Formik with blank `initialValues`, applies `validationSchema`, and triggers creation mutation in `onSubmit`.
+  - `update.tsx`: Initializes Formik with `enableReinitialize: true`, hydrates from active item/query data, applies the same `validationSchema`, and triggers update mutation in `onSubmit`.
+- **Field Presentation in `form.tsx`**:
+  - `form.tsx` renders fields, sections, and grids using Formik state (`values`, `errors`, `touched`, `handleChange`, `handleBlur`, `setFieldValue`).
+  - Displays inline validation error messages beneath inputs when `touched[fieldName] && errors[fieldName]`.
+  - Pass `hasError={Boolean(touched[fieldName] && errors[fieldName])}` to input components for visual error states.
+

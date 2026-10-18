@@ -3,10 +3,12 @@
 import * as React from 'react';
 import { useUpdateSetup, type SetupItem } from '@/services/setups';
 import { RiEditLine } from '@remixicon/react';
+import { useFormik } from 'formik';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
 
+import { levelValidationSchema } from './create';
 import { SetupForm } from './form';
 import type { SetupFormData } from './types';
 
@@ -23,65 +25,57 @@ export function UpdateSetupModal({
   onClose,
   onSuccess,
 }: UpdateSetupModalProps) {
-  const [formData, setFormData] = React.useState<SetupFormData>({
-    name: '',
-    code: '',
-    category: 'equipment',
-    description: '',
-    isEnabled: true,
-  });
-
   const updateSetup = useUpdateSetup();
 
-  // Hydrate form when item is selected
-  React.useEffect(() => {
-    if (item) {
-      setFormData({
-        name: item.name,
-        code: item.code,
-        category: item.category,
-        description: item.description || '',
-        isEnabled: item.isEnabled,
-      });
-    }
-  }, [item]);
+  const formik = useFormik<SetupFormData>({
+    initialValues: {
+      name: item?.name || '',
+      title: item?.title || '',
+      code: item?.code || '',
+      description: item?.description || '',
+      controlsCount: item?.controlsCount || 15,
+      isEnabled: item?.isEnabled ?? true,
+    },
+    validationSchema: levelValidationSchema,
+    enableReinitialize: true,
+    validateOnBlur: true,
+    validateOnChange: true,
+    onSubmit: (values) => {
+      if (!item) return;
 
-  const handleFieldChange = (fields: Partial<SetupFormData>) => {
-    setFormData((prev) => ({ ...prev, ...fields }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!item || !formData.name.trim() || !formData.code.trim()) return;
-
-    updateSetup.mutate(
-      {
-        id: item.id,
-        ...formData,
-      },
-      {
-        onSuccess: (updated) => {
-          onSuccess?.(updated || { ...item, ...formData });
-          onClose();
+      updateSetup.mutate(
+        {
+          id: item.id,
+          ...values,
         },
-      },
-    );
-  };
+        {
+          onSuccess: (updated) => {
+            onSuccess?.(updated || { ...item, ...values });
+            onClose();
+          },
+        },
+      );
+    },
+  });
 
   return (
     <Modal.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <Modal.Content className='max-w-[540px]'>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={formik.handleSubmit}>
           <Modal.Header
             icon={RiEditLine}
-            title='Update Setup'
-            description={`Editing configuration details for ${item?.name || 'classification'}.`}
+            title='Update Level Setup'
+            description={`Editing parameters and control requirements for ${item?.name || 'level'}.`}
           />
 
           <Modal.Body className='py-5'>
             <SetupForm
-              formData={formData}
-              onChange={handleFieldChange}
+              values={formik.values}
+              errors={formik.errors}
+              touched={formik.touched}
+              handleChange={formik.handleChange}
+              handleBlur={formik.handleBlur}
+              setFieldValue={formik.setFieldValue}
               disabled={updateSetup.isPending}
             />
           </Modal.Body>
@@ -102,11 +96,7 @@ export function UpdateSetupModal({
               variant='primary'
               mode='filled'
               size='small'
-              disabled={
-                updateSetup.isPending ||
-                !formData.name.trim() ||
-                !formData.code.trim()
-              }
+              disabled={updateSetup.isPending || !formik.isValid}
             >
               {updateSetup.isPending ? 'Saving...' : 'Save Changes'}
             </Button.Root>
