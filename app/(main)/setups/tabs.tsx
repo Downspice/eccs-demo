@@ -4,21 +4,27 @@ import * as React from 'react';
 
 import { cn } from '@/utils/cn';
 
-export interface TabItem {
+export interface SetupModuleItem {
   id: string;
   label: string;
   count?: number;
+  badge?: string;
+  description?: string;
+  disabled?: boolean;
 }
 
 interface SetupTabsProps {
-  tabs: TabItem[];
+  tabs: SetupModuleItem[];
   activeTab: string;
   onTabChange: (id: string) => void;
 }
 
 export function SetupTabs({ tabs, activeTab, onTabChange }: SetupTabsProps) {
   return (
-    <div className='flex items-center gap-1 overflow-x-auto border-b border-stroke-soft-200 pb-px'>
+    <nav
+      className='flex flex-col border-b border-stroke-soft-200'
+      aria-label='Setup Modules'
+    >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
 
@@ -28,33 +34,42 @@ export function SetupTabs({ tabs, activeTab, onTabChange }: SetupTabsProps) {
             type='button'
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              'group relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-label-sm transition-all',
+              'group relative flex w-full items-center justify-between border-b border-stroke-soft-200 px-6 py-4 text-left transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-base focus-visible:ring-inset',
               isActive
-                ? 'font-semibold text-primary-base'
-                : 'text-text-sub-600 hover:text-text-strong-950',
+                ? 'bg-bg-weak-50 text-text-strong-950 font-semibold'
+                : 'bg-bg-white-0 text-text-sub-600 hover:bg-bg-weak-50/70 hover:text-text-strong-950 font-medium',
             )}
           >
-            <span>{tab.label}</span>
+            <div className='flex items-center gap-3'>
+              {isActive && (
+                <div className='absolute left-0 top-0 bottom-0 w-1 bg-primary-base' />
+              )}
+              <span className='text-label-sm'>{tab.label}</span>
+            </div>
+
             {typeof tab.count === 'number' && (
               <span
                 className={cn(
                   'rounded-full px-2 py-0.5 text-label-xs transition-colors',
                   isActive
-                    ? 'bg-primary-lighter/40 text-primary-base font-semibold'
-                    : 'bg-bg-soft-200 text-text-sub-600 group-hover:bg-bg-sub-300',
+                    ? 'bg-bg-soft-200 font-semibold text-text-strong-950'
+                    : 'bg-bg-weak-50 text-text-sub-600 group-hover:bg-bg-soft-200',
                 )}
               >
                 {tab.count}
               </span>
             )}
 
-            {isActive && (
-              <div className='absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary-base' />
+            {tab.badge && typeof tab.count !== 'number' && (
+              <span className='rounded bg-bg-weak-50 px-2 py-0.5 text-label-xs font-normal text-text-soft-400'>
+                {tab.badge}
+              </span>
             )}
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }
 
