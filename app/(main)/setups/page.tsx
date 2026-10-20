@@ -20,11 +20,7 @@ import {
   RiEditLine,
   RiEqualizerLine,
   RiEyeLine,
-  RiFlagLine,
-  RiGovernmentLine,
-  RiNodeTree,
   RiSearchLine,
-  RiUserStarLine,
 } from '@remixicon/react';
 
 import * as Badge from '@/components/ui/badge';
@@ -32,6 +28,7 @@ import * as Button from '@/components/ui/button';
 import * as CompactButton from '@/components/ui/compact-button';
 import * as Input from '@/components/ui/input';
 import * as Select from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import * as Table from '@/components/ui/table';
 
 import {
@@ -335,6 +332,18 @@ export default function SetupsPage() {
                 : mod.id === 'political-party'
                   ? politicalParties.length
                   : undefined,
+      loading:
+        mod.id === 'levels'
+          ? isLevelsLoading
+          : mod.id === 'level-mapping'
+            ? isLevelMappingsLoading
+            : mod.id === 'candidates'
+              ? isCandidatesLoading
+              : mod.id === 'elections'
+                ? isElectionsLoading
+                : mod.id === 'political-party'
+                  ? isPoliticalPartiesLoading
+                  : false,
     }));
   }, [
     levels.length,
@@ -342,6 +351,11 @@ export default function SetupsPage() {
     candidates.length,
     elections.length,
     politicalParties.length,
+    isLevelsLoading,
+    isLevelMappingsLoading,
+    isCandidatesLoading,
+    isElectionsLoading,
+    isPoliticalPartiesLoading,
   ]);
 
   return (
@@ -659,14 +673,29 @@ export default function SetupsPage() {
 
                 <Table.Body>
                   {isLevelsLoading ? (
-                    <Table.Row>
-                      <Table.Cell
-                        colSpan={4}
-                        className='py-12 text-center text-text-sub-600'
-                      >
-                        Loading levels...
-                      </Table.Cell>
-                    </Table.Row>
+                    Array.from({ length: 5 }).map((_, idx) => (
+                      <Table.Row key={`skeleton-level-${idx}`}>
+                        <Table.Cell>
+                          <Skeleton className='h-5 w-16 rounded-full' />
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className='flex flex-col gap-1.5'>
+                            <Skeleton className='h-4 w-36' />
+                            <Skeleton className='h-3 w-56' />
+                          </div>
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Skeleton className='h-4 w-28' />
+                        </Table.Cell>
+                        <Table.Cell className='text-right'>
+                          <div className='inline-flex items-center justify-end gap-1.5'>
+                            <Skeleton className='size-7 rounded-lg' />
+                            <Skeleton className='size-7 rounded-lg' />
+                            <Skeleton className='size-7 rounded-lg' />
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
                   ) : filteredLevels.length === 0 ? (
                     <Table.Row>
                       <Table.Cell colSpan={4} className='py-12 text-center'>
@@ -787,14 +816,29 @@ export default function SetupsPage() {
 
                 <Table.Body>
                   {isLevelMappingsLoading ? (
-                    <Table.Row>
-                      <Table.Cell
-                        colSpan={5}
-                        className='py-12 text-center text-text-sub-600'
-                      >
-                        Loading level mappings...
-                      </Table.Cell>
-                    </Table.Row>
+                    Array.from({ length: 5 }).map((_, idx) => (
+                      <Table.Row key={`skeleton-mapping-${idx}`}>
+                        <Table.Cell>
+                          <Skeleton className='h-4 w-40' />
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Skeleton className='h-5 w-20 rounded-full' />
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Skeleton className='h-4 w-32' />
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Skeleton className='h-4 w-28' />
+                        </Table.Cell>
+                        <Table.Cell className='text-right'>
+                          <div className='inline-flex items-center justify-end gap-1.5'>
+                            <Skeleton className='size-7 rounded-lg' />
+                            <Skeleton className='size-7 rounded-lg' />
+                            <Skeleton className='size-7 rounded-lg' />
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
                   ) : filteredLevelMappings.length === 0 ? (
                     <Table.Row>
                       <Table.Cell colSpan={5} className='py-12 text-center'>
@@ -815,14 +859,9 @@ export default function SetupsPage() {
                       >
                         {/* Unit Name */}
                         <Table.Cell>
-                          <div className='flex items-center gap-2.5'>
-                            <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-base/10 text-primary-base'>
-                              <RiNodeTree className='size-4' />
-                            </div>
-                            <span className='text-label-sm font-semibold text-text-strong-950'>
-                              {item.name}
-                            </span>
-                          </div>
+                          <span className='text-label-sm font-semibold text-text-strong-950'>
+                            {item.name}
+                          </span>
                         </Table.Cell>
 
                         {/* Tier */}
@@ -936,14 +975,26 @@ export default function SetupsPage() {
 
                 <Table.Body>
                   {isCandidatesLoading ? (
-                    <Table.Row>
-                      <Table.Cell
-                        colSpan={4}
-                        className='py-12 text-center text-text-sub-600'
-                      >
-                        Loading candidates...
-                      </Table.Cell>
-                    </Table.Row>
+                    Array.from({ length: 5 }).map((_, idx) => (
+                      <Table.Row key={`skeleton-candidate-${idx}`}>
+                        <Table.Cell>
+                          <Skeleton className='h-4 w-44' />
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Skeleton className='h-4 w-32' />
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Skeleton className='h-4 w-28' />
+                        </Table.Cell>
+                        <Table.Cell className='text-right'>
+                          <div className='inline-flex items-center justify-end gap-1.5'>
+                            <Skeleton className='size-7 rounded-lg' />
+                            <Skeleton className='size-7 rounded-lg' />
+                            <Skeleton className='size-7 rounded-lg' />
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
                   ) : filteredCandidates.length === 0 ? (
                     <Table.Row>
                       <Table.Cell colSpan={4} className='py-12 text-center'>
@@ -964,26 +1015,16 @@ export default function SetupsPage() {
                       >
                         {/* Candidate Name */}
                         <Table.Cell>
-                          <div className='flex items-center gap-2.5'>
-                            <div className='flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-base/10 text-primary-base font-semibold text-label-xs'>
-                              {item.name
-                                ? item.name.charAt(0).toUpperCase()
-                                : 'C'}
-                            </div>
-                            <span className='text-label-sm font-semibold text-text-strong-950'>
-                              {item.name}
-                            </span>
-                          </div>
+                          <span className='text-label-sm font-semibold text-text-strong-950'>
+                            {item.name}
+                          </span>
                         </Table.Cell>
 
                         {/* Political Party */}
                         <Table.Cell>
-                          <div className='flex items-center gap-1.5'>
-                            <RiFlagLine className='size-3.5 text-text-sub-600' />
-                            <span className='text-paragraph-sm text-text-strong-950 font-medium'>
-                              {item.politicalPartyName || item.politicalPartyId}
-                            </span>
-                          </div>
+                          <span className='text-paragraph-sm text-text-strong-950 font-medium'>
+                            {item.politicalPartyName || item.politicalPartyId}
+                          </span>
                         </Table.Cell>
 
                         {/* Election */}
@@ -1058,14 +1099,20 @@ export default function SetupsPage() {
 
                 <Table.Body>
                   {isElectionsLoading ? (
-                    <Table.Row>
-                      <Table.Cell
-                        colSpan={2}
-                        className='py-12 text-center text-text-sub-600'
-                      >
-                        Loading elections...
-                      </Table.Cell>
-                    </Table.Row>
+                    Array.from({ length: 5 }).map((_, idx) => (
+                      <Table.Row key={`skeleton-election-${idx}`}>
+                        <Table.Cell>
+                          <Skeleton className='h-4 w-52' />
+                        </Table.Cell>
+                        <Table.Cell className='text-right'>
+                          <div className='inline-flex items-center justify-end gap-1.5'>
+                            <Skeleton className='size-7 rounded-lg' />
+                            <Skeleton className='size-7 rounded-lg' />
+                            <Skeleton className='size-7 rounded-lg' />
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
                   ) : filteredElections.length === 0 ? (
                     <Table.Row>
                       <Table.Cell colSpan={2} className='py-12 text-center'>
@@ -1086,14 +1133,9 @@ export default function SetupsPage() {
                       >
                         {/* Election Name */}
                         <Table.Cell>
-                          <div className='flex items-center gap-2.5'>
-                            <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-base/10 text-primary-base'>
-                              <RiGovernmentLine className='size-4' />
-                            </div>
-                            <span className='text-label-sm font-semibold text-text-strong-950'>
-                              {item.name}
-                            </span>
-                          </div>
+                          <span className='text-label-sm font-semibold text-text-strong-950'>
+                            {item.name}
+                          </span>
                         </Table.Cell>
 
                         {/* Actions */}
@@ -1161,14 +1203,20 @@ export default function SetupsPage() {
 
                 <Table.Body>
                   {isPoliticalPartiesLoading ? (
-                    <Table.Row>
-                      <Table.Cell
-                        colSpan={2}
-                        className='py-12 text-center text-text-sub-600'
-                      >
-                        Loading political parties...
-                      </Table.Cell>
-                    </Table.Row>
+                    Array.from({ length: 5 }).map((_, idx) => (
+                      <Table.Row key={`skeleton-party-${idx}`}>
+                        <Table.Cell>
+                          <Skeleton className='h-4 w-48' />
+                        </Table.Cell>
+                        <Table.Cell className='text-right'>
+                          <div className='inline-flex items-center justify-end gap-1.5'>
+                            <Skeleton className='size-7 rounded-lg' />
+                            <Skeleton className='size-7 rounded-lg' />
+                            <Skeleton className='size-7 rounded-lg' />
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
                   ) : filteredPoliticalParties.length === 0 ? (
                     <Table.Row>
                       <Table.Cell colSpan={2} className='py-12 text-center'>
@@ -1189,14 +1237,9 @@ export default function SetupsPage() {
                       >
                         {/* Party Name */}
                         <Table.Cell>
-                          <div className='flex items-center gap-2.5'>
-                            <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-base/10 text-primary-base'>
-                              <RiFlagLine className='size-4' />
-                            </div>
-                            <span className='text-label-sm font-semibold text-text-strong-950'>
-                              {item.name}
-                            </span>
-                          </div>
+                          <span className='text-label-sm font-semibold text-text-strong-950'>
+                            {item.name}
+                          </span>
                         </Table.Cell>
 
                         {/* Actions */}

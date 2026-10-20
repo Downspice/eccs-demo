@@ -3,21 +3,14 @@ import { cn } from '@/utils/cn';
 import './globals.css';
 
 import type { Metadata } from 'next';
-import { Inter as FontSans } from 'next/font/google';
-import localFont from 'next/font/local';
+import { Nunito as FontSans } from 'next/font/google';
 
 import { Providers } from '@/app/providers';
 
-const inter = FontSans({
+const nunito = FontSans({
   subsets: ['latin'],
-  variable: '--font-inter',
-});
-
-const interVar = localFont({
-  src: '../assets/font/InterVariable.woff2',
+  variable: '--font-nunito',
   display: 'swap',
-  variable: '--font-inter-var',
-  weight: '100 900',
 });
 
 export const metadata: Metadata = {
@@ -34,9 +27,9 @@ export default function RootLayout({
     <html
       lang='en'
       suppressHydrationWarning
-      className={cn(inter.variable, interVar.variable, 'antialiased')}
+      className={cn(nunito.variable, 'antialiased font-sans')}
     >
-      <body className='bg-bg-white-0'>
+      <body className='bg-bg-white-0 font-sans'>
         <Providers>{children}</Providers>
       </body>
     </html>

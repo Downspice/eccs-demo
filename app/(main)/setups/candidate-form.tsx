@@ -12,6 +12,7 @@ import * as Hint from '@/components/ui/hint';
 import * as Input from '@/components/ui/input';
 import * as Label from '@/components/ui/label';
 import * as Select from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import type { CandidateFormData } from './types';
 
@@ -91,7 +92,9 @@ export function CandidateForm({
       {/* Associated Election */}
       <div className='flex flex-col gap-1.5'>
         <Label.Root htmlFor='electionId'>Election</Label.Root>
-        {elections.length > 0 ? (
+        {isElectionsLoading ? (
+          <Skeleton className='h-10 w-full rounded-lg' />
+        ) : elections.length > 0 ? (
           <Select.Root
             value={values.electionId}
             onValueChange={(val) => setFieldValue('electionId', val)}
@@ -136,7 +139,9 @@ export function CandidateForm({
       {/* Political Party Selection */}
       <div className='flex flex-col gap-1.5'>
         <Label.Root htmlFor='politicalPartyId'>Political Party</Label.Root>
-        {politicalParties.length > 0 ? (
+        {isPartiesLoading ? (
+          <Skeleton className='h-10 w-full rounded-lg' />
+        ) : politicalParties.length > 0 ? (
           <Select.Root
             value={values.politicalPartyId}
             onValueChange={(val) => setFieldValue('politicalPartyId', val)}

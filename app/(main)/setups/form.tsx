@@ -8,6 +8,7 @@ import * as Hint from '@/components/ui/hint';
 import * as Input from '@/components/ui/input';
 import * as Label from '@/components/ui/label';
 import * as Select from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import * as Textarea from '@/components/ui/textarea';
 
 import type { SetupFormData } from './types';
@@ -104,7 +105,9 @@ export function SetupForm({
       {/* Associated Election Dropdown */}
       <div className='flex flex-col gap-1.5'>
         <Label.Root htmlFor='electionId'>Associated Election</Label.Root>
-        {elections.length > 0 ? (
+        {isElectionsLoading ? (
+          <Skeleton className='h-10 w-full rounded-lg' />
+        ) : elections.length > 0 ? (
           <Select.Root
             value={values.electionId}
             onValueChange={(val) => setFieldValue('electionId', val)}

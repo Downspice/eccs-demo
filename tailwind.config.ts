@@ -591,8 +591,8 @@ const config = {
       //#endregion
     },
     fontFamily: {
-      sans: ['var(--font-inter)'],
-      'inter-var': ['var(--font-inter-var)'],
+      sans: ['var(--font-nunito)', ...defaultTheme.fontFamily.sans],
+      nunito: ['var(--font-nunito)', ...defaultTheme.fontFamily.sans],
     },
     fontSize: {
       ...texts,

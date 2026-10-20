@@ -11,6 +11,7 @@ export interface SetupModuleItem {
   badge?: string;
   description?: string;
   disabled?: boolean;
+  loading?: boolean;
 }
 
 interface SetupTabsProps {
@@ -48,7 +49,9 @@ export function SetupTabs({ tabs, activeTab, onTabChange }: SetupTabsProps) {
               <span className='text-label-sm'>{tab.label}</span>
             </div>
 
-            {typeof tab.count === 'number' && (
+            {tab.loading ? (
+              <span className='h-4 w-6 animate-pulse rounded-full bg-bg-soft-200' />
+            ) : typeof tab.count === 'number' ? (
               <span
                 className={cn(
                   'rounded-full px-2 py-0.5 text-label-xs transition-colors',
@@ -59,7 +62,7 @@ export function SetupTabs({ tabs, activeTab, onTabChange }: SetupTabsProps) {
               >
                 {tab.count}
               </span>
-            )}
+            ) : null}
 
             {tab.badge && typeof tab.count !== 'number' && (
               <span className='rounded bg-bg-weak-50 px-2 py-0.5 text-label-xs font-normal text-text-soft-400'>
