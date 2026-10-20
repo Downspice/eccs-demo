@@ -24,10 +24,17 @@ export const electionValidationSchema = Yup.object().shape({
     .min(3, 'Election name must be at least 3 characters')
     .max(120, 'Election name cannot exceed 120 characters')
     .required('Election name is required'),
+  electionDate: Yup.string().required('Election date is required'),
+  expectedTurnout: Yup.number()
+    .typeError('Expected turnout must be a number')
+    .min(0, 'Expected turnout cannot be negative')
+    .required('Expected turnout is required'),
 });
 
 const INITIAL_FORM_DATA: ElectionFormData = {
   name: '',
+  electionDate: '',
+  expectedTurnout: '',
 };
 
 export function CreateElectionModal({
@@ -43,7 +50,15 @@ export function CreateElectionModal({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      createElection.mutate(values, {
+      const payload = {
+        name: values.name.trim(),
+        electionDate: values.electionDate || undefined,
+        expectedTurnout:
+          values.expectedTurnout !== '' && values.expectedTurnout !== undefined
+            ? Number(values.expectedTurnout)
+            : undefined,
+      };
+      createElection.mutate(payload, {
         onSuccess: (newItem) => {
           onSuccess?.(newItem);
           handleClose();

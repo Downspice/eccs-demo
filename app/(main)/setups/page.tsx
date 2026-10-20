@@ -15,11 +15,13 @@ import {
 } from '@/services/political-parties';
 import {
   RiAddLine,
+  RiCalendarLine,
   RiCloseLine,
   RiDeleteBinLine,
   RiEditLine,
   RiEqualizerLine,
   RiEyeLine,
+  RiGroupLine,
   RiSearchLine,
 } from '@remixicon/react';
 
@@ -302,6 +304,7 @@ export default function SetupsPage() {
     return elections.filter(
       (item) =>
         item.name?.toLowerCase().includes(query) ||
+        item.electionDate?.toLowerCase().includes(query) ||
         item.id?.toLowerCase().includes(query),
     );
   }, [elections, electionSearch]);
@@ -1093,6 +1096,10 @@ export default function SetupsPage() {
                 <Table.Header>
                   <Table.Row>
                     <Table.Head>Election Name</Table.Head>
+                    <Table.Head className='w-[180px]'>Election Date</Table.Head>
+                    <Table.Head className='w-[180px]'>
+                      Expected Turnout
+                    </Table.Head>
                     <Table.Head className='w-[120px] text-right'>
                       Actions
                     </Table.Head>
@@ -1104,7 +1111,13 @@ export default function SetupsPage() {
                     Array.from({ length: 5 }).map((_, idx) => (
                       <Table.Row key={`skeleton-election-${idx}`}>
                         <Table.Cell>
-                          <Skeleton className='h-4 w-52' />
+                          <Skeleton className='h-4 w-48' />
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Skeleton className='h-4 w-28' />
+                        </Table.Cell>
+                        <Table.Cell>
+                          <Skeleton className='h-5 w-24 rounded-full' />
                         </Table.Cell>
                         <Table.Cell className='text-right'>
                           <div className='inline-flex items-center justify-end gap-1.5'>
@@ -1117,7 +1130,7 @@ export default function SetupsPage() {
                     ))
                   ) : filteredElections.length === 0 ? (
                     <Table.Row>
-                      <Table.Cell colSpan={2} className='py-12 text-center'>
+                      <Table.Cell colSpan={4} className='py-12 text-center'>
                         <p className='text-label-sm font-semibold text-text-strong-950'>
                           No elections found
                         </p>
@@ -1138,6 +1151,37 @@ export default function SetupsPage() {
                           <span className='text-label-sm font-semibold text-text-strong-950'>
                             {item.name}
                           </span>
+                        </Table.Cell>
+
+                        {/* Election Date */}
+                        <Table.Cell>
+                          <div className='flex items-center gap-1.5 text-text-sub-600'>
+                            <RiCalendarLine className='size-3.5 text-text-soft-400 shrink-0' />
+                            <span className='text-paragraph-sm'>
+                              {item.electionDate || '—'}
+                            </span>
+                          </div>
+                        </Table.Cell>
+
+                        {/* Expected Turnout */}
+                        <Table.Cell>
+                          {item.expectedTurnout != null ? (
+                            <Badge.Root
+                              variant='lighter'
+                              color='blue'
+                              size='small'
+                            >
+                              <RiGroupLine className='size-3 shrink-0' />
+                              <span>
+                                {Number(item.expectedTurnout).toLocaleString()}{' '}
+                                voters
+                              </span>
+                            </Badge.Root>
+                          ) : (
+                            <span className='text-paragraph-sm text-text-soft-400'>
+                              —
+                            </span>
+                          )}
                         </Table.Cell>
 
                         {/* Actions */}

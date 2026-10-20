@@ -12,15 +12,21 @@ import type { PaginationParams } from '@/types/api';
 export interface ElectionItem {
   id: string;
   name: string;
+  electionDate?: string;
+  expectedTurnout?: number;
 }
 
 export interface CreateElectionPayload {
   name: string;
+  electionDate?: string;
+  expectedTurnout?: number | string;
 }
 
 export interface UpdateElectionPayload {
   id: string;
   name: string;
+  electionDate?: string;
+  expectedTurnout?: number | string;
 }
 
 // --- Queries ---

@@ -62,6 +62,67 @@ export function ElectionForm({
           </p>
         )}
       </div>
+
+      {/* Grid for Election Date & Expected Turnout */}
+      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+        {/* Election Date */}
+        <div className='flex flex-col gap-1.5'>
+          <Label.Root htmlFor='electionDate'>Election Date</Label.Root>
+          <Input.Root
+            hasError={Boolean(touched.electionDate && errors.electionDate)}
+          >
+            <Input.Wrapper>
+              <input
+                id='electionDate'
+                name='electionDate'
+                type='date'
+                disabled={disabled}
+                value={values.electionDate || ''}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+              />
+            </Input.Wrapper>
+          </Input.Root>
+          {touched.electionDate && errors.electionDate ? (
+            <Hint.Root hasError>{errors.electionDate}</Hint.Root>
+          ) : (
+            <p className='text-paragraph-xs text-text-soft-400'>
+              Scheduled date of polling.
+            </p>
+          )}
+        </div>
+
+        {/* Expected Turnout */}
+        <div className='flex flex-col gap-1.5'>
+          <Label.Root htmlFor='expectedTurnout'>Expected Turnout</Label.Root>
+          <Input.Root
+            hasError={Boolean(touched.expectedTurnout && errors.expectedTurnout)}
+          >
+            <Input.Wrapper>
+              <input
+                id='expectedTurnout'
+                name='expectedTurnout'
+                type='number'
+                min='0'
+                disabled={disabled}
+                placeholder='e.g. 100'
+                value={values.expectedTurnout ?? ''}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+              />
+            </Input.Wrapper>
+          </Input.Root>
+          {touched.expectedTurnout && errors.expectedTurnout ? (
+            <Hint.Root hasError>{errors.expectedTurnout}</Hint.Root>
+          ) : (
+            <p className='text-paragraph-xs text-text-soft-400'>
+              Estimated number of voters.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,13 @@
 
 import * as React from 'react';
 import type { ElectionItem } from '@/services/elections';
-import { RiEditLine, RiEyeLine, RiGovernmentLine } from '@remixicon/react';
+import {
+  RiCalendarLine,
+  RiEditLine,
+  RiEyeLine,
+  RiGovernmentLine,
+  RiGroupLine,
+} from '@remixicon/react';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
@@ -44,6 +50,35 @@ export function ViewElectionModal({
               <span className='text-label-sm font-semibold text-text-strong-950 truncate'>
                 {item.name}
               </span>
+            </div>
+          </div>
+
+          {/* Details Grid */}
+          <div className='grid grid-cols-2 gap-3'>
+            <div className='flex flex-col gap-1 rounded-xl border border-stroke-soft-200 bg-bg-white-0 p-3.5'>
+              <div className='flex items-center gap-1.5 text-text-sub-600'>
+                <RiCalendarLine className='size-4 text-primary-base' />
+                <span className='text-paragraph-xs font-medium'>
+                  Election Date
+                </span>
+              </div>
+              <p className='text-label-sm font-semibold text-text-strong-950 mt-0.5'>
+                {item.electionDate || '—'}
+              </p>
+            </div>
+
+            <div className='flex flex-col gap-1 rounded-xl border border-stroke-soft-200 bg-bg-white-0 p-3.5'>
+              <div className='flex items-center gap-1.5 text-text-sub-600'>
+                <RiGroupLine className='size-4 text-primary-base' />
+                <span className='text-paragraph-xs font-medium'>
+                  Expected Turnout
+                </span>
+              </div>
+              <p className='text-label-sm font-semibold text-text-strong-950 mt-0.5'>
+                {item.expectedTurnout != null
+                  ? `${Number(item.expectedTurnout).toLocaleString()} voters`
+                  : '—'}
+              </p>
             </div>
           </div>
         </Modal.Body>

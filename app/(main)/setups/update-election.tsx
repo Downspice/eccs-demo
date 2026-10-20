@@ -30,6 +30,8 @@ export function UpdateElectionModal({
   const formik = useFormik<ElectionFormData>({
     initialValues: {
       name: item?.name || '',
+      electionDate: item?.electionDate || '',
+      expectedTurnout: item?.expectedTurnout ?? '',
     },
     validationSchema: electionValidationSchema,
     enableReinitialize: true,
@@ -41,7 +43,12 @@ export function UpdateElectionModal({
       updateElection.mutate(
         {
           id: item.id,
-          name: values.name,
+          name: values.name.trim(),
+          electionDate: values.electionDate || undefined,
+          expectedTurnout:
+            values.expectedTurnout !== '' && values.expectedTurnout !== undefined
+              ? Number(values.expectedTurnout)
+              : undefined,
         },
         {
           onSuccess: (updated) => {
