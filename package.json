@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "private": true,
   "author": {
-    "name": "Doğukan Çavuş",
-    "email": "dogukan@alignui.com",
+    "name": "Joseph Awer",
+    "email": "joseph.awer@gmail.com",
     "url": "https://github.com/alignui"
   },
   "repository": {
@@ -17,7 +17,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "format:write": "prettier --write \"**/*.{ts,tsx,mdx}\" --cache",
+    "format": "prettier --write \"**/*.{ts,tsx,mdx}\" --cache",
     "compute-map": "node ./scripts/computeMap.js"
   },
   "dependencies": {

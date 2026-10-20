@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useCreateSetup, type SetupItem } from '@/services/setups';
+import { useCreateLevel, type LevelItem } from '@/services/levels';
 import { RiAddLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -15,7 +15,7 @@ import type { SetupFormData } from './types';
 interface CreateSetupModalProps {
   open: boolean;
   onClose: () => void;
-  onSuccess?: (item: SetupItem) => void;
+  onSuccess?: (item: LevelItem) => void;
 }
 
 export const levelValidationSchema = Yup.object().shape({
@@ -55,7 +55,7 @@ export function CreateSetupModal({
   onClose,
   onSuccess,
 }: CreateSetupModalProps) {
-  const createSetup = useCreateSetup();
+  const createLevel = useCreateLevel();
 
   const formik = useFormik<SetupFormData>({
     initialValues: INITIAL_FORM_DATA,
@@ -63,7 +63,7 @@ export function CreateSetupModal({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      createSetup.mutate(values, {
+      createLevel.mutate(values, {
         onSuccess: (newItem) => {
           onSuccess?.(newItem);
           handleClose();
@@ -95,7 +95,7 @@ export function CreateSetupModal({
               handleChange={formik.handleChange}
               handleBlur={formik.handleBlur}
               setFieldValue={formik.setFieldValue}
-              disabled={createSetup.isPending}
+              disabled={createLevel.isPending}
             />
           </Modal.Body>
 
@@ -106,7 +106,7 @@ export function CreateSetupModal({
               mode='stroke'
               size='small'
               onClick={handleClose}
-              disabled={createSetup.isPending}
+              disabled={createLevel.isPending}
             >
               Cancel
             </Button.Root>
@@ -115,9 +115,9 @@ export function CreateSetupModal({
               variant='primary'
               mode='filled'
               size='small'
-              disabled={createSetup.isPending || !formik.isValid}
+              disabled={createLevel.isPending || !formik.isValid}
             >
-              {createSetup.isPending ? 'Saving...' : 'Create Level'}
+              {createLevel.isPending ? 'Saving...' : 'Create Level'}
             </Button.Root>
           </Modal.Footer>
         </form>

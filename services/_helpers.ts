@@ -117,7 +117,7 @@ export const useBaseQuery = <TData = unknown, TSelect = TData>(
       typeof response === 'object' &&
       'data' in response &&
       'statusCode' in response
-        ? (response as ApiResponse<TData>).data as unknown as TSelect
+        ? ((response as ApiResponse<TData>).data as unknown as TSelect)
         : (response as unknown as TSelect),
     ...options,
   });

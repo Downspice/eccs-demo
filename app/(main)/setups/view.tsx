@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import type { SetupItem } from '@/services/setups';
+import type { LevelItem } from '@/services/levels';
 import { RiEditLine, RiEyeLine, RiShieldCheckLine } from '@remixicon/react';
 
 import * as Button from '@/components/ui/button';
@@ -9,10 +9,10 @@ import * as Modal from '@/components/ui/modal';
 import * as StatusBadge from '@/components/ui/status-badge';
 
 interface ViewSetupModalProps {
-  item: SetupItem | null;
+  item: LevelItem | null;
   open: boolean;
   onClose: () => void;
-  onEdit?: (item: SetupItem) => void;
+  onEdit?: (item: LevelItem) => void;
 }
 
 export function ViewSetupModal({

@@ -13,8 +13,12 @@ interface ElectionFormProps {
   values: ElectionFormData;
   errors: FormikErrors<ElectionFormData>;
   touched: FormikTouched<ElectionFormData>;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void;
+  handleBlur: (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void;
   setFieldValue: (field: string, value: unknown) => void;
   disabled?: boolean;
   electionId?: string;
@@ -63,7 +67,8 @@ export function ElectionForm({
           <Hint.Root hasError>{errors.name}</Hint.Root>
         ) : (
           <p className='text-paragraph-xs text-text-soft-400'>
-            Provide the formal title used across ballot manifests and reporting systems.
+            Provide the formal title used across ballot manifests and reporting
+            systems.
           </p>
         )}
       </div>

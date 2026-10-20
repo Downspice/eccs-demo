@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useGetElections, type ElectionItem } from '@/services/elections';
-import { useGetSetups, type SetupItem } from '@/services/setups';
+import { useGetLevels, type LevelItem } from '@/services/levels';
 import {
   RiAddLine,
   RiCloseLine,
@@ -20,13 +20,13 @@ import * as Input from '@/components/ui/input';
 import * as StatusBadge from '@/components/ui/status-badge';
 import * as Table from '@/components/ui/table';
 
-import { CreateSetupModal, CreateElectionModal } from './create';
-import { DeleteSetupModal, DeleteElectionModal } from './delete';
+import { CreateElectionModal, CreateSetupModal } from './create';
+import { DeleteElectionModal, DeleteSetupModal } from './delete';
 import { SetupFilters, type SetupFilterState } from './filters';
 import { SetupTabs, type SetupModuleItem } from './tabs';
 import type { ElectionModalState, ModalState } from './types';
-import { UpdateSetupModal, UpdateElectionModal } from './update';
-import { ViewSetupModal, ViewElectionModal } from './view';
+import { UpdateElectionModal, UpdateSetupModal } from './update';
+import { ViewElectionModal, ViewSetupModal } from './view';
 
 const SETUP_MODULES: SetupModuleItem[] = [
   {
@@ -44,7 +44,7 @@ const SETUP_MODULES: SetupModuleItem[] = [
 ];
 
 export default function SetupsPage() {
-  const { data: setups = [], isLoading: isSetupsLoading } = useGetSetups();
+  const { data: levels = [], isLoading: isLevelsLoading } = useGetLevels();
   const { data: elections = [], isLoading: isElectionsLoading } =
     useGetElections();
 
@@ -78,8 +78,8 @@ export default function SetupsPage() {
     SETUP_MODULES.find((m) => m.id === activeModule) || SETUP_MODULES[0];
 
   // Filtered dataset for Levels
-  const filteredSetups = React.useMemo(() => {
-    return setups.filter((item) => {
+  const filteredLevels = React.useMemo(() => {
+    return levels.filter((item) => {
       // Status pill filter
       if (filters.status === 'active' && !item.isEnabled) return false;
       if (filters.status === 'disabled' && item.isEnabled) return false;
@@ -97,7 +97,7 @@ export default function SetupsPage() {
 
       return true;
     });
-  }, [setups, filters]);
+  }, [levels, filters]);
 
   // Filtered dataset for Elections
   const filteredElections = React.useMemo(() => {
@@ -116,12 +116,12 @@ export default function SetupsPage() {
       ...mod,
       count:
         mod.id === 'levels'
-          ? setups.length
+          ? levels.length
           : mod.id === 'elections'
             ? elections.length
             : undefined,
     }));
-  }, [setups.length, elections.length]);
+  }, [levels.length, elections.length]);
 
   return (
     <div className='flex w-full flex-col'>
@@ -137,7 +137,8 @@ export default function SetupsPage() {
             </h1>
           </div>
           <p className='text-paragraph-sm text-text-sub-600'>
-            Configure security maturity levels, election directories, and mandatory control thresholds.
+            Configure security maturity levels, election directories, and
+            mandatory control thresholds.
           </p>
         </div>
       </header>
@@ -250,7 +251,7 @@ export default function SetupsPage() {
                 </Table.Header>
 
                 <Table.Body>
-                  {isSetupsLoading ? (
+                  {isLevelsLoading ? (
                     <Table.Row>
                       <Table.Cell
                         colSpan={5}
@@ -259,7 +260,7 @@ export default function SetupsPage() {
                         Loading levels...
                       </Table.Cell>
                     </Table.Row>
-                  ) : filteredSetups.length === 0 ? (
+                  ) : filteredLevels.length === 0 ? (
                     <Table.Row>
                       <Table.Cell colSpan={5} className='py-12 text-center'>
                         <p className='text-label-sm font-semibold text-text-strong-950'>
@@ -271,7 +272,7 @@ export default function SetupsPage() {
                       </Table.Cell>
                     </Table.Row>
                   ) : (
-                    filteredSetups.map((item) => (
+                    filteredLevels.map((item) => (
                       <Table.Row
                         key={item.id}
                         className='transition-colors hover:bg-bg-weak-50/50'
@@ -303,7 +304,11 @@ export default function SetupsPage() {
 
                         {/* Controls Required */}
                         <Table.Cell>
-                          <Badge.Root variant='lighter' color='gray' size='small'>
+                          <Badge.Root
+                            variant='lighter'
+                            color='gray'
+                            size='small'
+                          >
                             {item.controlsCount || 0} Controls
                           </Badge.Root>
                         </Table.Cell>
@@ -365,7 +370,9 @@ export default function SetupsPage() {
               <Table.Root>
                 <Table.Header>
                   <Table.Row>
-                    <Table.Head className='w-[320px]'>Identifier (UUID)</Table.Head>
+                    <Table.Head className='w-[320px]'>
+                      Identifier (UUID)
+                    </Table.Head>
                     <Table.Head>Election Name</Table.Head>
                     <Table.Head className='w-[120px] text-right'>
                       Actions
@@ -390,7 +397,8 @@ export default function SetupsPage() {
                           No elections found
                         </p>
                         <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                          Try adjusting your search criteria or register a new election.
+                          Try adjusting your search criteria or register a new
+                          election.
                         </p>
                       </Table.Cell>
                     </Table.Row>
@@ -507,9 +515,7 @@ export default function SetupsPage() {
           electionModalState.type === 'view' ? electionModalState.item : null
         }
         onClose={() => setElectionModalState({ type: null })}
-        onEdit={(item) =>
-          setElectionModalState({ type: 'update', item })
-        }
+        onEdit={(item) => setElectionModalState({ type: 'update', item })}
       />
 
       <DeleteElectionModal

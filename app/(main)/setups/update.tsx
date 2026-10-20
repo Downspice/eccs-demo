@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useUpdateSetup, type SetupItem } from '@/services/setups';
+import { useUpdateLevel, type LevelItem } from '@/services/levels';
 import { RiEditLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 
@@ -13,10 +13,10 @@ import { SetupForm } from './form';
 import type { SetupFormData } from './types';
 
 interface UpdateSetupModalProps {
-  item: SetupItem | null;
+  item: LevelItem | null;
   open: boolean;
   onClose: () => void;
-  onSuccess?: (item: SetupItem) => void;
+  onSuccess?: (item: LevelItem) => void;
 }
 
 export function UpdateSetupModal({
@@ -25,7 +25,7 @@ export function UpdateSetupModal({
   onClose,
   onSuccess,
 }: UpdateSetupModalProps) {
-  const updateSetup = useUpdateSetup();
+  const updateLevel = useUpdateLevel();
 
   const formik = useFormik<SetupFormData>({
     initialValues: {
@@ -43,7 +43,7 @@ export function UpdateSetupModal({
     onSubmit: (values) => {
       if (!item) return;
 
-      updateSetup.mutate(
+      updateLevel.mutate(
         {
           id: item.id,
           ...values,
@@ -76,7 +76,7 @@ export function UpdateSetupModal({
               handleChange={formik.handleChange}
               handleBlur={formik.handleBlur}
               setFieldValue={formik.setFieldValue}
-              disabled={updateSetup.isPending}
+              disabled={updateLevel.isPending}
             />
           </Modal.Body>
 
@@ -87,7 +87,7 @@ export function UpdateSetupModal({
               mode='stroke'
               size='small'
               onClick={onClose}
-              disabled={updateSetup.isPending}
+              disabled={updateLevel.isPending}
             >
               Cancel
             </Button.Root>
@@ -96,9 +96,9 @@ export function UpdateSetupModal({
               variant='primary'
               mode='filled'
               size='small'
-              disabled={updateSetup.isPending || !formik.isValid}
+              disabled={updateLevel.isPending || !formik.isValid}
             >
-              {updateSetup.isPending ? 'Saving...' : 'Save Changes'}
+              {updateLevel.isPending ? 'Saving...' : 'Save Changes'}
             </Button.Root>
           </Modal.Footer>
         </form>

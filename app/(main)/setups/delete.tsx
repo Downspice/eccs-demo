@@ -1,14 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { useDeleteSetup, type SetupItem } from '@/services/setups';
+import { useDeleteLevel, type LevelItem } from '@/services/levels';
 import { RiDeleteBinLine } from '@remixicon/react';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
 
 interface DeleteSetupModalProps {
-  item: SetupItem | null;
+  item: LevelItem | null;
   open: boolean;
   onClose: () => void;
   onSuccess?: (id: string) => void;
@@ -20,12 +20,12 @@ export function DeleteSetupModal({
   onClose,
   onSuccess,
 }: DeleteSetupModalProps) {
-  const deleteSetup = useDeleteSetup();
+  const deleteLevel = useDeleteLevel();
 
   if (!item) return null;
 
   const handleDelete = () => {
-    deleteSetup.mutate(
+    deleteLevel.mutate(
       { id: item.id },
       {
         onSuccess: () => {
@@ -67,7 +67,7 @@ export function DeleteSetupModal({
             mode='stroke'
             size='small'
             onClick={onClose}
-            disabled={deleteSetup.isPending}
+            disabled={deleteLevel.isPending}
           >
             Cancel
           </Button.Root>
@@ -77,9 +77,9 @@ export function DeleteSetupModal({
             mode='filled'
             size='small'
             onClick={handleDelete}
-            disabled={deleteSetup.isPending}
+            disabled={deleteLevel.isPending}
           >
-            {deleteSetup.isPending ? 'Deleting...' : 'Confirm Delete'}
+            {deleteLevel.isPending ? 'Deleting...' : 'Confirm Delete'}
           </Button.Root>
         </Modal.Footer>
       </Modal.Content>

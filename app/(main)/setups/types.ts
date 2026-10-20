@@ -1,7 +1,8 @@
 import type { CreateElectionPayload, ElectionItem } from '@/services/elections';
-import type { CreateSetupPayload, SetupItem } from '@/services/setups';
+import type { CreateLevelPayload, LevelItem } from '@/services/levels';
 
-export type SetupFormData = CreateSetupPayload;
+export type LevelFormData = CreateLevelPayload;
+export type SetupFormData = LevelFormData;
 export type ElectionFormData = CreateElectionPayload;
 
 export interface SetupCategoryTab {
@@ -13,9 +14,9 @@ export interface SetupCategoryTab {
 export type ModalState =
   | { type: null }
   | { type: 'create' }
-  | { type: 'update'; item: SetupItem }
-  | { type: 'view'; item: SetupItem }
-  | { type: 'delete'; item: SetupItem };
+  | { type: 'update'; item: LevelItem }
+  | { type: 'view'; item: LevelItem }
+  | { type: 'delete'; item: LevelItem };
 
 export type ElectionModalState =
   | { type: null }
