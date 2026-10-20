@@ -49,34 +49,20 @@ export function ViewPoliticalPartyModal({
           </div>
 
           {/* Details Grid */}
-          <div className='grid grid-cols-2 gap-3'>
-            <div className='flex flex-col gap-1 rounded-xl border border-stroke-soft-200 bg-bg-white-0 p-3.5'>
-              <span className='text-paragraph-xs font-medium text-text-sub-600'>
-                Abbreviation
-              </span>
-              <div className='mt-0.5'>
-                {item.abbreviation ? (
-                  <Badge.Root variant='lighter' color='gray' size='small'>
-                    {item.abbreviation}
-                  </Badge.Root>
-                ) : (
-                  <span className='text-label-sm font-semibold text-text-strong-950'>
-                    —
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className='flex flex-col gap-1 rounded-xl border border-stroke-soft-200 bg-bg-white-0 p-3.5'>
-              <span className='text-paragraph-xs font-medium text-text-sub-600'>
-                Identifier
-              </span>
-              <p
-                className='text-label-sm font-mono text-text-sub-600 truncate mt-0.5'
-                title={item.id}
-              >
-                {item.id}
-              </p>
+          <div className='grid grid-cols-1 gap-3'>
+            <span className='text-paragraph-xs font-medium text-text-sub-600'>
+              Abbreviation
+            </span>
+            <div className='mt-0.5'>
+              {item.abbreviation ? (
+                <Badge.Root variant='lighter' color='gray' size='small'>
+                  {item.abbreviation}
+                </Badge.Root>
+              ) : (
+                <span className='text-label-sm font-semibold text-text-strong-950'>
+                  —
+                </span>
+              )}
             </div>
           </div>
         </Modal.Body>

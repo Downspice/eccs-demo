@@ -3,6 +3,7 @@
 import * as React from 'react';
 import type { FormikErrors, FormikTouched } from 'formik';
 
+import { DatePicker } from '@/components/ui/date-picker';
 import * as Hint from '@/components/ui/hint';
 import * as Input from '@/components/ui/input';
 import * as Label from '@/components/ui/label';
@@ -30,6 +31,7 @@ export function ElectionForm({
   touched,
   handleChange,
   handleBlur,
+  setFieldValue,
   disabled,
   electionId,
 }: ElectionFormProps) {
@@ -68,22 +70,15 @@ export function ElectionForm({
         {/* Election Date */}
         <div className='flex flex-col gap-1.5'>
           <Label.Root htmlFor='electionDate'>Election Date</Label.Root>
-          <Input.Root
+          <DatePicker
+            id='electionDate'
+            name='electionDate'
+            value={values.electionDate}
+            onChange={(dateStr) => setFieldValue('electionDate', dateStr)}
             hasError={Boolean(touched.electionDate && errors.electionDate)}
-          >
-            <Input.Wrapper>
-              <input
-                id='electionDate'
-                name='electionDate'
-                type='date'
-                disabled={disabled}
-                value={values.electionDate || ''}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
-              />
-            </Input.Wrapper>
-          </Input.Root>
+            disabled={disabled}
+            placeholder='Select election date'
+          />
           {touched.electionDate && errors.electionDate ? (
             <Hint.Root hasError>{errors.electionDate}</Hint.Root>
           ) : (

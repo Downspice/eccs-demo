@@ -15,10 +15,7 @@ interface SetupFiltersProps {
   onReset?: () => void;
 }
 
-export function SetupFilters({
-  filters,
-  onChange,
-}: SetupFiltersProps) {
+export function SetupFilters({ filters, onChange }: SetupFiltersProps) {
   return (
     <div className='w-full sm:max-w-xs'>
       <Input.Root>
