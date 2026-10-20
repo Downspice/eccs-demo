@@ -128,3 +128,4 @@ export function CreateSetupModal({
 
 export default CreateSetupModal;
 export { CreateElectionModal } from './create-election';
+export { CreatePoliticalPartyModal } from './create-political-party';

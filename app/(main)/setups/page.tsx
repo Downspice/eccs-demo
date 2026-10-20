@@ -4,12 +4,17 @@ import * as React from 'react';
 import { useGetElections, type ElectionItem } from '@/services/elections';
 import { useGetLevels, type LevelItem } from '@/services/levels';
 import {
+  useGetPoliticalParties,
+  type PoliticalPartyItem,
+} from '@/services/political-parties';
+import {
   RiAddLine,
   RiCloseLine,
   RiDeleteBinLine,
   RiEditLine,
   RiEqualizerLine,
   RiEyeLine,
+  RiFlagLine,
   RiGovernmentLine,
   RiSearchLine,
 } from '@remixicon/react';
@@ -20,13 +25,33 @@ import * as Input from '@/components/ui/input';
 import * as StatusBadge from '@/components/ui/status-badge';
 import * as Table from '@/components/ui/table';
 
-import { CreateElectionModal, CreateSetupModal } from './create';
-import { DeleteElectionModal, DeleteSetupModal } from './delete';
+import {
+  CreateElectionModal,
+  CreatePoliticalPartyModal,
+  CreateSetupModal,
+} from './create';
+import {
+  DeleteElectionModal,
+  DeletePoliticalPartyModal,
+  DeleteSetupModal,
+} from './delete';
 import { SetupFilters, type SetupFilterState } from './filters';
 import { SetupTabs, type SetupModuleItem } from './tabs';
-import type { ElectionModalState, ModalState } from './types';
-import { UpdateElectionModal, UpdateSetupModal } from './update';
-import { ViewElectionModal, ViewSetupModal } from './view';
+import type {
+  ElectionModalState,
+  ModalState,
+  PoliticalPartyModalState,
+} from './types';
+import {
+  UpdateElectionModal,
+  UpdatePoliticalPartyModal,
+  UpdateSetupModal,
+} from './update';
+import {
+  ViewElectionModal,
+  ViewPoliticalPartyModal,
+  ViewSetupModal,
+} from './view';
 
 const SETUP_MODULES: SetupModuleItem[] = [
   {
@@ -41,12 +66,20 @@ const SETUP_MODULES: SetupModuleItem[] = [
     description:
       'Manage election cycles, ballot specifications, and jurisdictional electoral configurations.',
   },
+  {
+    id: 'political-party',
+    label: 'Political Parties',
+    description:
+      'Manage registered political party entities, ballot affiliations, and accredited party rosters.',
+  },
 ];
 
 export default function SetupsPage() {
   const { data: levels = [], isLoading: isLevelsLoading } = useGetLevels();
   const { data: elections = [], isLoading: isElectionsLoading } =
     useGetElections();
+  const { data: politicalParties = [], isLoading: isPoliticalPartiesLoading } =
+    useGetPoliticalParties();
 
   const [activeModule, setActiveModule] = React.useState('levels');
   const [filters, setFilters] = React.useState<SetupFilterState>({
@@ -54,12 +87,17 @@ export default function SetupsPage() {
     status: 'all',
   });
   const [electionSearch, setElectionSearch] = React.useState('');
+  const [politicalPartySearch, setPoliticalPartySearch] = React.useState('');
 
   const [modalState, setModalState] = React.useState<ModalState>({
     type: null,
   });
   const [electionModalState, setElectionModalState] =
     React.useState<ElectionModalState>({
+      type: null,
+    });
+  const [politicalPartyModalState, setPoliticalPartyModalState] =
+    React.useState<PoliticalPartyModalState>({
       type: null,
     });
 
@@ -110,6 +148,17 @@ export default function SetupsPage() {
     );
   }, [elections, electionSearch]);
 
+  // Filtered dataset for Political Parties
+  const filteredPoliticalParties = React.useMemo(() => {
+    if (!politicalPartySearch.trim()) return politicalParties;
+    const query = politicalPartySearch.toLowerCase();
+    return politicalParties.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) ||
+        item.id.toLowerCase().includes(query),
+    );
+  }, [politicalParties, politicalPartySearch]);
+
   // Modules with dynamic counts
   const modulesWithCounts = React.useMemo(() => {
     return SETUP_MODULES.map((mod) => ({
@@ -119,9 +168,11 @@ export default function SetupsPage() {
           ? levels.length
           : mod.id === 'elections'
             ? elections.length
-            : undefined,
+            : mod.id === 'political-party'
+              ? politicalParties.length
+              : undefined,
     }));
-  }, [levels.length, elections.length]);
+  }, [levels.length, elections.length, politicalParties.length]);
 
   return (
     <div className='flex w-full flex-col'>
@@ -137,8 +188,8 @@ export default function SetupsPage() {
             </h1>
           </div>
           <p className='text-paragraph-sm text-text-sub-600'>
-            Configure security maturity levels, election directories, and
-            mandatory control thresholds.
+            Configure security maturity levels, elections, political party
+            directories, and mandatory control thresholds.
           </p>
         </div>
       </header>
@@ -180,7 +231,7 @@ export default function SetupsPage() {
                   <Button.Icon as={RiAddLine} />
                   <span>New Level</span>
                 </Button.Root>
-              ) : (
+              ) : activeModule === 'elections' ? (
                 <Button.Root
                   variant='primary'
                   mode='filled'
@@ -189,6 +240,18 @@ export default function SetupsPage() {
                 >
                   <Button.Icon as={RiAddLine} />
                   <span>New Election</span>
+                </Button.Root>
+              ) : (
+                <Button.Root
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  onClick={() =>
+                    setPoliticalPartyModalState({ type: 'create' })
+                  }
+                >
+                  <Button.Icon as={RiAddLine} />
+                  <span>New Political Party</span>
                 </Button.Root>
               )}
             </div>
@@ -203,7 +266,7 @@ export default function SetupsPage() {
               }
               onReset={() => setFilters({ search: '', status: 'all' })}
             />
-          ) : (
+          ) : activeModule === 'elections' ? (
             <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
               <div className='w-full sm:max-w-xs'>
                 <Input.Root>
@@ -220,6 +283,33 @@ export default function SetupsPage() {
                       <button
                         type='button'
                         onClick={() => setElectionSearch('')}
+                        className='px-2 text-text-soft-400 hover:text-text-sub-600'
+                        title='Clear search'
+                      >
+                        <RiCloseLine className='size-4' />
+                      </button>
+                    )}
+                  </Input.Wrapper>
+                </Input.Root>
+              </div>
+            </div>
+          ) : (
+            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+              <div className='w-full sm:max-w-xs'>
+                <Input.Root>
+                  <Input.Wrapper>
+                    <Input.Icon as={RiSearchLine} />
+                    <input
+                      type='text'
+                      placeholder='Search political parties or UUID...'
+                      value={politicalPartySearch}
+                      onChange={(e) => setPoliticalPartySearch(e.target.value)}
+                      className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
+                    />
+                    {politicalPartySearch && (
+                      <button
+                        type='button'
+                        onClick={() => setPoliticalPartySearch('')}
                         className='px-2 text-text-soft-400 hover:text-text-sub-600'
                         title='Clear search'
                       >
@@ -366,7 +456,7 @@ export default function SetupsPage() {
                   )}
                 </Table.Body>
               </Table.Root>
-            ) : (
+            ) : activeModule === 'elections' ? (
               <Table.Root>
                 <Table.Header>
                   <Table.Row>
@@ -465,6 +555,114 @@ export default function SetupsPage() {
                   )}
                 </Table.Body>
               </Table.Root>
+            ) : (
+              <Table.Root>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.Head className='w-[320px]'>
+                      Identifier (UUID)
+                    </Table.Head>
+                    <Table.Head>Party Name</Table.Head>
+                    <Table.Head className='w-[120px] text-right'>
+                      Actions
+                    </Table.Head>
+                  </Table.Row>
+                </Table.Header>
+
+                <Table.Body>
+                  {isPoliticalPartiesLoading ? (
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan={3}
+                        className='py-12 text-center text-text-sub-600'
+                      >
+                        Loading political parties...
+                      </Table.Cell>
+                    </Table.Row>
+                  ) : filteredPoliticalParties.length === 0 ? (
+                    <Table.Row>
+                      <Table.Cell colSpan={3} className='py-12 text-center'>
+                        <p className='text-label-sm font-semibold text-text-strong-950'>
+                          No political parties found
+                        </p>
+                        <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                          Try adjusting your search criteria or register a new
+                          political party.
+                        </p>
+                      </Table.Cell>
+                    </Table.Row>
+                  ) : (
+                    filteredPoliticalParties.map((item) => (
+                      <Table.Row
+                        key={item.id}
+                        className='transition-colors hover:bg-bg-weak-50/50'
+                      >
+                        {/* System Identifier */}
+                        <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
+                          <span className='truncate'>{item.id}</span>
+                        </Table.Cell>
+
+                        {/* Party Name */}
+                        <Table.Cell>
+                          <div className='flex items-center gap-2.5'>
+                            <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-base/10 text-primary-base'>
+                              <RiFlagLine className='size-4' />
+                            </div>
+                            <span className='text-label-sm font-semibold text-text-strong-950'>
+                              {item.name}
+                            </span>
+                          </div>
+                        </Table.Cell>
+
+                        {/* Actions */}
+                        <Table.Cell className='text-right'>
+                          <div className='inline-flex items-center gap-1'>
+                            <button
+                              type='button'
+                              onClick={() =>
+                                setPoliticalPartyModalState({
+                                  type: 'view',
+                                  item,
+                                })
+                              }
+                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-text-strong-950 transition-colors'
+                              title='View details'
+                            >
+                              <RiEyeLine className='size-4' />
+                            </button>
+                            <button
+                              type='button'
+                              onClick={() =>
+                                setPoliticalPartyModalState({
+                                  type: 'update',
+                                  item,
+                                })
+                              }
+                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
+                              title='Edit party'
+                            >
+                              <RiEditLine className='size-4' />
+                            </button>
+                            <button
+                              type='button'
+                              onClick={() =>
+                                setPoliticalPartyModalState({
+                                  type: 'delete',
+                                  item,
+                                })
+                              }
+                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-error-base transition-colors'
+                              title='Delete party'
+                            >
+                              <RiDeleteBinLine className='size-4' />
+                            </button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
+                  )}
+                </Table.Body>
+              </Table.Root>
             )}
           </div>
         </main>
@@ -524,6 +722,43 @@ export default function SetupsPage() {
           electionModalState.type === 'delete' ? electionModalState.item : null
         }
         onClose={() => setElectionModalState({ type: null })}
+      />
+
+      {/* Sibling Action Modals - Political Parties */}
+      <CreatePoliticalPartyModal
+        open={politicalPartyModalState.type === 'create'}
+        onClose={() => setPoliticalPartyModalState({ type: null })}
+      />
+
+      <UpdatePoliticalPartyModal
+        open={politicalPartyModalState.type === 'update'}
+        item={
+          politicalPartyModalState.type === 'update'
+            ? politicalPartyModalState.item
+            : null
+        }
+        onClose={() => setPoliticalPartyModalState({ type: null })}
+      />
+
+      <ViewPoliticalPartyModal
+        open={politicalPartyModalState.type === 'view'}
+        item={
+          politicalPartyModalState.type === 'view'
+            ? politicalPartyModalState.item
+            : null
+        }
+        onClose={() => setPoliticalPartyModalState({ type: null })}
+        onEdit={(item) => setPoliticalPartyModalState({ type: 'update', item })}
+      />
+
+      <DeletePoliticalPartyModal
+        open={politicalPartyModalState.type === 'delete'}
+        item={
+          politicalPartyModalState.type === 'delete'
+            ? politicalPartyModalState.item
+            : null
+        }
+        onClose={() => setPoliticalPartyModalState({ type: null })}
       />
     </div>
   );

@@ -56,7 +56,14 @@ export const useBaseMutation = <
 
     const response = await apiClient<ApiResponse<TResponse> | TResponse>(url, {
       method,
-      data: isBodyMethod ? payload : undefined,
+      data: isBodyMethod ? payload : method === 'delete' ? payload : undefined,
+      params:
+        method === 'delete' &&
+        payload &&
+        typeof payload === 'object' &&
+        'id' in payload
+          ? { id: (payload as Record<string, unknown>).id }
+          : undefined,
     });
 
     // Automatically unwraps ApiResponse.data if nested, or returns direct response
