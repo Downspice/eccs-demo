@@ -45,7 +45,9 @@ export const useBaseMutation = <
     AxiosError<ApiError>,
     TPayload,
     TContext
-  >,
+  > & {
+    transformPayload?: (payload: TPayload) => unknown;
+  },
 ) => {
   const queryClient = useQueryClient();
 
@@ -53,10 +55,17 @@ export const useBaseMutation = <
     const url = typeof endpoint === 'function' ? endpoint(payload) : endpoint;
     const isBodyMethod =
       method === 'post' || method === 'put' || method === 'patch';
+    const requestData = options?.transformPayload
+      ? options.transformPayload(payload)
+      : payload;
 
     const response = await apiClient<ApiResponse<TResponse> | TResponse>(url, {
       method,
-      data: isBodyMethod ? payload : method === 'delete' ? payload : undefined,
+      data: isBodyMethod
+        ? requestData
+        : method === 'delete'
+          ? requestData
+          : undefined,
       params:
         method === 'delete' &&
         payload &&
@@ -70,10 +79,10 @@ export const useBaseMutation = <
     if (
       response &&
       typeof response === 'object' &&
-      'data' in response &&
-      'statusCode' in response
+      !Array.isArray(response) &&
+      'data' in response
     ) {
-      return (response as ApiResponse<TResponse>).data;
+      return (response as { data: TResponse }).data;
     }
 
     return response as TResponse;
@@ -122,9 +131,9 @@ export const useBaseQuery = <TData = unknown, TSelect = TData>(
     select: (response) =>
       response &&
       typeof response === 'object' &&
-      'data' in response &&
-      'statusCode' in response
-        ? ((response as ApiResponse<TData>).data as unknown as TSelect)
+      !Array.isArray(response) &&
+      'data' in response
+        ? ((response as { data: TData }).data as unknown as TSelect)
         : (response as unknown as TSelect),
     ...options,
   });

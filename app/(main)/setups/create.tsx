@@ -21,33 +21,23 @@ interface CreateSetupModalProps {
 export const levelValidationSchema = Yup.object().shape({
   name: Yup.string()
     .trim()
-    .required('Level identifier is required (e.g. Level 1)'),
-  title: Yup.string().trim().required('Classification title is required'),
-  code: Yup.string()
-    .trim()
-    .matches(
-      /^[A-Z0-9_-]+$/,
-      'Code must be uppercase alphanumeric (e.g. LVL-01)',
-    )
-    .required('Unique level code is required'),
-  controlsCount: Yup.number()
-    .typeError('Controls must be a valid number')
-    .min(1, 'At least 1 control is required')
-    .required('Control threshold is required'),
+    .required('Level name is required (e.g. Constituency)'),
+  levelRank: Yup.number()
+    .typeError('Level rank must be a valid number')
+    .min(0, 'Level rank cannot be negative')
+    .required('Level rank is required'),
+  electionId: Yup.string().trim().required('Associated election is required'),
   description: Yup.string().max(
     500,
     'Description cannot exceed 500 characters',
   ),
-  isEnabled: Yup.boolean().default(true),
 });
 
 const INITIAL_FORM_DATA: SetupFormData = {
   name: '',
-  title: '',
-  code: '',
   description: '',
-  controlsCount: 15,
-  isEnabled: true,
+  levelRank: 1,
+  electionId: '',
 };
 
 export function CreateSetupModal({
@@ -63,12 +53,21 @@ export function CreateSetupModal({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      createLevel.mutate(values, {
-        onSuccess: (newItem) => {
-          onSuccess?.(newItem);
-          handleClose();
+      createLevel.mutate(
+        {
+          id: crypto.randomUUID(),
+          name: values.name.trim(),
+          description: values.description?.trim() || '',
+          levelRank: Number(values.levelRank),
+          electionId: values.electionId.trim(),
         },
-      });
+        {
+          onSuccess: (newItem) => {
+            onSuccess?.(newItem);
+            handleClose();
+          },
+        },
+      );
     },
   });
 
@@ -84,7 +83,7 @@ export function CreateSetupModal({
           <Modal.Header
             icon={RiAddLine}
             title='Create New Level'
-            description='Add a new security or compliance level threshold to the ECCS framework.'
+            description='Add a new hierarchical administrative level to the electoral setup.'
           />
 
           <Modal.Body className='py-5'>

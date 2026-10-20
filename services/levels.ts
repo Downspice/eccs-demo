@@ -11,46 +11,51 @@ import type { PaginationParams } from '@/types/api';
 
 export interface LevelItem {
   id: string;
-  name: string; // e.g. 'Level 1'
-  title: string; // e.g. 'Foundational Hygiene'
-  code: string; // e.g. 'LVL-01'
-  category: string; // 'levels'
+  name: string;
   description?: string;
-  isEnabled: boolean;
+  levelRank?: number;
+  electionId?: string;
+  electionName?: string;
+  title?: string;
+  code?: string;
+  category?: string;
+  isEnabled?: boolean;
   controlsCount?: number;
   updatedAt?: string;
 }
 
 export interface CreateLevelPayload {
+  id?: string;
   name: string;
-  title: string;
-  code: string;
-  category?: string;
   description?: string;
-  isEnabled: boolean;
-  controlsCount?: number;
+  levelRank: number;
+  electionId: string;
 }
 
-export interface UpdateLevelPayload extends Partial<CreateLevelPayload> {
+export interface UpdateLevelPayload {
   id: TId;
+  name: string;
+  description?: string;
+  levelRank: number;
+  electionId: string;
 }
 
 // --- Queries ---
 
 export function useGetLevels() {
-  return useBaseQuery<LevelItem[]>(['levels'], '/api/levels');
+  return useBaseQuery<LevelItem[]>(['levels'], '/levels');
 }
 
 export function useGetLevelsPaginated(params?: PaginationParams) {
   return useBasePaginatedQuery<LevelItem>(
     ['levels-paginated'],
-    '/api/levels',
+    '/levels',
     params,
   );
 }
 
 export function useGetLevel(id?: TId) {
-  return useBaseQuery<LevelItem>(['level', id], `/api/levels/${id}`, {
+  return useBaseQuery<LevelItem>(['level', id], `/levels/${id}`, {
     enabled: Boolean(id),
   });
 }
@@ -60,7 +65,7 @@ export function useGetLevel(id?: TId) {
 export function useCreateLevel() {
   return useBaseMutation<LevelItem, CreateLevelPayload>(
     ['create-level'],
-    '/api/levels',
+    '/levels',
     'post',
     () => [['levels'], ['levels-paginated']],
   );
@@ -69,8 +74,8 @@ export function useCreateLevel() {
 export function useUpdateLevel() {
   return useBaseMutation<LevelItem, UpdateLevelPayload>(
     ['update-level'],
-    (payload) => `/api/levels/${payload.id}`,
-    'put',
+    '/levels',
+    'post',
     (payload) => [['levels'], ['level', payload.id], ['levels-paginated']],
   );
 }
@@ -78,7 +83,7 @@ export function useUpdateLevel() {
 export function useDeleteLevel() {
   return useBaseMutation<void, { id: TId }>(
     ['delete-level'],
-    (payload) => `/api/levels/${payload.id}`,
+    (payload) => `/levels/${payload.id}`,
     'delete',
     (payload) => [['levels'], ['level', payload.id], ['levels-paginated']],
   );

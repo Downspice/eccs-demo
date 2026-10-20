@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useGetElections, type ElectionItem } from '@/services/elections';
 import { useUpdateLevel, type LevelItem } from '@/services/levels';
 import { RiEditLine } from '@remixicon/react';
 import { useFormik } from 'formik';
@@ -26,15 +27,35 @@ export function UpdateSetupModal({
   onSuccess,
 }: UpdateSetupModalProps) {
   const updateLevel = useUpdateLevel();
+  const { data: rawElections } = useGetElections();
+
+  const elections = React.useMemo<ElectionItem[]>(() => {
+    if (Array.isArray(rawElections)) return rawElections;
+    if (
+      rawElections &&
+      typeof rawElections === 'object' &&
+      Array.isArray((rawElections as { data?: ElectionItem[] }).data)
+    ) {
+      return (rawElections as { data: ElectionItem[] }).data;
+    }
+    return [];
+  }, [rawElections]);
+
+  const initialElectionId = React.useMemo(() => {
+    if (item?.electionId) return item.electionId;
+    if (item?.electionName && elections.length > 0) {
+      const match = elections.find((e) => e.name === item.electionName);
+      if (match) return match.id;
+    }
+    return elections[0]?.id || '';
+  }, [item?.electionId, item?.electionName, elections]);
 
   const formik = useFormik<SetupFormData>({
     initialValues: {
       name: item?.name || '',
-      title: item?.title || '',
-      code: item?.code || '',
       description: item?.description || '',
-      controlsCount: item?.controlsCount || 15,
-      isEnabled: item?.isEnabled ?? true,
+      levelRank: item?.levelRank ?? 1,
+      electionId: initialElectionId,
     },
     validationSchema: levelValidationSchema,
     enableReinitialize: true,
@@ -46,7 +67,10 @@ export function UpdateSetupModal({
       updateLevel.mutate(
         {
           id: item.id,
-          ...values,
+          name: values.name.trim(),
+          description: values.description?.trim() || '',
+          levelRank: Number(values.levelRank),
+          electionId: values.electionId.trim(),
         },
         {
           onSuccess: (updated) => {
@@ -65,7 +89,7 @@ export function UpdateSetupModal({
           <Modal.Header
             icon={RiEditLine}
             title='Update Level Setup'
-            description={`Editing parameters and control requirements for ${item?.name || 'level'}.`}
+            description={`Editing parameters for ${item?.name || 'level'}.`}
           />
 
           <Modal.Body className='py-5'>

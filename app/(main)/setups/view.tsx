@@ -28,60 +28,50 @@ export function ViewSetupModal({
       <Modal.Content className='max-w-[500px]'>
         <Modal.Header
           icon={RiEyeLine}
-          title={`${item.name}: ${item.title}`}
-          description={`Level Classification Code: ${item.code}`}
+          title={item.name}
+          description={`Level Rank: ${item.levelRank ?? 1}`}
         />
 
         <Modal.Body className='py-5 space-y-4'>
-          {/* Status Row */}
-          <div className='flex items-center justify-between border-b border-stroke-soft-200 pb-3'>
-            <span className='text-paragraph-xs font-medium uppercase tracking-wider text-text-soft-400'>
-              Certification Status
-            </span>
-            <StatusBadge.Root
-              status={item.isEnabled ? 'completed' : 'disabled'}
-              variant='stroke'
-            >
-              <StatusBadge.Dot />
-              {item.isEnabled ? 'Active & Enforced' : 'Inactive / Draft'}
-            </StatusBadge.Root>
-          </div>
-
           {/* Details Grid */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
               <span className='text-paragraph-xs text-text-sub-600'>
-                Level Code
+                Level Rank
               </span>
-              <p className='font-mono text-label-sm font-semibold text-text-strong-950'>
-                {item.code}
+              <p className='text-label-sm font-semibold text-text-strong-950 mt-0.5'>
+                Level {item.levelRank ?? 1}
               </p>
             </div>
             <div>
               <span className='text-paragraph-xs text-text-sub-600'>
-                Control Threshold
+                Associated Election
               </span>
-              <p className='text-label-sm font-semibold text-text-strong-950'>
-                {item.controlsCount || 0} mandatory controls
+              <p className='text-label-sm font-semibold text-text-strong-950 mt-0.5'>
+                {item.electionName || item.electionId || 'Not specified'}
               </p>
             </div>
+          </div>
+
+          {/* Unique Identifier */}
+          <div>
+            <span className='text-paragraph-xs text-text-sub-600'>
+              Level UUID
+            </span>
+            <p className='font-mono text-label-xs font-semibold text-text-sub-600 mt-0.5 break-all'>
+              {item.id}
+            </p>
           </div>
 
           {/* Description */}
           <div>
             <span className='text-paragraph-xs text-text-sub-600'>
-              Safeguarding & Scope
+              Description
             </span>
             <div className='mt-1 rounded-xl bg-bg-weak-50 p-3 text-paragraph-sm text-text-strong-950'>
               {item.description || 'No description provided for this level.'}
             </div>
           </div>
-
-          {item.updatedAt && (
-            <div className='text-right text-[11px] text-text-soft-400'>
-              Last updated: {item.updatedAt}
-            </div>
-          )}
         </Modal.Body>
 
         <Modal.Footer>

@@ -1,12 +1,13 @@
 'use client';
 
 import * as React from 'react';
+import { useGetElections, type ElectionItem } from '@/services/elections';
 import type { FormikErrors, FormikTouched } from 'formik';
 
 import * as Hint from '@/components/ui/hint';
 import * as Input from '@/components/ui/input';
 import * as Label from '@/components/ui/label';
-import * as Switch from '@/components/ui/switch';
+import * as Select from '@/components/ui/select';
 import * as Textarea from '@/components/ui/textarea';
 
 import type { SetupFormData } from './types';
@@ -30,12 +31,28 @@ export function SetupForm({
   setFieldValue,
   disabled,
 }: SetupFormProps) {
+  const { data: rawElections, isLoading: isElectionsLoading } =
+    useGetElections();
+
+  const elections = React.useMemo<ElectionItem[]>(() => {
+    if (Array.isArray(rawElections)) return rawElections;
+    if (
+      rawElections &&
+      typeof rawElections === 'object' &&
+      Array.isArray((rawElections as { data?: ElectionItem[] }).data)
+    ) {
+      return (rawElections as { data: ElectionItem[] }).data;
+    }
+    return [];
+  }, [rawElections]);
+
   return (
     <div className='flex flex-col gap-4'>
-      {/* Level Name & Code Grid */}
-      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
-        <div className='flex flex-col gap-1.5'>
-          <Label.Root htmlFor='name'>Level Identifier</Label.Root>
+      {/* Level Name & Level Rank Grid */}
+      <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
+        {/* Level Name (takes 2 columns) */}
+        <div className='flex flex-col gap-1.5 sm:col-span-2'>
+          <Label.Root htmlFor='name'>Level Name</Label.Root>
           <Input.Root hasError={Boolean(touched.name && errors.name)}>
             <Input.Wrapper>
               <input
@@ -43,7 +60,7 @@ export function SetupForm({
                 name='name'
                 type='text'
                 disabled={disabled}
-                placeholder='e.g. Level 1'
+                placeholder='e.g. Constituency, Electoral Area, Polling Station'
                 value={values.name}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -56,90 +73,89 @@ export function SetupForm({
           )}
         </div>
 
+        {/* Level Rank (takes 1 column) */}
         <div className='flex flex-col gap-1.5'>
-          <Label.Root htmlFor='code'>Level Code</Label.Root>
-          <Input.Root hasError={Boolean(touched.code && errors.code)}>
+          <Label.Root htmlFor='levelRank'>Level Rank</Label.Root>
+          <Input.Root hasError={Boolean(touched.levelRank && errors.levelRank)}>
             <Input.Wrapper>
               <input
-                id='code'
-                name='code'
-                type='text'
+                id='levelRank'
+                name='levelRank'
+                type='number'
+                min='0'
                 disabled={disabled}
-                placeholder='e.g. LVL-01'
-                value={values.code}
-                onChange={(e) =>
-                  setFieldValue('code', e.target.value.toUpperCase())
-                }
+                placeholder='e.g. 1'
+                value={values.levelRank ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFieldValue('levelRank', val === '' ? '' : Number(val));
+                }}
                 onBlur={handleBlur}
-                className='w-full bg-transparent px-3 py-2 font-mono text-paragraph-sm uppercase text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
               />
             </Input.Wrapper>
           </Input.Root>
-          {touched.code && errors.code && (
-            <Hint.Root hasError>{errors.code}</Hint.Root>
+          {touched.levelRank && errors.levelRank && (
+            <Hint.Root hasError>{errors.levelRank}</Hint.Root>
           )}
         </div>
       </div>
 
-      {/* Level Title */}
+      {/* Associated Election Dropdown */}
       <div className='flex flex-col gap-1.5'>
-        <Label.Root htmlFor='title'>Classification Title</Label.Root>
-        <Input.Root hasError={Boolean(touched.title && errors.title)}>
-          <Input.Wrapper>
-            <input
-              id='title'
-              name='title'
-              type='text'
-              disabled={disabled}
-              placeholder='e.g. Foundational Hygiene'
-              value={values.title}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
-            />
-          </Input.Wrapper>
-        </Input.Root>
-        {touched.title && errors.title && (
-          <Hint.Root hasError>{errors.title}</Hint.Root>
+        <Label.Root htmlFor='electionId'>Associated Election</Label.Root>
+        {elections.length > 0 ? (
+          <Select.Root
+            value={values.electionId}
+            onValueChange={(val) => setFieldValue('electionId', val)}
+            disabled={disabled || isElectionsLoading}
+            hasError={Boolean(touched.electionId && errors.electionId)}
+          >
+            <Select.Trigger id='electionId' className='w-full'>
+              <Select.Value placeholder='Select an election...' />
+            </Select.Trigger>
+            <Select.Content position='popper'>
+              {elections.map((elec) => (
+                <Select.Item key={elec.id} value={elec.id}>
+                  {elec.name}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        ) : (
+          <Input.Root
+            hasError={Boolean(touched.electionId && errors.electionId)}
+          >
+            <Input.Wrapper>
+              <input
+                id='electionId'
+                name='electionId'
+                type='text'
+                disabled={disabled}
+                placeholder='Enter Election UUID (e.g. 3fa85f64-5717-4562-b3fc-2c963f66afa6)'
+                value={values.electionId}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className='w-full bg-transparent px-3 py-2 font-mono text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+              />
+            </Input.Wrapper>
+          </Input.Root>
         )}
-      </div>
-
-      {/* Minimum Controls Required */}
-      <div className='flex flex-col gap-1.5'>
-        <Label.Root htmlFor='controlsCount'>Controls Required</Label.Root>
-        <Input.Root
-          hasError={Boolean(touched.controlsCount && errors.controlsCount)}
-        >
-          <Input.Wrapper>
-            <input
-              id='controlsCount'
-              name='controlsCount'
-              type='number'
-              min='1'
-              disabled={disabled}
-              placeholder='e.g. 18'
-              value={values.controlsCount || ''}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
-            />
-          </Input.Wrapper>
-        </Input.Root>
-        {touched.controlsCount && errors.controlsCount && (
-          <Hint.Root hasError>{errors.controlsCount}</Hint.Root>
+        {touched.electionId && errors.electionId && (
+          <Hint.Root hasError>{errors.electionId}</Hint.Root>
         )}
       </div>
 
       {/* Description Field */}
       <div className='flex flex-col gap-1.5'>
-        <Label.Root htmlFor='description'>Description & Scope</Label.Root>
+        <Label.Root htmlFor='description'>Description</Label.Root>
         <Textarea.Root
           id='description'
           name='description'
           simple
           hasError={Boolean(touched.description && errors.description)}
           disabled={disabled}
-          placeholder='Safeguarding criteria, control objectives, and auditing guidance for this level...'
+          placeholder='Describe the administrative hierarchy, role, or scope of this level...'
           value={values.description || ''}
           onChange={handleChange}
           onBlur={handleBlur}
@@ -148,24 +164,6 @@ export function SetupForm({
         {touched.description && errors.description && (
           <Hint.Root hasError>{errors.description}</Hint.Root>
         )}
-      </div>
-
-      {/* Active Status Switch */}
-      <div className='mt-1 flex items-center justify-between rounded-xl border border-stroke-soft-200 bg-bg-weak-50/50 p-3'>
-        <div className='flex flex-col'>
-          <span className='text-label-sm font-medium text-text-strong-950'>
-            Activate Level Certification
-          </span>
-          <span className='text-paragraph-xs text-text-sub-600'>
-            When active, this level is enforced in compliance audits and
-            certification scoring.
-          </span>
-        </div>
-        <Switch.Root
-          checked={values.isEnabled}
-          onCheckedChange={(checked) => setFieldValue('isEnabled', checked)}
-          disabled={disabled}
-        />
       </div>
     </div>
   );

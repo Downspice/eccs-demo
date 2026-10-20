@@ -21,6 +21,7 @@ import {
 
 import * as Badge from '@/components/ui/badge';
 import * as Button from '@/components/ui/button';
+import * as CompactButton from '@/components/ui/compact-button';
 import * as Input from '@/components/ui/input';
 import * as StatusBadge from '@/components/ui/status-badge';
 import * as Table from '@/components/ui/table';
@@ -75,11 +76,50 @@ const SETUP_MODULES: SetupModuleItem[] = [
 ];
 
 export default function SetupsPage() {
-  const { data: levels = [], isLoading: isLevelsLoading } = useGetLevels();
-  const { data: elections = [], isLoading: isElectionsLoading } =
+  const { data: rawLevels, isLoading: isLevelsLoading } = useGetLevels();
+  const { data: rawElections, isLoading: isElectionsLoading } =
     useGetElections();
-  const { data: politicalParties = [], isLoading: isPoliticalPartiesLoading } =
+  const { data: rawPoliticalParties, isLoading: isPoliticalPartiesLoading } =
     useGetPoliticalParties();
+
+  // Defensive array normalization guarantees levels, elections, politicalParties are always arrays
+  const levels = React.useMemo<LevelItem[]>(() => {
+    if (Array.isArray(rawLevels)) return rawLevels;
+    if (
+      rawLevels &&
+      typeof rawLevels === 'object' &&
+      Array.isArray((rawLevels as { data?: LevelItem[] }).data)
+    ) {
+      return (rawLevels as { data: LevelItem[] }).data;
+    }
+    return [];
+  }, [rawLevels]);
+
+  const elections = React.useMemo<ElectionItem[]>(() => {
+    if (Array.isArray(rawElections)) return rawElections;
+    if (
+      rawElections &&
+      typeof rawElections === 'object' &&
+      Array.isArray((rawElections as { data?: ElectionItem[] }).data)
+    ) {
+      return (rawElections as { data: ElectionItem[] }).data;
+    }
+    return [];
+  }, [rawElections]);
+
+  const politicalParties = React.useMemo<PoliticalPartyItem[]>(() => {
+    if (Array.isArray(rawPoliticalParties)) return rawPoliticalParties;
+    if (
+      rawPoliticalParties &&
+      typeof rawPoliticalParties === 'object' &&
+      Array.isArray(
+        (rawPoliticalParties as { data?: PoliticalPartyItem[] }).data,
+      )
+    ) {
+      return (rawPoliticalParties as { data: PoliticalPartyItem[] }).data;
+    }
+    return [];
+  }, [rawPoliticalParties]);
 
   const [activeModule, setActiveModule] = React.useState('levels');
   const [filters, setFilters] = React.useState<SetupFilterState>({
@@ -119,17 +159,27 @@ export default function SetupsPage() {
   const filteredLevels = React.useMemo(() => {
     return levels.filter((item) => {
       // Status pill filter
-      if (filters.status === 'active' && !item.isEnabled) return false;
-      if (filters.status === 'disabled' && item.isEnabled) return false;
+      if (filters.status === 'active' && item.isEnabled === false) return false;
+      if (filters.status === 'disabled' && item.isEnabled !== false)
+        return false;
 
       // Search filter
       if (filters.search.trim()) {
         const query = filters.search.toLowerCase();
-        const matchesName = item.name.toLowerCase().includes(query);
+        const matchesName = item.name?.toLowerCase().includes(query);
         const matchesTitle = item.title?.toLowerCase().includes(query);
-        const matchesCode = item.code.toLowerCase().includes(query);
+        const matchesCode = item.code?.toLowerCase().includes(query);
         const matchesDesc = item.description?.toLowerCase().includes(query);
-        if (!matchesName && !matchesTitle && !matchesCode && !matchesDesc)
+        const matchesElection = item.electionName
+          ?.toLowerCase()
+          .includes(query);
+        if (
+          !matchesName &&
+          !matchesTitle &&
+          !matchesCode &&
+          !matchesDesc &&
+          !matchesElection
+        )
           return false;
       }
 
@@ -143,8 +193,8 @@ export default function SetupsPage() {
     const query = electionSearch.toLowerCase();
     return elections.filter(
       (item) =>
-        item.name.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query),
+        item.name?.toLowerCase().includes(query) ||
+        item.id?.toLowerCase().includes(query),
     );
   }, [elections, electionSearch]);
 
@@ -154,8 +204,8 @@ export default function SetupsPage() {
     const query = politicalPartySearch.toLowerCase();
     return politicalParties.filter(
       (item) =>
-        item.name.toLowerCase().includes(query) ||
-        item.id.toLowerCase().includes(query),
+        item.name?.toLowerCase().includes(query) ||
+        item.id?.toLowerCase().includes(query),
     );
   }, [politicalParties, politicalPartySearch]);
 
@@ -328,12 +378,10 @@ export default function SetupsPage() {
               <Table.Root>
                 <Table.Header>
                   <Table.Row>
-                    <Table.Head className='w-[120px]'>Code</Table.Head>
-                    <Table.Head>Level & Classification</Table.Head>
-                    <Table.Head className='w-[140px]'>Controls</Table.Head>
-                    <Table.Head className='w-[160px]'>
-                      Certification Status
-                    </Table.Head>
+                    <Table.Head className='w-[100px]'>Rank</Table.Head>
+                    <Table.Head>Level Name & Description</Table.Head>
+                    <Table.Head>Associated Election</Table.Head>
+                    <Table.Head className='w-[200px]'>UUID</Table.Head>
                     <Table.Head className='w-[120px] text-right'>
                       Actions
                     </Table.Head>
@@ -367,23 +415,23 @@ export default function SetupsPage() {
                         key={item.id}
                         className='transition-colors hover:bg-bg-weak-50/50'
                       >
-                        {/* Level Code */}
-                        <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
-                          {item.code}
+                        {/* Level Rank */}
+                        <Table.Cell>
+                          <Badge.Root
+                            variant='lighter'
+                            color='gray'
+                            size='small'
+                          >
+                            Rank {item.levelRank ?? 1}
+                          </Badge.Root>
                         </Table.Cell>
 
-                        {/* Level Name & Title & Description */}
+                        {/* Level Name & Description */}
                         <Table.Cell>
                           <div className='flex flex-col'>
-                            <div className='flex items-center gap-2'>
-                              <span className='text-label-sm font-semibold text-text-strong-950'>
-                                {item.name}
-                              </span>
-                              <span className='text-text-soft-400'>•</span>
-                              <span className='text-paragraph-sm font-medium text-text-sub-600'>
-                                {item.title}
-                              </span>
-                            </div>
+                            <span className='text-label-sm font-semibold text-text-strong-950'>
+                              {item.name}
+                            </span>
                             {item.description && (
                               <span className='text-paragraph-xs text-text-soft-400 line-clamp-1 mt-0.5'>
                                 {item.description}
@@ -392,63 +440,68 @@ export default function SetupsPage() {
                           </div>
                         </Table.Cell>
 
-                        {/* Controls Required */}
+                        {/* Associated Election */}
                         <Table.Cell>
-                          <Badge.Root
-                            variant='lighter'
-                            color='gray'
-                            size='small'
-                          >
-                            {item.controlsCount || 0} Controls
-                          </Badge.Root>
+                          <span className='text-paragraph-sm font-medium text-text-sub-600'>
+                            {item.electionName || '—'}
+                          </span>
                         </Table.Cell>
 
-                        {/* Status */}
-                        <Table.Cell>
-                          <StatusBadge.Root
-                            status={item.isEnabled ? 'completed' : 'disabled'}
-                            variant='stroke'
+                        {/* Level UUID */}
+                        <Table.Cell className='font-mono text-label-xs text-text-sub-600'>
+                          <span
+                            className='line-clamp-1 max-w-[180px]'
+                            title={item.id}
                           >
-                            <StatusBadge.Dot />
-                            {item.isEnabled
-                              ? 'Active & Enforced'
-                              : 'Inactive / Draft'}
-                          </StatusBadge.Root>
+                            {item.id}
+                          </span>
                         </Table.Cell>
 
                         {/* Actions */}
                         <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center gap-1'>
-                            <button
+                          <div className='inline-flex items-center gap-1.5'>
+                            <CompactButton.Root
                               type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg'
                               onClick={() =>
                                 setModalState({ type: 'view', item })
                               }
-                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-text-strong-950 transition-colors'
                               title='View details'
                             >
-                              <RiEyeLine className='size-4' />
-                            </button>
-                            <button
+                              <CompactButton.Icon
+                                as={RiEyeLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                            <CompactButton.Root
                               type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg hover:text-primary-base'
                               onClick={() =>
                                 setModalState({ type: 'update', item })
                               }
-                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
                               title='Edit level'
                             >
-                              <RiEditLine className='size-4' />
-                            </button>
-                            <button
+                              <CompactButton.Icon
+                                as={RiEditLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                            <CompactButton.Root
                               type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg hover:text-error-base'
                               onClick={() =>
                                 setModalState({ type: 'delete', item })
                               }
-                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-error-base transition-colors'
                               title='Delete level'
                             >
-                              <RiDeleteBinLine className='size-4' />
-                            </button>
+                              <CompactButton.Icon
+                                as={RiDeleteBinLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
                           </div>
                         </Table.Cell>
                       </Table.Row>
@@ -517,37 +570,49 @@ export default function SetupsPage() {
 
                         {/* Actions */}
                         <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center gap-1'>
-                            <button
+                          <div className='inline-flex items-center gap-1.5'>
+                            <CompactButton.Root
                               type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg'
                               onClick={() =>
                                 setElectionModalState({ type: 'view', item })
                               }
-                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-text-strong-950 transition-colors'
                               title='View details'
                             >
-                              <RiEyeLine className='size-4' />
-                            </button>
-                            <button
+                              <CompactButton.Icon
+                                as={RiEyeLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                            <CompactButton.Root
                               type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg hover:text-primary-base'
                               onClick={() =>
                                 setElectionModalState({ type: 'update', item })
                               }
-                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
                               title='Edit election'
                             >
-                              <RiEditLine className='size-4' />
-                            </button>
-                            <button
+                              <CompactButton.Icon
+                                as={RiEditLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                            <CompactButton.Root
                               type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg hover:text-error-base'
                               onClick={() =>
                                 setElectionModalState({ type: 'delete', item })
                               }
-                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-error-base transition-colors'
                               title='Delete election'
                             >
-                              <RiDeleteBinLine className='size-4' />
-                            </button>
+                              <CompactButton.Icon
+                                as={RiDeleteBinLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
                           </div>
                         </Table.Cell>
                       </Table.Row>
@@ -616,46 +681,58 @@ export default function SetupsPage() {
 
                         {/* Actions */}
                         <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center gap-1'>
-                            <button
+                          <div className='inline-flex items-center gap-1.5'>
+                            <CompactButton.Root
                               type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg'
                               onClick={() =>
                                 setPoliticalPartyModalState({
                                   type: 'view',
                                   item,
                                 })
                               }
-                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-text-strong-950 transition-colors'
                               title='View details'
                             >
-                              <RiEyeLine className='size-4' />
-                            </button>
-                            <button
+                              <CompactButton.Icon
+                                as={RiEyeLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                            <CompactButton.Root
                               type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg hover:text-primary-base'
                               onClick={() =>
                                 setPoliticalPartyModalState({
                                   type: 'update',
                                   item,
                                 })
                               }
-                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
                               title='Edit party'
                             >
-                              <RiEditLine className='size-4' />
-                            </button>
-                            <button
+                              <CompactButton.Icon
+                                as={RiEditLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                            <CompactButton.Root
                               type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg hover:text-error-base'
                               onClick={() =>
                                 setPoliticalPartyModalState({
                                   type: 'delete',
                                   item,
                                 })
                               }
-                              className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-error-base transition-colors'
                               title='Delete party'
                             >
-                              <RiDeleteBinLine className='size-4' />
-                            </button>
+                              <CompactButton.Icon
+                                as={RiDeleteBinLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
                           </div>
                         </Table.Cell>
                       </Table.Row>

@@ -7,8 +7,9 @@ export type TId = string | number;
  */
 export interface ApiResponse<T = unknown> {
   data: T;
-  message: string;
-  statusCode: number;
+  message?: string | null;
+  statusCode?: number;
+  statuscode?: number;
 }
 
 /**
@@ -16,8 +17,9 @@ export interface ApiResponse<T = unknown> {
  */
 export interface ApiListResponse<T = unknown> {
   data: T[];
-  message: string;
-  statusCode: number;
+  message?: string | null;
+  statusCode?: number;
+  statuscode?: number;
   length?: number;
   total?: number;
 }
