@@ -46,6 +46,7 @@ import {
   DeleteSetupModal,
 } from './delete';
 import { SetupFilters, type SetupFilterState } from './filters';
+import { SetupTablePanel } from './setup-table-panel';
 import { SetupTabs, type SetupModuleItem } from './tabs';
 import type {
   CandidateModalState,
@@ -359,9 +360,9 @@ export default function SetupsPage() {
   ]);
 
   return (
-    <div className='flex w-full flex-col'>
+    <div className='flex min-h-0 w-full flex-1 flex-col overflow-hidden'>
       {/* Page Heading */}
-      <header className='w-full border-b border-stroke-soft-200 bg-bg-white-0 px-4 py-5 lg:px-8'>
+      <header className='w-full shrink-0 border-b border-stroke-soft-200 bg-bg-white-0 px-4 py-5 lg:px-8'>
         <div className='flex flex-col gap-1'>
           <div className='flex items-center gap-2.5'>
             <div className='flex size-8 items-center justify-center rounded-lg bg-primary-base text-static-white'>
@@ -379,7 +380,7 @@ export default function SetupsPage() {
       </header>
 
       {/* Main Two-Column Layout */}
-      <div className='flex w-full flex-1 flex-col md:flex-row'>
+      <div className='flex max-h-[calc(100svh-8.75rem)] min-h-0 w-full flex-1 flex-col overflow-hidden md:flex-row'>
         {/* Left Column: Setups Vertical Navigation */}
         <aside className='w-full border-b border-stroke-soft-200 bg-bg-white-0 md:w-64 md:shrink-0 md:border-b-0 md:border-r'>
           <SetupTabs
@@ -390,9 +391,9 @@ export default function SetupsPage() {
         </aside>
 
         {/* Right Column: Selected Setup Module Content */}
-        <main className='flex flex-1 flex-col gap-6 p-4 sm:p-6 lg:p-8 bg-bg-weak-50/30 min-h-[calc(100vh-140px)]'>
+        <main className='flex min-h-0 flex-1 flex-col gap-6 overflow-hidden p-4 sm:p-6 lg:p-8 bg-bg-weak-50/30'>
           {/* Header of selected setup module */}
-          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+          <div className='flex shrink-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <div className='flex flex-col gap-0.5'>
               <div className='flex items-center gap-2.5'>
                 <h2 className='text-title-h5 font-semibold text-text-strong-950 capitalize'>
@@ -461,9 +462,10 @@ export default function SetupsPage() {
             </div>
           </div>
 
+          <div className='flex min-h-0 flex-1 flex-col gap-6 overflow-hidden'>
           {/* Search and Filters */}
           {activeModule === 'levels' ? (
-            <div className='flex flex-col gap-3'>
+            <div className='flex shrink-0 flex-col gap-3'>
               <SetupFilters
                 filters={filters}
                 onChange={(updated) =>
@@ -497,7 +499,7 @@ export default function SetupsPage() {
               )}
             </div>
           ) : activeModule === 'level-mapping' ? (
-            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
               <div className='w-full sm:max-w-xs'>
                 <Input.Root>
                   <Input.Wrapper>
@@ -549,7 +551,7 @@ export default function SetupsPage() {
               )}
             </div>
           ) : activeModule === 'candidates' ? (
-            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
               <div className='w-full sm:max-w-xs'>
                 <Input.Root>
                   <Input.Wrapper>
@@ -601,7 +603,7 @@ export default function SetupsPage() {
               )}
             </div>
           ) : activeModule === 'elections' ? (
-            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
               <div className='w-full sm:max-w-xs'>
                 <Input.Root>
                   <Input.Wrapper>
@@ -628,7 +630,7 @@ export default function SetupsPage() {
               </div>
             </div>
           ) : (
-            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
               <div className='w-full sm:max-w-xs'>
                 <Input.Root>
                   <Input.Wrapper>
@@ -657,9 +659,9 @@ export default function SetupsPage() {
           )}
 
           {/* Main Table Content */}
-          <div className='overflow-hidden rounded-2xl bg-bg-white-0 shadow-xs'>
+          <SetupTablePanel>
             {activeModule === 'levels' ? (
-              <Table.Root>
+              <Table.Root scrollable>
                 <Table.Header>
                   <Table.Row>
                     <Table.Head className='w-[100px]'>Rank</Table.Head>
@@ -799,7 +801,7 @@ export default function SetupsPage() {
                 </Table.Body>
               </Table.Root>
             ) : activeModule === 'level-mapping' ? (
-              <Table.Root>
+              <Table.Root scrollable>
                 <Table.Header>
                   <Table.Row>
                     <Table.Head>Territory / Unit Name</Table.Head>
@@ -961,7 +963,7 @@ export default function SetupsPage() {
                 </Table.Body>
               </Table.Root>
             ) : activeModule === 'candidates' ? (
-              <Table.Root>
+              <Table.Root scrollable>
                 <Table.Header>
                   <Table.Row>
                     <Table.Head>Candidate Name</Table.Head>
@@ -1087,7 +1089,7 @@ export default function SetupsPage() {
                 </Table.Body>
               </Table.Root>
             ) : activeModule === 'elections' ? (
-              <Table.Root>
+              <Table.Root scrollable>
                 <Table.Header>
                   <Table.Row>
                     <Table.Head>Election Name</Table.Head>
@@ -1191,7 +1193,7 @@ export default function SetupsPage() {
                 </Table.Body>
               </Table.Root>
             ) : (
-              <Table.Root>
+              <Table.Root scrollable>
                 <Table.Header>
                   <Table.Row>
                     <Table.Head>Party Name</Table.Head>
@@ -1304,6 +1306,7 @@ export default function SetupsPage() {
                 </Table.Body>
               </Table.Root>
             )}
+          </SetupTablePanel>
           </div>
         </main>
       </div>

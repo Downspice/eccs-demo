@@ -7,10 +7,20 @@ import * as Divider from '@/components/ui/divider';
 
 const Table = React.forwardRef<
   HTMLTableElement,
-  React.TableHTMLAttributes<HTMLTableElement>
->(({ className, ...rest }, forwardedRef) => {
+  React.TableHTMLAttributes<HTMLTableElement> & {
+    scrollable?: boolean;
+  }
+>(({ className, scrollable, ...rest }, forwardedRef) => {
   return (
-    <div className={cn('w-full overflow-x-auto', className)}>
+    <div
+      className={cn(
+        'w-full',
+        scrollable
+          ? 'min-h-0 flex-1 overflow-auto overscroll-contain'
+          : 'overflow-x-auto',
+        className,
+      )}
+    >
       <table ref={forwardedRef} className='w-full' {...rest} />
     </div>
   );
@@ -33,7 +43,7 @@ const TableHead = React.forwardRef<
     <th
       ref={forwardedRef}
       className={cn(
-        'bg-bg-weak-50 px-3 py-2 text-left text-paragraph-sm text-text-sub-600 first:rounded-l-lg last:rounded-r-lg',
+        'sticky top-0 z-10 bg-bg-weak-50 px-3 py-2 text-left text-paragraph-sm text-text-sub-600 first:rounded-l-lg last:rounded-r-lg',
         className,
       )}
       {...rest}
