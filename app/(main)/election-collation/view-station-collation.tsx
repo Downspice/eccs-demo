@@ -1,7 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { useGetResultsByLevelMapping } from '@/services/election-collations';
+import {
+  useCreateElectionCollation,
+  useGetResultsByLevelMapping,
+} from '@/services/election-collations';
 import type { LevelMappingItem } from '@/services/level-mappings';
 import {
   RiCheckDoubleLine,
@@ -34,9 +37,33 @@ export function ViewStationCollationModal({
     station?.id,
     false,
   );
+  const createCollation = useCreateElectionCollation();
 
   const hasCollation = Boolean(collationData?.collation);
   const collation = collationData?.collation;
+
+  const handleVerify = async () => {
+    if (!collation || !station) return;
+    try {
+      await createCollation.mutateAsync({
+        id: collation.id,
+        electionId: collation.electionId || station.electionId,
+        levelMappingId: station.id,
+        spoiltBallot: Number(collation.spoiltBallot || 0),
+        pathToResultsImage: collation.pathToResultsImage || '/',
+        status: true,
+        results: (collation.results || []).map((r) => ({
+          candidateId: r.candidateId,
+          candidateName: r.candidateName,
+          total: Number(r.total || 0),
+          percentage: Number(r.percentage || 0),
+        })),
+      });
+      onClose();
+    } catch (err) {
+      console.error('Failed to verify collation:', err);
+    }
+  };
 
   return (
     <Modal.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -164,7 +191,21 @@ export function ViewStationCollationModal({
           >
             Close
           </Button.Root>
-          {station && onRecordNew && (
+          {hasCollation && !collation?.status && (
+            <Button.Root
+              variant='primary'
+              mode='filled'
+              size='small'
+              onClick={handleVerify}
+              disabled={createCollation.isPending}
+            >
+              <Button.Icon as={RiCheckDoubleLine} />
+              <span>
+                {createCollation.isPending ? 'Verifying...' : 'Verify Collation'}
+              </span>
+            </Button.Root>
+          )}
+          {!hasCollation && station && onRecordNew && (
             <Button.Root
               variant='primary'
               mode='filled'
@@ -174,7 +215,7 @@ export function ViewStationCollationModal({
                 onRecordNew(station);
               }}
             >
-              <span>{hasCollation ? 'Update Results' : 'Record Results'}</span>
+              <span>Record Results</span>
             </Button.Root>
           )}
         </Modal.Footer>

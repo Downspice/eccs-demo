@@ -167,7 +167,7 @@ function ModalFooter({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-3 border-t border-stroke-soft-200 px-5 py-4',
+        'flex items-center justify-end gap-3 border-t border-stroke-soft-200 px-5 py-4',
         className,
       )}
       {...rest}
