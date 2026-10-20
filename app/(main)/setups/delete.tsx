@@ -94,3 +94,5 @@ export function DeleteSetupModal({
 export default DeleteSetupModal;
 export { DeleteElectionModal } from './delete-election';
 export { DeletePoliticalPartyModal } from './delete-political-party';
+export { DeleteCandidateModal } from './delete-candidate';
+export { DeleteLevelMappingModal } from './delete-level-mapping';

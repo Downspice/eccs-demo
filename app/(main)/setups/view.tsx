@@ -108,3 +108,5 @@ export function ViewSetupModal({
 export default ViewSetupModal;
 export { ViewElectionModal } from './view-election';
 export { ViewPoliticalPartyModal } from './view-political-party';
+export { ViewCandidateModal } from './view-candidate';
+export { ViewLevelMappingModal } from './view-level-mapping';

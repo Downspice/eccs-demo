@@ -134,3 +134,5 @@ export function UpdateSetupModal({
 export default UpdateSetupModal;
 export { UpdateElectionModal } from './update-election';
 export { UpdatePoliticalPartyModal } from './update-political-party';
+export { UpdateCandidateModal } from './update-candidate';
+export { UpdateLevelMappingModal } from './update-level-mapping';

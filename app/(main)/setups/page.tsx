@@ -1,7 +1,13 @@
 'use client';
 
 import * as React from 'react';
+import { useGetCandidates, type CandidateItem } from '@/services/candidates';
 import { useGetElections, type ElectionItem } from '@/services/elections';
+import {
+  useGetLevelMappings,
+  type LevelMappingGroup,
+  type LevelMappingItem,
+} from '@/services/level-mappings';
 import { useGetLevels, type LevelItem } from '@/services/levels';
 import {
   useGetPoliticalParties,
@@ -16,40 +22,52 @@ import {
   RiEyeLine,
   RiFlagLine,
   RiGovernmentLine,
+  RiNodeTree,
   RiSearchLine,
+  RiUserStarLine,
 } from '@remixicon/react';
 
 import * as Badge from '@/components/ui/badge';
 import * as Button from '@/components/ui/button';
 import * as CompactButton from '@/components/ui/compact-button';
 import * as Input from '@/components/ui/input';
-import * as StatusBadge from '@/components/ui/status-badge';
+import * as Select from '@/components/ui/select';
 import * as Table from '@/components/ui/table';
 
 import {
+  CreateCandidateModal,
   CreateElectionModal,
+  CreateLevelMappingModal,
   CreatePoliticalPartyModal,
   CreateSetupModal,
 } from './create';
 import {
+  DeleteCandidateModal,
   DeleteElectionModal,
+  DeleteLevelMappingModal,
   DeletePoliticalPartyModal,
   DeleteSetupModal,
 } from './delete';
 import { SetupFilters, type SetupFilterState } from './filters';
 import { SetupTabs, type SetupModuleItem } from './tabs';
 import type {
+  CandidateModalState,
   ElectionModalState,
+  LevelMappingModalState,
   ModalState,
   PoliticalPartyModalState,
 } from './types';
 import {
+  UpdateCandidateModal,
   UpdateElectionModal,
+  UpdateLevelMappingModal,
   UpdatePoliticalPartyModal,
   UpdateSetupModal,
 } from './update';
 import {
+  ViewCandidateModal,
   ViewElectionModal,
+  ViewLevelMappingModal,
   ViewPoliticalPartyModal,
   ViewSetupModal,
 } from './view';
@@ -59,7 +77,19 @@ const SETUP_MODULES: SetupModuleItem[] = [
     id: 'levels',
     label: 'Levels',
     description:
-      'Configure security maturity levels, classification codes, and mandatory control thresholds.',
+      'Configure administrative hierarchy tiers, rank levels, and jurisdictional definitions.',
+  },
+  {
+    id: 'level-mapping',
+    label: 'Level Mapping',
+    description:
+      'Map territorial hierarchies, administrative boundaries, and parent reporting jurisdictions.',
+  },
+  {
+    id: 'candidates',
+    label: 'Candidates',
+    description:
+      'Manage contested candidates, political affiliations, ballot allocations, and candidate profiles.',
   },
   {
     id: 'elections',
@@ -103,10 +133,16 @@ export default function SetupsPage() {
   }, [elections, selectedElectionId]);
 
   const activeElectionId = selectedElectionId || elections[0]?.id;
+
+  // Active election datasets
   const { data: rawLevels, isLoading: isLevelsLoading } =
     useGetLevels(activeElectionId);
+  const { data: rawLevelMappings, isLoading: isLevelMappingsLoading } =
+    useGetLevelMappings(activeElectionId);
+  const { data: rawCandidates, isLoading: isCandidatesLoading } =
+    useGetCandidates(activeElectionId);
 
-  // Defensive array normalization guarantees levels, elections, politicalParties are always arrays
+  // Normalized arrays
   const levels = React.useMemo<LevelItem[]>(() => {
     if (Array.isArray(rawLevels)) return rawLevels;
     if (
@@ -118,6 +154,30 @@ export default function SetupsPage() {
     }
     return [];
   }, [rawLevels]);
+
+  const levelMappings = React.useMemo<LevelMappingItem[]>(() => {
+    if (!rawLevelMappings || !Array.isArray(rawLevelMappings)) return [];
+    return rawLevelMappings.flatMap((group: LevelMappingGroup) =>
+      (group.mappings || []).map((m: LevelMappingItem) => ({
+        ...m,
+        levelId: m.levelId || group.levelId,
+        levelName: m.levelName || group.levelName,
+        electionId: m.electionId || activeElectionId,
+      })),
+    );
+  }, [rawLevelMappings, activeElectionId]);
+
+  const candidates = React.useMemo<CandidateItem[]>(() => {
+    if (Array.isArray(rawCandidates)) return rawCandidates;
+    if (
+      rawCandidates &&
+      typeof rawCandidates === 'object' &&
+      Array.isArray((rawCandidates as { data?: CandidateItem[] }).data)
+    ) {
+      return (rawCandidates as { data: CandidateItem[] }).data;
+    }
+    return [];
+  }, [rawCandidates]);
 
   const politicalParties = React.useMemo<PoliticalPartyItem[]>(() => {
     if (Array.isArray(rawPoliticalParties)) return rawPoliticalParties;
@@ -133,17 +193,29 @@ export default function SetupsPage() {
     return [];
   }, [rawPoliticalParties]);
 
+  // Tab & search states
   const [activeModule, setActiveModule] = React.useState('levels');
   const [filters, setFilters] = React.useState<SetupFilterState>({
     search: '',
     status: 'all',
   });
+  const [levelMappingSearch, setLevelMappingSearch] = React.useState('');
+  const [candidateSearch, setCandidateSearch] = React.useState('');
   const [electionSearch, setElectionSearch] = React.useState('');
   const [politicalPartySearch, setPoliticalPartySearch] = React.useState('');
 
+  // Modal states
   const [modalState, setModalState] = React.useState<ModalState>({
     type: null,
   });
+  const [levelMappingModalState, setLevelMappingModalState] =
+    React.useState<LevelMappingModalState>({
+      type: null,
+    });
+  const [candidateModalState, setCandidateModalState] =
+    React.useState<CandidateModalState>({
+      type: null,
+    });
   const [electionModalState, setElectionModalState] =
     React.useState<ElectionModalState>({
       type: null,
@@ -199,6 +271,32 @@ export default function SetupsPage() {
     });
   }, [levels, filters]);
 
+  // Filtered dataset for Level Mappings
+  const filteredLevelMappings = React.useMemo(() => {
+    if (!levelMappingSearch.trim()) return levelMappings;
+    const query = levelMappingSearch.toLowerCase();
+    return levelMappings.filter(
+      (item) =>
+        item.name?.toLowerCase().includes(query) ||
+        item.levelName?.toLowerCase().includes(query) ||
+        item.upperLevelName?.toLowerCase().includes(query) ||
+        item.id?.toLowerCase().includes(query),
+    );
+  }, [levelMappings, levelMappingSearch]);
+
+  // Filtered dataset for Candidates
+  const filteredCandidates = React.useMemo(() => {
+    if (!candidateSearch.trim()) return candidates;
+    const query = candidateSearch.toLowerCase();
+    return candidates.filter(
+      (item) =>
+        item.name?.toLowerCase().includes(query) ||
+        item.politicalPartyName?.toLowerCase().includes(query) ||
+        item.electionName?.toLowerCase().includes(query) ||
+        item.id?.toLowerCase().includes(query),
+    );
+  }, [candidates, candidateSearch]);
+
   // Filtered dataset for Elections
   const filteredElections = React.useMemo(() => {
     if (!electionSearch.trim()) return elections;
@@ -228,17 +326,27 @@ export default function SetupsPage() {
       count:
         mod.id === 'levels'
           ? levels.length
-          : mod.id === 'elections'
-            ? elections.length
-            : mod.id === 'political-party'
-              ? politicalParties.length
-              : undefined,
+          : mod.id === 'level-mapping'
+            ? levelMappings.length
+            : mod.id === 'candidates'
+              ? candidates.length
+              : mod.id === 'elections'
+                ? elections.length
+                : mod.id === 'political-party'
+                  ? politicalParties.length
+                  : undefined,
     }));
-  }, [levels.length, elections.length, politicalParties.length]);
+  }, [
+    levels.length,
+    levelMappings.length,
+    candidates.length,
+    elections.length,
+    politicalParties.length,
+  ]);
 
   return (
     <div className='flex w-full flex-col'>
-      {/* Page Heading - Extends from sidebar border to the other end */}
+      {/* Page Heading */}
       <header className='w-full border-b border-stroke-soft-200 bg-bg-white-0 px-4 py-5 lg:px-8'>
         <div className='flex flex-col gap-1'>
           <div className='flex items-center gap-2.5'>
@@ -250,8 +358,8 @@ export default function SetupsPage() {
             </h1>
           </div>
           <p className='text-paragraph-sm text-text-sub-600'>
-            Configure security maturity levels, elections, political party
-            directories, and mandatory control thresholds.
+            Configure administrative tiers, geographic mappings, candidate
+            slates, election cycles, and political parties.
           </p>
         </div>
       </header>
@@ -293,6 +401,26 @@ export default function SetupsPage() {
                   <Button.Icon as={RiAddLine} />
                   <span>New Level</span>
                 </Button.Root>
+              ) : activeModule === 'level-mapping' ? (
+                <Button.Root
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  onClick={() => setLevelMappingModalState({ type: 'create' })}
+                >
+                  <Button.Icon as={RiAddLine} />
+                  <span>New Mapping</span>
+                </Button.Root>
+              ) : activeModule === 'candidates' ? (
+                <Button.Root
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  onClick={() => setCandidateModalState({ type: 'create' })}
+                >
+                  <Button.Icon as={RiAddLine} />
+                  <span>New Candidate</span>
+                </Button.Root>
               ) : activeModule === 'elections' ? (
                 <Button.Root
                   variant='primary'
@@ -321,13 +449,143 @@ export default function SetupsPage() {
 
           {/* Search and Filters */}
           {activeModule === 'levels' ? (
-            <SetupFilters
-              filters={filters}
-              onChange={(updated) =>
-                setFilters((prev) => ({ ...prev, ...updated }))
-              }
-              onReset={() => setFilters({ search: '', status: 'all' })}
-            />
+            <div className='flex flex-col gap-3'>
+              <SetupFilters
+                filters={filters}
+                onChange={(updated) =>
+                  setFilters((prev) => ({ ...prev, ...updated }))
+                }
+                onReset={() => setFilters({ search: '', status: 'all' })}
+              />
+              {elections.length > 1 && (
+                <div className='flex items-center gap-2 pt-1'>
+                  <span className='text-label-xs font-medium text-text-sub-600'>
+                    Active Election:
+                  </span>
+                  <div className='w-64'>
+                    <Select.Root
+                      value={activeElectionId}
+                      onValueChange={(val) => setSelectedElectionId(val)}
+                    >
+                      <Select.Trigger className='w-full'>
+                        <Select.Value placeholder='Select election...' />
+                      </Select.Trigger>
+                      <Select.Content position='popper'>
+                        {elections.map((elec) => (
+                          <Select.Item key={elec.id} value={elec.id}>
+                            {elec.name}
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Root>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : activeModule === 'level-mapping' ? (
+            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+              <div className='w-full sm:max-w-xs'>
+                <Input.Root>
+                  <Input.Wrapper>
+                    <Input.Icon as={RiSearchLine} />
+                    <input
+                      type='text'
+                      placeholder='Search mappings or UUID...'
+                      value={levelMappingSearch}
+                      onChange={(e) => setLevelMappingSearch(e.target.value)}
+                      className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
+                    />
+                    {levelMappingSearch && (
+                      <button
+                        type='button'
+                        onClick={() => setLevelMappingSearch('')}
+                        className='px-2 text-text-soft-400 hover:text-text-sub-600'
+                        title='Clear search'
+                      >
+                        <RiCloseLine className='size-4' />
+                      </button>
+                    )}
+                  </Input.Wrapper>
+                </Input.Root>
+              </div>
+
+              {elections.length > 1 && (
+                <div className='flex items-center gap-2'>
+                  <span className='text-label-xs font-medium text-text-sub-600'>
+                    Election:
+                  </span>
+                  <div className='w-56'>
+                    <Select.Root
+                      value={activeElectionId}
+                      onValueChange={(val) => setSelectedElectionId(val)}
+                    >
+                      <Select.Trigger className='w-full'>
+                        <Select.Value placeholder='Select election...' />
+                      </Select.Trigger>
+                      <Select.Content position='popper'>
+                        {elections.map((elec) => (
+                          <Select.Item key={elec.id} value={elec.id}>
+                            {elec.name}
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Root>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : activeModule === 'candidates' ? (
+            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+              <div className='w-full sm:max-w-xs'>
+                <Input.Root>
+                  <Input.Wrapper>
+                    <Input.Icon as={RiSearchLine} />
+                    <input
+                      type='text'
+                      placeholder='Search candidates or UUID...'
+                      value={candidateSearch}
+                      onChange={(e) => setCandidateSearch(e.target.value)}
+                      className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
+                    />
+                    {candidateSearch && (
+                      <button
+                        type='button'
+                        onClick={() => setCandidateSearch('')}
+                        className='px-2 text-text-soft-400 hover:text-text-sub-600'
+                        title='Clear search'
+                      >
+                        <RiCloseLine className='size-4' />
+                      </button>
+                    )}
+                  </Input.Wrapper>
+                </Input.Root>
+              </div>
+
+              {elections.length > 1 && (
+                <div className='flex items-center gap-2'>
+                  <span className='text-label-xs font-medium text-text-sub-600'>
+                    Election:
+                  </span>
+                  <div className='w-56'>
+                    <Select.Root
+                      value={activeElectionId}
+                      onValueChange={(val) => setSelectedElectionId(val)}
+                    >
+                      <Select.Trigger className='w-full'>
+                        <Select.Value placeholder='Select election...' />
+                      </Select.Trigger>
+                      <Select.Content position='popper'>
+                        {elections.map((elec) => (
+                          <Select.Item key={elec.id} value={elec.id}>
+                            {elec.name}
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Root>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : activeModule === 'elections' ? (
             <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
               <div className='w-full sm:max-w-xs'>
@@ -417,7 +675,8 @@ export default function SetupsPage() {
                           No levels found
                         </p>
                         <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                          Try adjusting your search criteria or status filter.
+                          Try adjusting your search criteria or register a new
+                          level.
                         </p>
                       </Table.Cell>
                     </Table.Row>
@@ -454,19 +713,14 @@ export default function SetupsPage() {
 
                         {/* Associated Election */}
                         <Table.Cell>
-                          <span className='text-paragraph-sm font-medium text-text-sub-600'>
-                            {item.electionName || '—'}
+                          <span className='text-paragraph-xs text-text-sub-600'>
+                            {item.electionName || 'National Level'}
                           </span>
                         </Table.Cell>
 
-                        {/* Level UUID */}
-                        <Table.Cell className='font-mono text-label-xs text-text-sub-600'>
-                          <span
-                            className='line-clamp-1 max-w-[180px]'
-                            title={item.id}
-                          >
-                            {item.id}
-                          </span>
+                        {/* UUID */}
+                        <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
+                          <span className='truncate'>{item.id}</span>
                         </Table.Cell>
 
                         {/* Actions */}
@@ -508,6 +762,294 @@ export default function SetupsPage() {
                                 setModalState({ type: 'delete', item })
                               }
                               title='Delete level'
+                            >
+                              <CompactButton.Icon
+                                as={RiDeleteBinLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
+                  )}
+                </Table.Body>
+              </Table.Root>
+            ) : activeModule === 'level-mapping' ? (
+              <Table.Root>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.Head className='w-[180px]'>UUID</Table.Head>
+                    <Table.Head>Territory / Unit Name</Table.Head>
+                    <Table.Head className='w-[160px]'>Level Tier</Table.Head>
+                    <Table.Head className='w-[220px]'>
+                      Parent Jurisdiction
+                    </Table.Head>
+                    <Table.Head>Election</Table.Head>
+                    <Table.Head className='w-[120px] text-right'>
+                      Actions
+                    </Table.Head>
+                  </Table.Row>
+                </Table.Header>
+
+                <Table.Body>
+                  {isLevelMappingsLoading ? (
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan={6}
+                        className='py-12 text-center text-text-sub-600'
+                      >
+                        Loading level mappings...
+                      </Table.Cell>
+                    </Table.Row>
+                  ) : filteredLevelMappings.length === 0 ? (
+                    <Table.Row>
+                      <Table.Cell colSpan={6} className='py-12 text-center'>
+                        <p className='text-label-sm font-semibold text-text-strong-950'>
+                          No level mappings found
+                        </p>
+                        <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                          Try adjusting your search criteria or register a new
+                          territorial mapping.
+                        </p>
+                      </Table.Cell>
+                    </Table.Row>
+                  ) : (
+                    filteredLevelMappings.map((item) => (
+                      <Table.Row
+                        key={item.id}
+                        className='transition-colors hover:bg-bg-weak-50/50'
+                      >
+                        {/* System Identifier */}
+                        <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
+                          <span className='truncate'>{item.id}</span>
+                        </Table.Cell>
+
+                        {/* Unit Name */}
+                        <Table.Cell>
+                          <div className='flex items-center gap-2.5'>
+                            <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-base/10 text-primary-base'>
+                              <RiNodeTree className='size-4' />
+                            </div>
+                            <span className='text-label-sm font-semibold text-text-strong-950'>
+                              {item.name}
+                            </span>
+                          </div>
+                        </Table.Cell>
+
+                        {/* Tier */}
+                        <Table.Cell>
+                          <Badge.Root
+                            variant='lighter'
+                            color='gray'
+                            size='small'
+                          >
+                            {item.levelName || 'Level'}
+                          </Badge.Root>
+                        </Table.Cell>
+
+                        {/* Parent Jurisdiction */}
+                        <Table.Cell>
+                          {item.upperLevelName ? (
+                            <span className='text-paragraph-sm text-text-strong-950 font-medium'>
+                              {item.upperLevelName}
+                            </span>
+                          ) : (
+                            <Badge.Root
+                              variant='lighter'
+                              color='blue'
+                              size='small'
+                            >
+                              Root Level
+                            </Badge.Root>
+                          )}
+                        </Table.Cell>
+
+                        {/* Election */}
+                        <Table.Cell>
+                          <span className='text-paragraph-xs text-text-sub-600'>
+                            {item.electionName || 'Election'}
+                          </span>
+                        </Table.Cell>
+
+                        {/* Actions */}
+                        <Table.Cell className='text-right'>
+                          <div className='inline-flex items-center gap-1.5'>
+                            <CompactButton.Root
+                              type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg'
+                              onClick={() =>
+                                setLevelMappingModalState({
+                                  type: 'view',
+                                  item,
+                                })
+                              }
+                              title='View details'
+                            >
+                              <CompactButton.Icon
+                                as={RiEyeLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                            <CompactButton.Root
+                              type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg hover:text-primary-base'
+                              onClick={() =>
+                                setLevelMappingModalState({
+                                  type: 'update',
+                                  item,
+                                })
+                              }
+                              title='Edit mapping'
+                            >
+                              <CompactButton.Icon
+                                as={RiEditLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                            <CompactButton.Root
+                              type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg hover:text-error-base'
+                              onClick={() =>
+                                setLevelMappingModalState({
+                                  type: 'delete',
+                                  item,
+                                })
+                              }
+                              title='Delete mapping'
+                            >
+                              <CompactButton.Icon
+                                as={RiDeleteBinLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    ))
+                  )}
+                </Table.Body>
+              </Table.Root>
+            ) : activeModule === 'candidates' ? (
+              <Table.Root>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.Head className='w-[180px]'>UUID</Table.Head>
+                    <Table.Head>Candidate Name</Table.Head>
+                    <Table.Head>Political Party</Table.Head>
+                    <Table.Head>Election</Table.Head>
+                    <Table.Head className='w-[120px] text-right'>
+                      Actions
+                    </Table.Head>
+                  </Table.Row>
+                </Table.Header>
+
+                <Table.Body>
+                  {isCandidatesLoading ? (
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan={5}
+                        className='py-12 text-center text-text-sub-600'
+                      >
+                        Loading candidates...
+                      </Table.Cell>
+                    </Table.Row>
+                  ) : filteredCandidates.length === 0 ? (
+                    <Table.Row>
+                      <Table.Cell colSpan={5} className='py-12 text-center'>
+                        <p className='text-label-sm font-semibold text-text-strong-950'>
+                          No candidates found
+                        </p>
+                        <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                          Try adjusting your search criteria or register a new
+                          candidate.
+                        </p>
+                      </Table.Cell>
+                    </Table.Row>
+                  ) : (
+                    filteredCandidates.map((item) => (
+                      <Table.Row
+                        key={item.id}
+                        className='transition-colors hover:bg-bg-weak-50/50'
+                      >
+                        {/* System Identifier */}
+                        <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
+                          <span className='truncate'>{item.id}</span>
+                        </Table.Cell>
+
+                        {/* Candidate Name */}
+                        <Table.Cell>
+                          <div className='flex items-center gap-2.5'>
+                            <div className='flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-base/10 text-primary-base font-semibold text-label-xs'>
+                              {item.name
+                                ? item.name.charAt(0).toUpperCase()
+                                : 'C'}
+                            </div>
+                            <span className='text-label-sm font-semibold text-text-strong-950'>
+                              {item.name}
+                            </span>
+                          </div>
+                        </Table.Cell>
+
+                        {/* Political Party */}
+                        <Table.Cell>
+                          <div className='flex items-center gap-1.5'>
+                            <RiFlagLine className='size-3.5 text-text-sub-600' />
+                            <span className='text-paragraph-sm text-text-strong-950 font-medium'>
+                              {item.politicalPartyName || item.politicalPartyId}
+                            </span>
+                          </div>
+                        </Table.Cell>
+
+                        {/* Election */}
+                        <Table.Cell>
+                          <span className='text-paragraph-xs text-text-sub-600'>
+                            {item.electionName || 'Election'}
+                          </span>
+                        </Table.Cell>
+
+                        {/* Actions */}
+                        <Table.Cell className='text-right'>
+                          <div className='inline-flex items-center gap-1.5'>
+                            <CompactButton.Root
+                              type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg'
+                              onClick={() =>
+                                setCandidateModalState({ type: 'view', item })
+                              }
+                              title='View details'
+                            >
+                              <CompactButton.Icon
+                                as={RiEyeLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                            <CompactButton.Root
+                              type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg hover:text-primary-base'
+                              onClick={() =>
+                                setCandidateModalState({ type: 'update', item })
+                              }
+                              title='Edit candidate'
+                            >
+                              <CompactButton.Icon
+                                as={RiEditLine}
+                                className='size-4'
+                              />
+                            </CompactButton.Root>
+                            <CompactButton.Root
+                              type='button'
+                              variant='stroke'
+                              className='size-7 rounded-lg hover:text-error-base'
+                              onClick={() =>
+                                setCandidateModalState({ type: 'delete', item })
+                              }
+                              title='Delete candidate'
                             >
                               <CompactButton.Icon
                                 as={RiDeleteBinLine}
@@ -781,6 +1323,80 @@ export default function SetupsPage() {
         open={modalState.type === 'delete'}
         item={modalState.type === 'delete' ? modalState.item : null}
         onClose={() => setModalState({ type: null })}
+      />
+
+      {/* Sibling Action Modals - Level Mappings */}
+      <CreateLevelMappingModal
+        open={levelMappingModalState.type === 'create'}
+        defaultElectionId={activeElectionId}
+        onClose={() => setLevelMappingModalState({ type: null })}
+      />
+
+      <UpdateLevelMappingModal
+        open={levelMappingModalState.type === 'update'}
+        item={
+          levelMappingModalState.type === 'update'
+            ? levelMappingModalState.item
+            : null
+        }
+        onClose={() => setLevelMappingModalState({ type: null })}
+      />
+
+      <ViewLevelMappingModal
+        open={levelMappingModalState.type === 'view'}
+        item={
+          levelMappingModalState.type === 'view'
+            ? levelMappingModalState.item
+            : null
+        }
+        onClose={() => setLevelMappingModalState({ type: null })}
+        onEdit={(item) => setLevelMappingModalState({ type: 'update', item })}
+      />
+
+      <DeleteLevelMappingModal
+        open={levelMappingModalState.type === 'delete'}
+        item={
+          levelMappingModalState.type === 'delete'
+            ? levelMappingModalState.item
+            : null
+        }
+        onClose={() => setLevelMappingModalState({ type: null })}
+      />
+
+      {/* Sibling Action Modals - Candidates */}
+      <CreateCandidateModal
+        open={candidateModalState.type === 'create'}
+        defaultElectionId={activeElectionId}
+        onClose={() => setCandidateModalState({ type: null })}
+      />
+
+      <UpdateCandidateModal
+        open={candidateModalState.type === 'update'}
+        item={
+          candidateModalState.type === 'update'
+            ? candidateModalState.item
+            : null
+        }
+        onClose={() => setCandidateModalState({ type: null })}
+      />
+
+      <ViewCandidateModal
+        open={candidateModalState.type === 'view'}
+        item={
+          candidateModalState.type === 'view' ? candidateModalState.item : null
+        }
+        onClose={() => setCandidateModalState({ type: null })}
+        onEdit={(item) => setCandidateModalState({ type: 'update', item })}
+      />
+
+      <DeleteCandidateModal
+        open={candidateModalState.type === 'delete'}
+        item={
+          candidateModalState.type === 'delete'
+            ? candidateModalState.item
+            : null
+        }
+        onClose={() => setCandidateModalState({ type: null })}
       />
 
       {/* Sibling Action Modals - Elections */}
