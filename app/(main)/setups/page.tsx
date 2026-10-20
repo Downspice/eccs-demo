@@ -197,7 +197,6 @@ export default function SetupsPage() {
   const [activeModule, setActiveModule] = React.useState('levels');
   const [filters, setFilters] = React.useState<SetupFilterState>({
     search: '',
-    status: 'all',
   });
   const [levelMappingSearch, setLevelMappingSearch] = React.useState('');
   const [candidateSearch, setCandidateSearch] = React.useState('');
@@ -242,11 +241,6 @@ export default function SetupsPage() {
   // Filtered dataset for Levels
   const filteredLevels = React.useMemo(() => {
     return levels.filter((item) => {
-      // Status pill filter
-      if (filters.status === 'active' && item.isEnabled === false) return false;
-      if (filters.status === 'disabled' && item.isEnabled !== false)
-        return false;
-
       // Search filter
       if (filters.search.trim()) {
         const query = filters.search.toLowerCase();
@@ -469,20 +463,20 @@ export default function SetupsPage() {
           <div className='flex min-h-0 flex-1 flex-col gap-6 overflow-hidden'>
             {/* Search and Filters */}
             {activeModule === 'levels' ? (
-              <div className='flex shrink-0 flex-col gap-3'>
+              <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
                 <SetupFilters
                   filters={filters}
                   onChange={(updated) =>
                     setFilters((prev) => ({ ...prev, ...updated }))
                   }
-                  onReset={() => setFilters({ search: '', status: 'all' })}
+                  onReset={() => setFilters({ search: '' })}
                 />
                 {elections.length > 1 && (
-                  <div className='flex items-center gap-2 pt-1'>
+                  <div className='flex items-center gap-2'>
                     <span className='text-label-xs font-medium text-text-sub-600'>
-                      Active Election:
+                      Election:
                     </span>
-                    <div className='w-64'>
+                    <div className='w-56'>
                       <Select.Root
                         value={activeElectionId}
                         onValueChange={(val) => setSelectedElectionId(val)}
