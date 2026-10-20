@@ -66,16 +66,6 @@ export function ViewLevelMappingModal({
               </p>
             </div>
           </div>
-
-          {/* Mapping UUID */}
-          <div>
-            <span className='text-paragraph-xs text-text-sub-600'>
-              Unit Mapping UUID
-            </span>
-            <p className='font-mono text-label-xs font-semibold text-text-sub-600 mt-0.5 break-all'>
-              {item.id}
-            </p>
-          </div>
         </Modal.Body>
 
         <Modal.Footer>

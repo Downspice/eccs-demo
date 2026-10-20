@@ -119,11 +119,11 @@ export function CandidateForm({
                 name='electionId'
                 type='text'
                 disabled={disabled}
-                placeholder='Enter Election UUID'
+                placeholder='Enter Election'
                 value={values.electionId}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                className='w-full bg-transparent px-3 py-2 font-mono text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
               />
             </Input.Wrapper>
           </Input.Root>
@@ -169,11 +169,11 @@ export function CandidateForm({
                   name='politicalPartyId'
                   type='text'
                   disabled={disabled}
-                  placeholder='Enter Political Party UUID'
+                  placeholder='Enter Political Party'
                   value={values.politicalPartyId}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className='w-full bg-transparent px-3 py-2 font-mono text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+                  className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
                 />
               </Input.Wrapper>
             </Input.Root>

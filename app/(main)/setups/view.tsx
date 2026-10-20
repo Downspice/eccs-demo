@@ -48,19 +48,9 @@ export function ViewSetupModal({
                 Associated Election
               </span>
               <p className='text-label-sm font-semibold text-text-strong-950 mt-0.5'>
-                {item.electionName || item.electionId || 'Not specified'}
+                {item.electionName || 'National Level'}
               </p>
             </div>
-          </div>
-
-          {/* Unique Identifier */}
-          <div>
-            <span className='text-paragraph-xs text-text-sub-600'>
-              Level UUID
-            </span>
-            <p className='font-mono text-label-xs font-semibold text-text-sub-600 mt-0.5 break-all'>
-              {item.id}
-            </p>
           </div>
 
           {/* Description */}

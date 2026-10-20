@@ -145,11 +145,11 @@ export function LevelMappingForm({
                 name='electionId'
                 type='text'
                 disabled={disabled}
-                placeholder='Enter Election UUID'
+                placeholder='Enter Election'
                 value={values.electionId}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                className='w-full bg-transparent px-3 py-2 font-mono text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
               />
             </Input.Wrapper>
           </Input.Root>
@@ -188,11 +188,11 @@ export function LevelMappingForm({
                 name='levelId'
                 type='text'
                 disabled={disabled}
-                placeholder='Enter Level UUID'
+                placeholder='Enter Level Tier'
                 value={values.levelId}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                className='w-full bg-transparent px-3 py-2 font-mono text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
               />
             </Input.Wrapper>
           </Input.Root>
@@ -239,11 +239,11 @@ export function LevelMappingForm({
                 name='upper_level_id'
                 type='text'
                 disabled={disabled}
-                placeholder='Enter Upper Level Unit UUID (leave blank if top-level)'
+                placeholder='Enter Parent Unit (leave blank if top-level)'
                 value={values.upper_level_id || ''}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                className='w-full bg-transparent px-3 py-2 font-mono text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
               />
             </Input.Wrapper>
           </Input.Root>

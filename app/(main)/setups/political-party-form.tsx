@@ -35,16 +35,6 @@ export function PoliticalPartyForm({
 }: PoliticalPartyFormProps) {
   return (
     <div className='flex flex-col gap-4'>
-      {/* If updating, display the immutable System UUID */}
-      {partyId && (
-        <div className='flex flex-col gap-1.5'>
-          <Label.Root>Party Identifier (UUID)</Label.Root>
-          <div className='rounded-lg bg-bg-weak-50 px-3 py-2 font-mono text-label-xs text-text-sub-600'>
-            {partyId}
-          </div>
-        </div>
-      )}
-
       {/* Party Name */}
       <div className='flex flex-col gap-1.5'>
         <Label.Root htmlFor='name'>Party Name</Label.Root>

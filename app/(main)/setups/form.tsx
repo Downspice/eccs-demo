@@ -132,11 +132,11 @@ export function SetupForm({
                 name='electionId'
                 type='text'
                 disabled={disabled}
-                placeholder='Enter Election UUID (e.g. 3fa85f64-5717-4562-b3fc-2c963f66afa6)'
+                placeholder='Enter associated election name or identifier'
                 value={values.electionId}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                className='w-full bg-transparent px-3 py-2 font-mono text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
+                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
               />
             </Input.Wrapper>
           </Input.Root>

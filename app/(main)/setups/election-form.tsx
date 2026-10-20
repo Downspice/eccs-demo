@@ -35,16 +35,6 @@ export function ElectionForm({
 }: ElectionFormProps) {
   return (
     <div className='flex flex-col gap-4'>
-      {/* If updating, display the immutable System UUID */}
-      {electionId && (
-        <div className='flex flex-col gap-1.5'>
-          <Label.Root>Election Identifier (UUID)</Label.Root>
-          <div className='rounded-lg bg-bg-weak-50 px-3 py-2 font-mono text-label-xs text-text-sub-600'>
-            {electionId}
-          </div>
-        </div>
-      )}
-
       {/* Election Name */}
       <div className='flex flex-col gap-1.5'>
         <Label.Root htmlFor='name'>Election Name</Label.Root>

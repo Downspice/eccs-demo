@@ -490,7 +490,7 @@ export default function SetupsPage() {
                     <Input.Icon as={RiSearchLine} />
                     <input
                       type='text'
-                      placeholder='Search mappings or UUID...'
+                      placeholder='Search mappings...'
                       value={levelMappingSearch}
                       onChange={(e) => setLevelMappingSearch(e.target.value)}
                       className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
@@ -542,7 +542,7 @@ export default function SetupsPage() {
                     <Input.Icon as={RiSearchLine} />
                     <input
                       type='text'
-                      placeholder='Search candidates or UUID...'
+                      placeholder='Search candidates...'
                       value={candidateSearch}
                       onChange={(e) => setCandidateSearch(e.target.value)}
                       className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
@@ -594,7 +594,7 @@ export default function SetupsPage() {
                     <Input.Icon as={RiSearchLine} />
                     <input
                       type='text'
-                      placeholder='Search elections or UUID...'
+                      placeholder='Search elections...'
                       value={electionSearch}
                       onChange={(e) => setElectionSearch(e.target.value)}
                       className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
@@ -621,7 +621,7 @@ export default function SetupsPage() {
                     <Input.Icon as={RiSearchLine} />
                     <input
                       type='text'
-                      placeholder='Search political parties or UUID...'
+                      placeholder='Search political parties...'
                       value={politicalPartySearch}
                       onChange={(e) => setPoliticalPartySearch(e.target.value)}
                       className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
@@ -651,7 +651,6 @@ export default function SetupsPage() {
                     <Table.Head className='w-[100px]'>Rank</Table.Head>
                     <Table.Head>Level Name & Description</Table.Head>
                     <Table.Head>Associated Election</Table.Head>
-                    <Table.Head className='w-[200px]'>UUID</Table.Head>
                     <Table.Head className='w-[120px] text-right'>
                       Actions
                     </Table.Head>
@@ -662,7 +661,7 @@ export default function SetupsPage() {
                   {isLevelsLoading ? (
                     <Table.Row>
                       <Table.Cell
-                        colSpan={5}
+                        colSpan={4}
                         className='py-12 text-center text-text-sub-600'
                       >
                         Loading levels...
@@ -670,7 +669,7 @@ export default function SetupsPage() {
                     </Table.Row>
                   ) : filteredLevels.length === 0 ? (
                     <Table.Row>
-                      <Table.Cell colSpan={5} className='py-12 text-center'>
+                      <Table.Cell colSpan={4} className='py-12 text-center'>
                         <p className='text-label-sm font-semibold text-text-strong-950'>
                           No levels found
                         </p>
@@ -716,11 +715,6 @@ export default function SetupsPage() {
                           <span className='text-paragraph-xs text-text-sub-600'>
                             {item.electionName || 'National Level'}
                           </span>
-                        </Table.Cell>
-
-                        {/* UUID */}
-                        <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
-                          <span className='truncate'>{item.id}</span>
                         </Table.Cell>
 
                         {/* Actions */}
@@ -779,7 +773,6 @@ export default function SetupsPage() {
               <Table.Root>
                 <Table.Header>
                   <Table.Row>
-                    <Table.Head className='w-[180px]'>UUID</Table.Head>
                     <Table.Head>Territory / Unit Name</Table.Head>
                     <Table.Head className='w-[160px]'>Level Tier</Table.Head>
                     <Table.Head className='w-[220px]'>
@@ -796,7 +789,7 @@ export default function SetupsPage() {
                   {isLevelMappingsLoading ? (
                     <Table.Row>
                       <Table.Cell
-                        colSpan={6}
+                        colSpan={5}
                         className='py-12 text-center text-text-sub-600'
                       >
                         Loading level mappings...
@@ -804,7 +797,7 @@ export default function SetupsPage() {
                     </Table.Row>
                   ) : filteredLevelMappings.length === 0 ? (
                     <Table.Row>
-                      <Table.Cell colSpan={6} className='py-12 text-center'>
+                      <Table.Cell colSpan={5} className='py-12 text-center'>
                         <p className='text-label-sm font-semibold text-text-strong-950'>
                           No level mappings found
                         </p>
@@ -820,11 +813,6 @@ export default function SetupsPage() {
                         key={item.id}
                         className='transition-colors hover:bg-bg-weak-50/50'
                       >
-                        {/* System Identifier */}
-                        <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
-                          <span className='truncate'>{item.id}</span>
-                        </Table.Cell>
-
                         {/* Unit Name */}
                         <Table.Cell>
                           <div className='flex items-center gap-2.5'>
@@ -937,7 +925,6 @@ export default function SetupsPage() {
               <Table.Root>
                 <Table.Header>
                   <Table.Row>
-                    <Table.Head className='w-[180px]'>UUID</Table.Head>
                     <Table.Head>Candidate Name</Table.Head>
                     <Table.Head>Political Party</Table.Head>
                     <Table.Head>Election</Table.Head>
@@ -951,7 +938,7 @@ export default function SetupsPage() {
                   {isCandidatesLoading ? (
                     <Table.Row>
                       <Table.Cell
-                        colSpan={5}
+                        colSpan={4}
                         className='py-12 text-center text-text-sub-600'
                       >
                         Loading candidates...
@@ -959,7 +946,7 @@ export default function SetupsPage() {
                     </Table.Row>
                   ) : filteredCandidates.length === 0 ? (
                     <Table.Row>
-                      <Table.Cell colSpan={5} className='py-12 text-center'>
+                      <Table.Cell colSpan={4} className='py-12 text-center'>
                         <p className='text-label-sm font-semibold text-text-strong-950'>
                           No candidates found
                         </p>
@@ -975,11 +962,6 @@ export default function SetupsPage() {
                         key={item.id}
                         className='transition-colors hover:bg-bg-weak-50/50'
                       >
-                        {/* System Identifier */}
-                        <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
-                          <span className='truncate'>{item.id}</span>
-                        </Table.Cell>
-
                         {/* Candidate Name */}
                         <Table.Cell>
                           <div className='flex items-center gap-2.5'>
@@ -1067,9 +1049,6 @@ export default function SetupsPage() {
               <Table.Root>
                 <Table.Header>
                   <Table.Row>
-                    <Table.Head className='w-[320px]'>
-                      Identifier (UUID)
-                    </Table.Head>
                     <Table.Head>Election Name</Table.Head>
                     <Table.Head className='w-[120px] text-right'>
                       Actions
@@ -1081,7 +1060,7 @@ export default function SetupsPage() {
                   {isElectionsLoading ? (
                     <Table.Row>
                       <Table.Cell
-                        colSpan={3}
+                        colSpan={2}
                         className='py-12 text-center text-text-sub-600'
                       >
                         Loading elections...
@@ -1089,7 +1068,7 @@ export default function SetupsPage() {
                     </Table.Row>
                   ) : filteredElections.length === 0 ? (
                     <Table.Row>
-                      <Table.Cell colSpan={3} className='py-12 text-center'>
+                      <Table.Cell colSpan={2} className='py-12 text-center'>
                         <p className='text-label-sm font-semibold text-text-strong-950'>
                           No elections found
                         </p>
@@ -1105,11 +1084,6 @@ export default function SetupsPage() {
                         key={item.id}
                         className='transition-colors hover:bg-bg-weak-50/50'
                       >
-                        {/* System Identifier */}
-                        <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
-                          <span className='truncate'>{item.id}</span>
-                        </Table.Cell>
-
                         {/* Election Name */}
                         <Table.Cell>
                           <div className='flex items-center gap-2.5'>
@@ -1178,9 +1152,6 @@ export default function SetupsPage() {
               <Table.Root>
                 <Table.Header>
                   <Table.Row>
-                    <Table.Head className='w-[320px]'>
-                      Identifier (UUID)
-                    </Table.Head>
                     <Table.Head>Party Name</Table.Head>
                     <Table.Head className='w-[120px] text-right'>
                       Actions
@@ -1192,7 +1163,7 @@ export default function SetupsPage() {
                   {isPoliticalPartiesLoading ? (
                     <Table.Row>
                       <Table.Cell
-                        colSpan={3}
+                        colSpan={2}
                         className='py-12 text-center text-text-sub-600'
                       >
                         Loading political parties...
@@ -1200,7 +1171,7 @@ export default function SetupsPage() {
                     </Table.Row>
                   ) : filteredPoliticalParties.length === 0 ? (
                     <Table.Row>
-                      <Table.Cell colSpan={3} className='py-12 text-center'>
+                      <Table.Cell colSpan={2} className='py-12 text-center'>
                         <p className='text-label-sm font-semibold text-text-strong-950'>
                           No political parties found
                         </p>
@@ -1216,11 +1187,6 @@ export default function SetupsPage() {
                         key={item.id}
                         className='transition-colors hover:bg-bg-weak-50/50'
                       >
-                        {/* System Identifier */}
-                        <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
-                          <span className='truncate'>{item.id}</span>
-                        </Table.Cell>
-
                         {/* Party Name */}
                         <Table.Cell>
                           <div className='flex items-center gap-2.5'>

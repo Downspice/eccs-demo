@@ -42,7 +42,7 @@ export function DeleteCandidateModal({
           <div className='rounded-xl bg-error-lighter/20 border border-error-base/20 p-3.5 text-paragraph-sm text-text-strong-950'>
             <p className='font-semibold text-error-base'>{item.name}</p>
             <p className='mt-1 text-paragraph-xs text-text-sub-600'>
-              Election: {item.electionName || item.electionId}
+              Election: {item.electionName || 'General Election'}
             </p>
             <p className='mt-2 text-paragraph-xs text-text-sub-600'>
               Removing this candidate will unassign them from ballots and party

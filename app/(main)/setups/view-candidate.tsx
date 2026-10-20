@@ -42,7 +42,7 @@ export function ViewCandidateModal({
                 {item.name}
               </span>
               <span className='text-paragraph-xs text-text-sub-600 mt-0.5'>
-                {item.politicalPartyName || item.politicalPartyId}
+                {item.politicalPartyName || 'Registered Candidate'}
               </span>
             </div>
           </div>
@@ -54,30 +54,17 @@ export function ViewCandidateModal({
                 Associated Election
               </span>
               <p className='text-label-sm font-semibold text-text-strong-950 mt-0.5'>
-                {item.electionName || item.electionId}
+                {item.electionName || 'General Election'}
               </p>
             </div>
             <div>
               <span className='text-paragraph-xs text-text-sub-600'>
-                Party ID
+                Political Party
               </span>
-              <p
-                className='font-mono text-label-xs font-semibold text-text-sub-600 mt-0.5 truncate'
-                title={item.politicalPartyId}
-              >
-                {item.politicalPartyId}
+              <p className='text-label-sm font-semibold text-text-strong-950 mt-0.5 truncate'>
+                {item.politicalPartyName || 'Independent / Unaffiliated'}
               </p>
             </div>
-          </div>
-
-          {/* Candidate UUID */}
-          <div>
-            <span className='text-paragraph-xs text-text-sub-600'>
-              Candidate UUID
-            </span>
-            <p className='font-mono text-label-xs font-semibold text-text-sub-600 mt-0.5 break-all'>
-              {item.id}
-            </p>
           </div>
         </Modal.Body>
 

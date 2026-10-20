@@ -51,9 +51,6 @@ export function DeletePoliticalPartyModal({
         <Modal.Body className='py-4'>
           <div className='rounded-xl bg-error-lighter/20 border border-error-base/20 p-3.5 text-paragraph-sm text-text-strong-950'>
             <p className='font-semibold text-error-base'>{item.name}</p>
-            <p className='mt-1 text-paragraph-xs text-text-sub-600 truncate'>
-              ID: <span className='font-mono font-medium'>{item.id}</span>
-            </p>
             <p className='mt-2 text-paragraph-xs text-text-sub-600'>
               Deleting this political party will unassign it from candidate
               rosters and electoral configurations. This action cannot be
