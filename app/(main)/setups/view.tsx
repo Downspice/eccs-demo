@@ -116,3 +116,4 @@ export function ViewSetupModal({
 }
 
 export default ViewSetupModal;
+export { ViewElectionModal } from './view-election';

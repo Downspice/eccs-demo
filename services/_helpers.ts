@@ -111,8 +111,14 @@ export const useBaseQuery = <TData = unknown, TSelect = TData>(
       const url = typeof endpoint === 'function' ? endpoint() : endpoint;
       return await apiClient<ApiResponse<TData>>(url);
     },
-    // Default select unwraps `data` from ApiResponse
-    select: (response) => response.data as unknown as TSelect,
+    // Default select unwraps `data` from ApiResponse if present, else returns raw response
+    select: (response) =>
+      response &&
+      typeof response === 'object' &&
+      'data' in response &&
+      'statusCode' in response
+        ? (response as ApiResponse<TData>).data as unknown as TSelect
+        : (response as unknown as TSelect),
     ...options,
   });
 };

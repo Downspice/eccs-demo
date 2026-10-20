@@ -88,3 +88,4 @@ export function DeleteSetupModal({
 }
 
 export default DeleteSetupModal;
+export { DeleteElectionModal } from './delete-election';

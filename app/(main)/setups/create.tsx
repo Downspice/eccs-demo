@@ -127,3 +127,4 @@ export function CreateSetupModal({
 }
 
 export default CreateSetupModal;
+export { CreateElectionModal } from './create-election';
