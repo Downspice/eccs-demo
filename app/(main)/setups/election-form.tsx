@@ -97,7 +97,9 @@ export function ElectionForm({
         <div className='flex flex-col gap-1.5'>
           <Label.Root htmlFor='expectedTurnout'>Expected Turnout</Label.Root>
           <Input.Root
-            hasError={Boolean(touched.expectedTurnout && errors.expectedTurnout)}
+            hasError={Boolean(
+              touched.expectedTurnout && errors.expectedTurnout,
+            )}
           >
             <Input.Wrapper>
               <input

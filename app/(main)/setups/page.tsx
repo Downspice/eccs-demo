@@ -467,912 +467,932 @@ export default function SetupsPage() {
           </div>
 
           <div className='flex min-h-0 flex-1 flex-col gap-6 overflow-hidden'>
-          {/* Search and Filters */}
-          {activeModule === 'levels' ? (
-            <div className='flex shrink-0 flex-col gap-3'>
-              <SetupFilters
-                filters={filters}
-                onChange={(updated) =>
-                  setFilters((prev) => ({ ...prev, ...updated }))
-                }
-                onReset={() => setFilters({ search: '', status: 'all' })}
-              />
-              {elections.length > 1 && (
-                <div className='flex items-center gap-2 pt-1'>
-                  <span className='text-label-xs font-medium text-text-sub-600'>
-                    Active Election:
-                  </span>
-                  <div className='w-64'>
-                    <Select.Root
-                      value={activeElectionId}
-                      onValueChange={(val) => setSelectedElectionId(val)}
-                    >
-                      <Select.Trigger className='w-full'>
-                        <Select.Value placeholder='Select election...' />
-                      </Select.Trigger>
-                      <Select.Content position='popper'>
-                        {elections.map((elec) => (
-                          <Select.Item key={elec.id} value={elec.id}>
-                            {elec.name}
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Root>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : activeModule === 'level-mapping' ? (
-            <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-              <div className='w-full sm:max-w-xs'>
-                <Input.Root>
-                  <Input.Wrapper>
-                    <Input.Icon as={RiSearchLine} />
-                    <input
-                      type='text'
-                      placeholder='Search mappings...'
-                      value={levelMappingSearch}
-                      onChange={(e) => setLevelMappingSearch(e.target.value)}
-                      className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
-                    />
-                    {levelMappingSearch && (
-                      <button
-                        type='button'
-                        onClick={() => setLevelMappingSearch('')}
-                        className='px-2 text-text-soft-400 hover:text-text-sub-600'
-                        title='Clear search'
-                      >
-                        <RiCloseLine className='size-4' />
-                      </button>
-                    )}
-                  </Input.Wrapper>
-                </Input.Root>
-              </div>
-
-              {elections.length > 1 && (
-                <div className='flex items-center gap-2'>
-                  <span className='text-label-xs font-medium text-text-sub-600'>
-                    Election:
-                  </span>
-                  <div className='w-56'>
-                    <Select.Root
-                      value={activeElectionId}
-                      onValueChange={(val) => setSelectedElectionId(val)}
-                    >
-                      <Select.Trigger className='w-full'>
-                        <Select.Value placeholder='Select election...' />
-                      </Select.Trigger>
-                      <Select.Content position='popper'>
-                        {elections.map((elec) => (
-                          <Select.Item key={elec.id} value={elec.id}>
-                            {elec.name}
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Root>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : activeModule === 'candidates' ? (
-            <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-              <div className='w-full sm:max-w-xs'>
-                <Input.Root>
-                  <Input.Wrapper>
-                    <Input.Icon as={RiSearchLine} />
-                    <input
-                      type='text'
-                      placeholder='Search candidates...'
-                      value={candidateSearch}
-                      onChange={(e) => setCandidateSearch(e.target.value)}
-                      className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
-                    />
-                    {candidateSearch && (
-                      <button
-                        type='button'
-                        onClick={() => setCandidateSearch('')}
-                        className='px-2 text-text-soft-400 hover:text-text-sub-600'
-                        title='Clear search'
-                      >
-                        <RiCloseLine className='size-4' />
-                      </button>
-                    )}
-                  </Input.Wrapper>
-                </Input.Root>
-              </div>
-
-              {elections.length > 1 && (
-                <div className='flex items-center gap-2'>
-                  <span className='text-label-xs font-medium text-text-sub-600'>
-                    Election:
-                  </span>
-                  <div className='w-56'>
-                    <Select.Root
-                      value={activeElectionId}
-                      onValueChange={(val) => setSelectedElectionId(val)}
-                    >
-                      <Select.Trigger className='w-full'>
-                        <Select.Value placeholder='Select election...' />
-                      </Select.Trigger>
-                      <Select.Content position='popper'>
-                        {elections.map((elec) => (
-                          <Select.Item key={elec.id} value={elec.id}>
-                            {elec.name}
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
-                    </Select.Root>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : activeModule === 'elections' ? (
-            <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-              <div className='w-full sm:max-w-xs'>
-                <Input.Root>
-                  <Input.Wrapper>
-                    <Input.Icon as={RiSearchLine} />
-                    <input
-                      type='text'
-                      placeholder='Search elections...'
-                      value={electionSearch}
-                      onChange={(e) => setElectionSearch(e.target.value)}
-                      className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
-                    />
-                    {electionSearch && (
-                      <button
-                        type='button'
-                        onClick={() => setElectionSearch('')}
-                        className='px-2 text-text-soft-400 hover:text-text-sub-600'
-                        title='Clear search'
-                      >
-                        <RiCloseLine className='size-4' />
-                      </button>
-                    )}
-                  </Input.Wrapper>
-                </Input.Root>
-              </div>
-            </div>
-          ) : (
-            <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-              <div className='w-full sm:max-w-xs'>
-                <Input.Root>
-                  <Input.Wrapper>
-                    <Input.Icon as={RiSearchLine} />
-                    <input
-                      type='text'
-                      placeholder='Search political parties...'
-                      value={politicalPartySearch}
-                      onChange={(e) => setPoliticalPartySearch(e.target.value)}
-                      className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
-                    />
-                    {politicalPartySearch && (
-                      <button
-                        type='button'
-                        onClick={() => setPoliticalPartySearch('')}
-                        className='px-2 text-text-soft-400 hover:text-text-sub-600'
-                        title='Clear search'
-                      >
-                        <RiCloseLine className='size-4' />
-                      </button>
-                    )}
-                  </Input.Wrapper>
-                </Input.Root>
-              </div>
-            </div>
-          )}
-
-          {/* Main Table Content */}
-          <SetupTablePanel>
+            {/* Search and Filters */}
             {activeModule === 'levels' ? (
-              <Table.Root scrollable>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.Head className='w-[100px]'>Rank</Table.Head>
-                    <Table.Head>Level Name & Description</Table.Head>
-                    <Table.Head>Associated Election</Table.Head>
-                    <Table.Head className='w-[120px] text-right'>
-                      Actions
-                    </Table.Head>
-                  </Table.Row>
-                </Table.Header>
-
-                <Table.Body>
-                  {isLevelsLoading ? (
-                    Array.from({ length: 5 }).map((_, idx) => (
-                      <Table.Row key={`skeleton-level-${idx}`}>
-                        <Table.Cell>
-                          <Skeleton className='h-5 w-16 rounded-full' />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className='flex flex-col gap-1.5'>
-                            <Skeleton className='h-4 w-36' />
-                            <Skeleton className='h-3 w-56' />
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Skeleton className='h-4 w-28' />
-                        </Table.Cell>
-                        <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center justify-end gap-1.5'>
-                            <Skeleton className='size-7 rounded-lg' />
-                            <Skeleton className='size-7 rounded-lg' />
-                            <Skeleton className='size-7 rounded-lg' />
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))
-                  ) : filteredLevels.length === 0 ? (
-                    <Table.Row>
-                      <Table.Cell colSpan={4} className='py-12 text-center'>
-                        <p className='text-label-sm font-semibold text-text-strong-950'>
-                          No levels found
-                        </p>
-                        <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                          Try adjusting your search criteria or register a new
-                          level.
-                        </p>
-                      </Table.Cell>
-                    </Table.Row>
-                  ) : (
-                    filteredLevels.map((item) => (
-                      <Table.Row
-                        key={item.id}
-                        className='transition-colors hover:bg-bg-weak-50/50'
+              <div className='flex shrink-0 flex-col gap-3'>
+                <SetupFilters
+                  filters={filters}
+                  onChange={(updated) =>
+                    setFilters((prev) => ({ ...prev, ...updated }))
+                  }
+                  onReset={() => setFilters({ search: '', status: 'all' })}
+                />
+                {elections.length > 1 && (
+                  <div className='flex items-center gap-2 pt-1'>
+                    <span className='text-label-xs font-medium text-text-sub-600'>
+                      Active Election:
+                    </span>
+                    <div className='w-64'>
+                      <Select.Root
+                        value={activeElectionId}
+                        onValueChange={(val) => setSelectedElectionId(val)}
                       >
-                        {/* Level Rank */}
-                        <Table.Cell>
-                          <Badge.Root
-                            variant='lighter'
-                            color='gray'
-                            size='small'
-                          >
-                            Rank {item.levelRank ?? 1}
-                          </Badge.Root>
-                        </Table.Cell>
-
-                        {/* Level Name & Description */}
-                        <Table.Cell>
-                          <div className='flex flex-col'>
-                            <span className='text-label-sm font-semibold text-text-strong-950'>
-                              {item.name}
-                            </span>
-                            {item.description && (
-                              <span className='text-paragraph-xs text-text-soft-400 line-clamp-1 mt-0.5'>
-                                {item.description}
-                              </span>
-                            )}
-                          </div>
-                        </Table.Cell>
-
-                        {/* Associated Election */}
-                        <Table.Cell>
-                          <span className='text-paragraph-xs text-text-sub-600'>
-                            {item.electionName || 'National Level'}
-                          </span>
-                        </Table.Cell>
-
-                        {/* Actions */}
-                        <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center gap-1.5'>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg'
-                              onClick={() =>
-                                setModalState({ type: 'view', item })
-                              }
-                              title='View details'
-                            >
-                              <CompactButton.Icon
-                                as={RiEyeLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg hover:text-primary-base'
-                              onClick={() =>
-                                setModalState({ type: 'update', item })
-                              }
-                              title='Edit level'
-                            >
-                              <CompactButton.Icon
-                                as={RiEditLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg hover:text-error-base'
-                              onClick={() =>
-                                setModalState({ type: 'delete', item })
-                              }
-                              title='Delete level'
-                            >
-                              <CompactButton.Icon
-                                as={RiDeleteBinLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))
-                  )}
-                </Table.Body>
-              </Table.Root>
+                        <Select.Trigger className='w-full'>
+                          <Select.Value placeholder='Select election...' />
+                        </Select.Trigger>
+                        <Select.Content position='popper'>
+                          {elections.map((elec) => (
+                            <Select.Item key={elec.id} value={elec.id}>
+                              {elec.name}
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Root>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : activeModule === 'level-mapping' ? (
-              <Table.Root scrollable>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.Head>Territory / Unit Name</Table.Head>
-                    <Table.Head className='w-[160px]'>Level Tier</Table.Head>
-                    <Table.Head className='w-[220px]'>
-                      Parent Jurisdiction
-                    </Table.Head>
-                    <Table.Head>Election</Table.Head>
-                    <Table.Head className='w-[120px] text-right'>
-                      Actions
-                    </Table.Head>
-                  </Table.Row>
-                </Table.Header>
+              <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+                <div className='w-full sm:max-w-xs'>
+                  <Input.Root>
+                    <Input.Wrapper>
+                      <Input.Icon as={RiSearchLine} />
+                      <input
+                        type='text'
+                        placeholder='Search mappings...'
+                        value={levelMappingSearch}
+                        onChange={(e) => setLevelMappingSearch(e.target.value)}
+                        className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
+                      />
+                      {levelMappingSearch && (
+                        <button
+                          type='button'
+                          onClick={() => setLevelMappingSearch('')}
+                          className='px-2 text-text-soft-400 hover:text-text-sub-600'
+                          title='Clear search'
+                        >
+                          <RiCloseLine className='size-4' />
+                        </button>
+                      )}
+                    </Input.Wrapper>
+                  </Input.Root>
+                </div>
 
-                <Table.Body>
-                  {isLevelMappingsLoading ? (
-                    Array.from({ length: 5 }).map((_, idx) => (
-                      <Table.Row key={`skeleton-mapping-${idx}`}>
-                        <Table.Cell>
-                          <Skeleton className='h-4 w-40' />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Skeleton className='h-5 w-20 rounded-full' />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Skeleton className='h-4 w-32' />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Skeleton className='h-4 w-28' />
-                        </Table.Cell>
-                        <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center justify-end gap-1.5'>
-                            <Skeleton className='size-7 rounded-lg' />
-                            <Skeleton className='size-7 rounded-lg' />
-                            <Skeleton className='size-7 rounded-lg' />
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))
-                  ) : filteredLevelMappings.length === 0 ? (
-                    <Table.Row>
-                      <Table.Cell colSpan={5} className='py-12 text-center'>
-                        <p className='text-label-sm font-semibold text-text-strong-950'>
-                          No level mappings found
-                        </p>
-                        <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                          Try adjusting your search criteria or register a new
-                          territorial mapping.
-                        </p>
-                      </Table.Cell>
-                    </Table.Row>
-                  ) : (
-                    filteredLevelMappings.map((item) => (
-                      <Table.Row
-                        key={item.id}
-                        className='transition-colors hover:bg-bg-weak-50/50'
+                {elections.length > 1 && (
+                  <div className='flex items-center gap-2'>
+                    <span className='text-label-xs font-medium text-text-sub-600'>
+                      Election:
+                    </span>
+                    <div className='w-56'>
+                      <Select.Root
+                        value={activeElectionId}
+                        onValueChange={(val) => setSelectedElectionId(val)}
                       >
-                        {/* Unit Name */}
-                        <Table.Cell>
-                          <span className='text-label-sm font-semibold text-text-strong-950'>
-                            {item.name}
-                          </span>
-                        </Table.Cell>
-
-                        {/* Tier */}
-                        <Table.Cell>
-                          <Badge.Root
-                            variant='lighter'
-                            color='gray'
-                            size='small'
-                          >
-                            {item.levelName || 'Level'}
-                          </Badge.Root>
-                        </Table.Cell>
-
-                        {/* Parent Jurisdiction */}
-                        <Table.Cell>
-                          {item.upperLevelName ? (
-                            <span className='text-paragraph-sm text-text-strong-950 font-medium'>
-                              {item.upperLevelName}
-                            </span>
-                          ) : (
-                            <Badge.Root
-                              variant='lighter'
-                              color='blue'
-                              size='small'
-                            >
-                              Root Level
-                            </Badge.Root>
-                          )}
-                        </Table.Cell>
-
-                        {/* Election */}
-                        <Table.Cell>
-                          <span className='text-paragraph-xs text-text-sub-600'>
-                            {item.electionName || 'Election'}
-                          </span>
-                        </Table.Cell>
-
-                        {/* Actions */}
-                        <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center gap-1.5'>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg'
-                              onClick={() =>
-                                setLevelMappingModalState({
-                                  type: 'view',
-                                  item,
-                                })
-                              }
-                              title='View details'
-                            >
-                              <CompactButton.Icon
-                                as={RiEyeLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg hover:text-primary-base'
-                              onClick={() =>
-                                setLevelMappingModalState({
-                                  type: 'update',
-                                  item,
-                                })
-                              }
-                              title='Edit mapping'
-                            >
-                              <CompactButton.Icon
-                                as={RiEditLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg hover:text-error-base'
-                              onClick={() =>
-                                setLevelMappingModalState({
-                                  type: 'delete',
-                                  item,
-                                })
-                              }
-                              title='Delete mapping'
-                            >
-                              <CompactButton.Icon
-                                as={RiDeleteBinLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))
-                  )}
-                </Table.Body>
-              </Table.Root>
+                        <Select.Trigger className='w-full'>
+                          <Select.Value placeholder='Select election...' />
+                        </Select.Trigger>
+                        <Select.Content position='popper'>
+                          {elections.map((elec) => (
+                            <Select.Item key={elec.id} value={elec.id}>
+                              {elec.name}
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Root>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : activeModule === 'candidates' ? (
-              <Table.Root scrollable>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.Head>Candidate Name</Table.Head>
-                    <Table.Head>Political Party</Table.Head>
-                    <Table.Head>Election</Table.Head>
-                    <Table.Head className='w-[120px] text-right'>
-                      Actions
-                    </Table.Head>
-                  </Table.Row>
-                </Table.Header>
+              <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+                <div className='w-full sm:max-w-xs'>
+                  <Input.Root>
+                    <Input.Wrapper>
+                      <Input.Icon as={RiSearchLine} />
+                      <input
+                        type='text'
+                        placeholder='Search candidates...'
+                        value={candidateSearch}
+                        onChange={(e) => setCandidateSearch(e.target.value)}
+                        className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
+                      />
+                      {candidateSearch && (
+                        <button
+                          type='button'
+                          onClick={() => setCandidateSearch('')}
+                          className='px-2 text-text-soft-400 hover:text-text-sub-600'
+                          title='Clear search'
+                        >
+                          <RiCloseLine className='size-4' />
+                        </button>
+                      )}
+                    </Input.Wrapper>
+                  </Input.Root>
+                </div>
 
-                <Table.Body>
-                  {isCandidatesLoading ? (
-                    Array.from({ length: 5 }).map((_, idx) => (
-                      <Table.Row key={`skeleton-candidate-${idx}`}>
-                        <Table.Cell>
-                          <Skeleton className='h-4 w-44' />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Skeleton className='h-4 w-32' />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Skeleton className='h-4 w-28' />
-                        </Table.Cell>
-                        <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center justify-end gap-1.5'>
-                            <Skeleton className='size-7 rounded-lg' />
-                            <Skeleton className='size-7 rounded-lg' />
-                            <Skeleton className='size-7 rounded-lg' />
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))
-                  ) : filteredCandidates.length === 0 ? (
-                    <Table.Row>
-                      <Table.Cell colSpan={4} className='py-12 text-center'>
-                        <p className='text-label-sm font-semibold text-text-strong-950'>
-                          No candidates found
-                        </p>
-                        <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                          Try adjusting your search criteria or register a new
-                          candidate.
-                        </p>
-                      </Table.Cell>
-                    </Table.Row>
-                  ) : (
-                    filteredCandidates.map((item) => (
-                      <Table.Row
-                        key={item.id}
-                        className='transition-colors hover:bg-bg-weak-50/50'
+                {elections.length > 1 && (
+                  <div className='flex items-center gap-2'>
+                    <span className='text-label-xs font-medium text-text-sub-600'>
+                      Election:
+                    </span>
+                    <div className='w-56'>
+                      <Select.Root
+                        value={activeElectionId}
+                        onValueChange={(val) => setSelectedElectionId(val)}
                       >
-                        {/* Candidate Name */}
-                        <Table.Cell>
-                          <span className='text-label-sm font-semibold text-text-strong-950'>
-                            {item.name}
-                          </span>
-                        </Table.Cell>
-
-                        {/* Political Party */}
-                        <Table.Cell>
-                          <span className='text-paragraph-sm text-text-strong-950 font-medium'>
-                            {item.politicalPartyName || item.politicalPartyId}
-                          </span>
-                        </Table.Cell>
-
-                        {/* Election */}
-                        <Table.Cell>
-                          <span className='text-paragraph-xs text-text-sub-600'>
-                            {item.electionName || 'Election'}
-                          </span>
-                        </Table.Cell>
-
-                        {/* Actions */}
-                        <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center gap-1.5'>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg'
-                              onClick={() =>
-                                setCandidateModalState({ type: 'view', item })
-                              }
-                              title='View details'
-                            >
-                              <CompactButton.Icon
-                                as={RiEyeLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg hover:text-primary-base'
-                              onClick={() =>
-                                setCandidateModalState({ type: 'update', item })
-                              }
-                              title='Edit candidate'
-                            >
-                              <CompactButton.Icon
-                                as={RiEditLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg hover:text-error-base'
-                              onClick={() =>
-                                setCandidateModalState({ type: 'delete', item })
-                              }
-                              title='Delete candidate'
-                            >
-                              <CompactButton.Icon
-                                as={RiDeleteBinLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))
-                  )}
-                </Table.Body>
-              </Table.Root>
+                        <Select.Trigger className='w-full'>
+                          <Select.Value placeholder='Select election...' />
+                        </Select.Trigger>
+                        <Select.Content position='popper'>
+                          {elections.map((elec) => (
+                            <Select.Item key={elec.id} value={elec.id}>
+                              {elec.name}
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Root>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : activeModule === 'elections' ? (
-              <Table.Root scrollable>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.Head>Election Name</Table.Head>
-                    <Table.Head className='w-[180px]'>Election Date</Table.Head>
-                    <Table.Head className='w-[180px]'>
-                      Expected Turnout
-                    </Table.Head>
-                    <Table.Head className='w-[120px] text-right'>
-                      Actions
-                    </Table.Head>
-                  </Table.Row>
-                </Table.Header>
-
-                <Table.Body>
-                  {isElectionsLoading ? (
-                    Array.from({ length: 5 }).map((_, idx) => (
-                      <Table.Row key={`skeleton-election-${idx}`}>
-                        <Table.Cell>
-                          <Skeleton className='h-4 w-48' />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Skeleton className='h-4 w-28' />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Skeleton className='h-5 w-24 rounded-full' />
-                        </Table.Cell>
-                        <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center justify-end gap-1.5'>
-                            <Skeleton className='size-7 rounded-lg' />
-                            <Skeleton className='size-7 rounded-lg' />
-                            <Skeleton className='size-7 rounded-lg' />
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))
-                  ) : filteredElections.length === 0 ? (
-                    <Table.Row>
-                      <Table.Cell colSpan={4} className='py-12 text-center'>
-                        <p className='text-label-sm font-semibold text-text-strong-950'>
-                          No elections found
-                        </p>
-                        <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                          Try adjusting your search criteria or register a new
-                          election.
-                        </p>
-                      </Table.Cell>
-                    </Table.Row>
-                  ) : (
-                    filteredElections.map((item) => (
-                      <Table.Row
-                        key={item.id}
-                        className='transition-colors hover:bg-bg-weak-50/50'
-                      >
-                        {/* Election Name */}
-                        <Table.Cell>
-                          <span className='text-label-sm font-semibold text-text-strong-950'>
-                            {item.name}
-                          </span>
-                        </Table.Cell>
-
-                        {/* Election Date */}
-                        <Table.Cell>
-                          <div className='flex items-center gap-1.5 text-text-sub-600'>
-                            <RiCalendarLine className='size-3.5 text-text-soft-400 shrink-0' />
-                            <span className='text-paragraph-sm'>
-                              {item.electionDate || '—'}
-                            </span>
-                          </div>
-                        </Table.Cell>
-
-                        {/* Expected Turnout */}
-                        <Table.Cell>
-                          {item.expectedTurnout != null ? (
-                            <Badge.Root
-                              variant='lighter'
-                              color='blue'
-                              size='small'
-                            >
-                              <RiGroupLine className='size-3 shrink-0' />
-                              <span>
-                                {Number(item.expectedTurnout).toLocaleString()}{' '}
-                                voters
-                              </span>
-                            </Badge.Root>
-                          ) : (
-                            <span className='text-paragraph-sm text-text-soft-400'>
-                              —
-                            </span>
-                          )}
-                        </Table.Cell>
-
-                        {/* Actions */}
-                        <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center gap-1.5'>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg'
-                              onClick={() =>
-                                setElectionModalState({ type: 'view', item })
-                              }
-                              title='View details'
-                            >
-                              <CompactButton.Icon
-                                as={RiEyeLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg hover:text-primary-base'
-                              onClick={() =>
-                                setElectionModalState({ type: 'update', item })
-                              }
-                              title='Edit election'
-                            >
-                              <CompactButton.Icon
-                                as={RiEditLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg hover:text-error-base'
-                              onClick={() =>
-                                setElectionModalState({ type: 'delete', item })
-                              }
-                              title='Delete election'
-                            >
-                              <CompactButton.Icon
-                                as={RiDeleteBinLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                          </div>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))
-                  )}
-                </Table.Body>
-              </Table.Root>
+              <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+                <div className='w-full sm:max-w-xs'>
+                  <Input.Root>
+                    <Input.Wrapper>
+                      <Input.Icon as={RiSearchLine} />
+                      <input
+                        type='text'
+                        placeholder='Search elections...'
+                        value={electionSearch}
+                        onChange={(e) => setElectionSearch(e.target.value)}
+                        className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
+                      />
+                      {electionSearch && (
+                        <button
+                          type='button'
+                          onClick={() => setElectionSearch('')}
+                          className='px-2 text-text-soft-400 hover:text-text-sub-600'
+                          title='Clear search'
+                        >
+                          <RiCloseLine className='size-4' />
+                        </button>
+                      )}
+                    </Input.Wrapper>
+                  </Input.Root>
+                </div>
+              </div>
             ) : (
-              <Table.Root scrollable>
-                <Table.Header>
-                  <Table.Row>
-                    <Table.Head>Party Name</Table.Head>
-                    <Table.Head className='w-[160px]'>Abbreviation</Table.Head>
-                    <Table.Head className='w-[120px] text-right'>
-                      Actions
-                    </Table.Head>
-                  </Table.Row>
-                </Table.Header>
+              <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+                <div className='w-full sm:max-w-xs'>
+                  <Input.Root>
+                    <Input.Wrapper>
+                      <Input.Icon as={RiSearchLine} />
+                      <input
+                        type='text'
+                        placeholder='Search political parties...'
+                        value={politicalPartySearch}
+                        onChange={(e) =>
+                          setPoliticalPartySearch(e.target.value)
+                        }
+                        className='w-full bg-transparent px-2.5 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
+                      />
+                      {politicalPartySearch && (
+                        <button
+                          type='button'
+                          onClick={() => setPoliticalPartySearch('')}
+                          className='px-2 text-text-soft-400 hover:text-text-sub-600'
+                          title='Clear search'
+                        >
+                          <RiCloseLine className='size-4' />
+                        </button>
+                      )}
+                    </Input.Wrapper>
+                  </Input.Root>
+                </div>
+              </div>
+            )}
 
-                <Table.Body>
-                  {isPoliticalPartiesLoading ? (
-                    Array.from({ length: 5 }).map((_, idx) => (
-                      <Table.Row key={`skeleton-party-${idx}`}>
-                        <Table.Cell>
-                          <Skeleton className='h-4 w-48' />
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Skeleton className='h-5 w-16 rounded-full' />
-                        </Table.Cell>
-                        <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center justify-end gap-1.5'>
-                            <Skeleton className='size-7 rounded-lg' />
-                            <Skeleton className='size-7 rounded-lg' />
-                            <Skeleton className='size-7 rounded-lg' />
-                          </div>
+            {/* Main Table Content */}
+            <SetupTablePanel>
+              {activeModule === 'levels' ? (
+                <Table.Root scrollable>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.Head className='w-[100px]'>Rank</Table.Head>
+                      <Table.Head>Level Name & Description</Table.Head>
+                      <Table.Head>Associated Election</Table.Head>
+                      <Table.Head className='w-[120px] text-right'>
+                        Actions
+                      </Table.Head>
+                    </Table.Row>
+                  </Table.Header>
+
+                  <Table.Body>
+                    {isLevelsLoading ? (
+                      Array.from({ length: 5 }).map((_, idx) => (
+                        <Table.Row key={`skeleton-level-${idx}`}>
+                          <Table.Cell>
+                            <Skeleton className='h-5 w-16 rounded-full' />
+                          </Table.Cell>
+                          <Table.Cell>
+                            <div className='flex flex-col gap-1.5'>
+                              <Skeleton className='h-4 w-36' />
+                              <Skeleton className='h-3 w-56' />
+                            </div>
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Skeleton className='h-4 w-28' />
+                          </Table.Cell>
+                          <Table.Cell className='text-right'>
+                            <div className='inline-flex items-center justify-end gap-1.5'>
+                              <Skeleton className='size-7 rounded-lg' />
+                              <Skeleton className='size-7 rounded-lg' />
+                              <Skeleton className='size-7 rounded-lg' />
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    ) : filteredLevels.length === 0 ? (
+                      <Table.Row>
+                        <Table.Cell colSpan={4} className='py-12 text-center'>
+                          <p className='text-label-sm font-semibold text-text-strong-950'>
+                            No levels found
+                          </p>
+                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                            Try adjusting your search criteria or register a new
+                            level.
+                          </p>
                         </Table.Cell>
                       </Table.Row>
-                    ))
-                  ) : filteredPoliticalParties.length === 0 ? (
-                    <Table.Row>
-                      <Table.Cell colSpan={3} className='py-12 text-center'>
-                        <p className='text-label-sm font-semibold text-text-strong-950'>
-                          No political parties found
-                        </p>
-                        <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                          Try adjusting your search criteria or register a new
-                          political party.
-                        </p>
-                      </Table.Cell>
-                    </Table.Row>
-                  ) : (
-                    filteredPoliticalParties.map((item) => (
-                      <Table.Row
-                        key={item.id}
-                        className='transition-colors hover:bg-bg-weak-50/50'
-                      >
-                        {/* Party Name */}
-                        <Table.Cell>
-                          <span className='text-label-sm font-semibold text-text-strong-950'>
-                            {item.name}
-                          </span>
-                        </Table.Cell>
-
-                        {/* Abbreviation */}
-                        <Table.Cell>
-                          {item.abbreviation ? (
+                    ) : (
+                      filteredLevels.map((item) => (
+                        <Table.Row
+                          key={item.id}
+                          className='transition-colors hover:bg-bg-weak-50/50'
+                        >
+                          {/* Level Rank */}
+                          <Table.Cell>
                             <Badge.Root
                               variant='lighter'
                               color='gray'
                               size='small'
                             >
-                              {item.abbreviation}
+                              Rank {item.levelRank ?? 1}
                             </Badge.Root>
-                          ) : (
-                            <span className='text-paragraph-sm text-text-soft-400'>
-                              —
-                            </span>
-                          )}
-                        </Table.Cell>
+                          </Table.Cell>
 
-                        {/* Actions */}
-                        <Table.Cell className='text-right'>
-                          <div className='inline-flex items-center gap-1.5'>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg'
-                              onClick={() =>
-                                setPoliticalPartyModalState({
-                                  type: 'view',
-                                  item,
-                                })
-                              }
-                              title='View details'
-                            >
-                              <CompactButton.Icon
-                                as={RiEyeLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg hover:text-primary-base'
-                              onClick={() =>
-                                setPoliticalPartyModalState({
-                                  type: 'update',
-                                  item,
-                                })
-                              }
-                              title='Edit party'
-                            >
-                              <CompactButton.Icon
-                                as={RiEditLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                            <CompactButton.Root
-                              type='button'
-                              variant='stroke'
-                              className='size-7 rounded-lg hover:text-error-base'
-                              onClick={() =>
-                                setPoliticalPartyModalState({
-                                  type: 'delete',
-                                  item,
-                                })
-                              }
-                              title='Delete party'
-                            >
-                              <CompactButton.Icon
-                                as={RiDeleteBinLine}
-                                className='size-4'
-                              />
-                            </CompactButton.Root>
-                          </div>
+                          {/* Level Name & Description */}
+                          <Table.Cell>
+                            <div className='flex flex-col'>
+                              <span className='text-label-sm font-semibold text-text-strong-950'>
+                                {item.name}
+                              </span>
+                              {item.description && (
+                                <span className='text-paragraph-xs text-text-soft-400 line-clamp-1 mt-0.5'>
+                                  {item.description}
+                                </span>
+                              )}
+                            </div>
+                          </Table.Cell>
+
+                          {/* Associated Election */}
+                          <Table.Cell>
+                            <span className='text-paragraph-xs text-text-sub-600'>
+                              {item.electionName || 'National Level'}
+                            </span>
+                          </Table.Cell>
+
+                          {/* Actions */}
+                          <Table.Cell className='text-right'>
+                            <div className='inline-flex items-center gap-1.5'>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg'
+                                onClick={() =>
+                                  setModalState({ type: 'view', item })
+                                }
+                                title='View details'
+                              >
+                                <CompactButton.Icon
+                                  as={RiEyeLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg hover:text-primary-base'
+                                onClick={() =>
+                                  setModalState({ type: 'update', item })
+                                }
+                                title='Edit level'
+                              >
+                                <CompactButton.Icon
+                                  as={RiEditLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg hover:text-error-base'
+                                onClick={() =>
+                                  setModalState({ type: 'delete', item })
+                                }
+                                title='Delete level'
+                              >
+                                <CompactButton.Icon
+                                  as={RiDeleteBinLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    )}
+                  </Table.Body>
+                </Table.Root>
+              ) : activeModule === 'level-mapping' ? (
+                <Table.Root scrollable>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.Head>Territory / Unit Name</Table.Head>
+                      <Table.Head className='w-[160px]'>Level Tier</Table.Head>
+                      <Table.Head className='w-[220px]'>
+                        Parent Jurisdiction
+                      </Table.Head>
+                      <Table.Head>Election</Table.Head>
+                      <Table.Head className='w-[120px] text-right'>
+                        Actions
+                      </Table.Head>
+                    </Table.Row>
+                  </Table.Header>
+
+                  <Table.Body>
+                    {isLevelMappingsLoading ? (
+                      Array.from({ length: 5 }).map((_, idx) => (
+                        <Table.Row key={`skeleton-mapping-${idx}`}>
+                          <Table.Cell>
+                            <Skeleton className='h-4 w-40' />
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Skeleton className='h-5 w-20 rounded-full' />
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Skeleton className='h-4 w-32' />
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Skeleton className='h-4 w-28' />
+                          </Table.Cell>
+                          <Table.Cell className='text-right'>
+                            <div className='inline-flex items-center justify-end gap-1.5'>
+                              <Skeleton className='size-7 rounded-lg' />
+                              <Skeleton className='size-7 rounded-lg' />
+                              <Skeleton className='size-7 rounded-lg' />
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    ) : filteredLevelMappings.length === 0 ? (
+                      <Table.Row>
+                        <Table.Cell colSpan={5} className='py-12 text-center'>
+                          <p className='text-label-sm font-semibold text-text-strong-950'>
+                            No level mappings found
+                          </p>
+                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                            Try adjusting your search criteria or register a new
+                            territorial mapping.
+                          </p>
                         </Table.Cell>
                       </Table.Row>
-                    ))
-                  )}
-                </Table.Body>
-              </Table.Root>
-            )}
-          </SetupTablePanel>
+                    ) : (
+                      filteredLevelMappings.map((item) => (
+                        <Table.Row
+                          key={item.id}
+                          className='transition-colors hover:bg-bg-weak-50/50'
+                        >
+                          {/* Unit Name */}
+                          <Table.Cell>
+                            <span className='text-label-sm font-semibold text-text-strong-950'>
+                              {item.name}
+                            </span>
+                          </Table.Cell>
+
+                          {/* Tier */}
+                          <Table.Cell>
+                            <Badge.Root
+                              variant='lighter'
+                              color='gray'
+                              size='small'
+                            >
+                              {item.levelName || 'Level'}
+                            </Badge.Root>
+                          </Table.Cell>
+
+                          {/* Parent Jurisdiction */}
+                          <Table.Cell>
+                            {item.upperLevelName ? (
+                              <span className='text-paragraph-sm text-text-strong-950 font-medium'>
+                                {item.upperLevelName}
+                              </span>
+                            ) : (
+                              <Badge.Root
+                                variant='lighter'
+                                color='blue'
+                                size='small'
+                              >
+                                Root Level
+                              </Badge.Root>
+                            )}
+                          </Table.Cell>
+
+                          {/* Election */}
+                          <Table.Cell>
+                            <span className='text-paragraph-xs text-text-sub-600'>
+                              {item.electionName || 'Election'}
+                            </span>
+                          </Table.Cell>
+
+                          {/* Actions */}
+                          <Table.Cell className='text-right'>
+                            <div className='inline-flex items-center gap-1.5'>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg'
+                                onClick={() =>
+                                  setLevelMappingModalState({
+                                    type: 'view',
+                                    item,
+                                  })
+                                }
+                                title='View details'
+                              >
+                                <CompactButton.Icon
+                                  as={RiEyeLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg hover:text-primary-base'
+                                onClick={() =>
+                                  setLevelMappingModalState({
+                                    type: 'update',
+                                    item,
+                                  })
+                                }
+                                title='Edit mapping'
+                              >
+                                <CompactButton.Icon
+                                  as={RiEditLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg hover:text-error-base'
+                                onClick={() =>
+                                  setLevelMappingModalState({
+                                    type: 'delete',
+                                    item,
+                                  })
+                                }
+                                title='Delete mapping'
+                              >
+                                <CompactButton.Icon
+                                  as={RiDeleteBinLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    )}
+                  </Table.Body>
+                </Table.Root>
+              ) : activeModule === 'candidates' ? (
+                <Table.Root scrollable>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.Head>Candidate Name</Table.Head>
+                      <Table.Head>Political Party</Table.Head>
+                      <Table.Head>Election</Table.Head>
+                      <Table.Head className='w-[120px] text-right'>
+                        Actions
+                      </Table.Head>
+                    </Table.Row>
+                  </Table.Header>
+
+                  <Table.Body>
+                    {isCandidatesLoading ? (
+                      Array.from({ length: 5 }).map((_, idx) => (
+                        <Table.Row key={`skeleton-candidate-${idx}`}>
+                          <Table.Cell>
+                            <Skeleton className='h-4 w-44' />
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Skeleton className='h-4 w-32' />
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Skeleton className='h-4 w-28' />
+                          </Table.Cell>
+                          <Table.Cell className='text-right'>
+                            <div className='inline-flex items-center justify-end gap-1.5'>
+                              <Skeleton className='size-7 rounded-lg' />
+                              <Skeleton className='size-7 rounded-lg' />
+                              <Skeleton className='size-7 rounded-lg' />
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    ) : filteredCandidates.length === 0 ? (
+                      <Table.Row>
+                        <Table.Cell colSpan={4} className='py-12 text-center'>
+                          <p className='text-label-sm font-semibold text-text-strong-950'>
+                            No candidates found
+                          </p>
+                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                            Try adjusting your search criteria or register a new
+                            candidate.
+                          </p>
+                        </Table.Cell>
+                      </Table.Row>
+                    ) : (
+                      filteredCandidates.map((item) => (
+                        <Table.Row
+                          key={item.id}
+                          className='transition-colors hover:bg-bg-weak-50/50'
+                        >
+                          {/* Candidate Name */}
+                          <Table.Cell>
+                            <span className='text-label-sm font-semibold text-text-strong-950'>
+                              {item.name}
+                            </span>
+                          </Table.Cell>
+
+                          {/* Political Party */}
+                          <Table.Cell>
+                            <span className='text-paragraph-sm text-text-strong-950 font-medium'>
+                              {item.politicalPartyName || item.politicalPartyId}
+                            </span>
+                          </Table.Cell>
+
+                          {/* Election */}
+                          <Table.Cell>
+                            <span className='text-paragraph-xs text-text-sub-600'>
+                              {item.electionName || 'Election'}
+                            </span>
+                          </Table.Cell>
+
+                          {/* Actions */}
+                          <Table.Cell className='text-right'>
+                            <div className='inline-flex items-center gap-1.5'>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg'
+                                onClick={() =>
+                                  setCandidateModalState({ type: 'view', item })
+                                }
+                                title='View details'
+                              >
+                                <CompactButton.Icon
+                                  as={RiEyeLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg hover:text-primary-base'
+                                onClick={() =>
+                                  setCandidateModalState({
+                                    type: 'update',
+                                    item,
+                                  })
+                                }
+                                title='Edit candidate'
+                              >
+                                <CompactButton.Icon
+                                  as={RiEditLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg hover:text-error-base'
+                                onClick={() =>
+                                  setCandidateModalState({
+                                    type: 'delete',
+                                    item,
+                                  })
+                                }
+                                title='Delete candidate'
+                              >
+                                <CompactButton.Icon
+                                  as={RiDeleteBinLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    )}
+                  </Table.Body>
+                </Table.Root>
+              ) : activeModule === 'elections' ? (
+                <Table.Root scrollable>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.Head>Election Name</Table.Head>
+                      <Table.Head className='w-[180px]'>
+                        Election Date
+                      </Table.Head>
+                      <Table.Head className='w-[180px]'>
+                        Expected Turnout
+                      </Table.Head>
+                      <Table.Head className='w-[120px] text-right'>
+                        Actions
+                      </Table.Head>
+                    </Table.Row>
+                  </Table.Header>
+
+                  <Table.Body>
+                    {isElectionsLoading ? (
+                      Array.from({ length: 5 }).map((_, idx) => (
+                        <Table.Row key={`skeleton-election-${idx}`}>
+                          <Table.Cell>
+                            <Skeleton className='h-4 w-48' />
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Skeleton className='h-4 w-28' />
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Skeleton className='h-5 w-24 rounded-full' />
+                          </Table.Cell>
+                          <Table.Cell className='text-right'>
+                            <div className='inline-flex items-center justify-end gap-1.5'>
+                              <Skeleton className='size-7 rounded-lg' />
+                              <Skeleton className='size-7 rounded-lg' />
+                              <Skeleton className='size-7 rounded-lg' />
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    ) : filteredElections.length === 0 ? (
+                      <Table.Row>
+                        <Table.Cell colSpan={4} className='py-12 text-center'>
+                          <p className='text-label-sm font-semibold text-text-strong-950'>
+                            No elections found
+                          </p>
+                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                            Try adjusting your search criteria or register a new
+                            election.
+                          </p>
+                        </Table.Cell>
+                      </Table.Row>
+                    ) : (
+                      filteredElections.map((item) => (
+                        <Table.Row
+                          key={item.id}
+                          className='transition-colors hover:bg-bg-weak-50/50'
+                        >
+                          {/* Election Name */}
+                          <Table.Cell>
+                            <span className='text-label-sm font-semibold text-text-strong-950'>
+                              {item.name}
+                            </span>
+                          </Table.Cell>
+
+                          {/* Election Date */}
+                          <Table.Cell>
+                            <div className='flex items-center gap-1.5 text-text-sub-600'>
+                              <RiCalendarLine className='size-3.5 text-text-soft-400 shrink-0' />
+                              <span className='text-paragraph-sm'>
+                                {item.electionDate || '—'}
+                              </span>
+                            </div>
+                          </Table.Cell>
+
+                          {/* Expected Turnout */}
+                          <Table.Cell>
+                            {item.expectedTurnout != null ? (
+                              <Badge.Root
+                                variant='lighter'
+                                color='blue'
+                                size='small'
+                              >
+                                <RiGroupLine className='size-3 shrink-0' />
+                                <span>
+                                  {Number(
+                                    item.expectedTurnout,
+                                  ).toLocaleString()}{' '}
+                                  voters
+                                </span>
+                              </Badge.Root>
+                            ) : (
+                              <span className='text-paragraph-sm text-text-soft-400'>
+                                —
+                              </span>
+                            )}
+                          </Table.Cell>
+
+                          {/* Actions */}
+                          <Table.Cell className='text-right'>
+                            <div className='inline-flex items-center gap-1.5'>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg'
+                                onClick={() =>
+                                  setElectionModalState({ type: 'view', item })
+                                }
+                                title='View details'
+                              >
+                                <CompactButton.Icon
+                                  as={RiEyeLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg hover:text-primary-base'
+                                onClick={() =>
+                                  setElectionModalState({
+                                    type: 'update',
+                                    item,
+                                  })
+                                }
+                                title='Edit election'
+                              >
+                                <CompactButton.Icon
+                                  as={RiEditLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg hover:text-error-base'
+                                onClick={() =>
+                                  setElectionModalState({
+                                    type: 'delete',
+                                    item,
+                                  })
+                                }
+                                title='Delete election'
+                              >
+                                <CompactButton.Icon
+                                  as={RiDeleteBinLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    )}
+                  </Table.Body>
+                </Table.Root>
+              ) : (
+                <Table.Root scrollable>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.Head>Party Name</Table.Head>
+                      <Table.Head className='w-[160px]'>
+                        Abbreviation
+                      </Table.Head>
+                      <Table.Head className='w-[120px] text-right'>
+                        Actions
+                      </Table.Head>
+                    </Table.Row>
+                  </Table.Header>
+
+                  <Table.Body>
+                    {isPoliticalPartiesLoading ? (
+                      Array.from({ length: 5 }).map((_, idx) => (
+                        <Table.Row key={`skeleton-party-${idx}`}>
+                          <Table.Cell>
+                            <Skeleton className='h-4 w-48' />
+                          </Table.Cell>
+                          <Table.Cell>
+                            <Skeleton className='h-5 w-16 rounded-full' />
+                          </Table.Cell>
+                          <Table.Cell className='text-right'>
+                            <div className='inline-flex items-center justify-end gap-1.5'>
+                              <Skeleton className='size-7 rounded-lg' />
+                              <Skeleton className='size-7 rounded-lg' />
+                              <Skeleton className='size-7 rounded-lg' />
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    ) : filteredPoliticalParties.length === 0 ? (
+                      <Table.Row>
+                        <Table.Cell colSpan={3} className='py-12 text-center'>
+                          <p className='text-label-sm font-semibold text-text-strong-950'>
+                            No political parties found
+                          </p>
+                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                            Try adjusting your search criteria or register a new
+                            political party.
+                          </p>
+                        </Table.Cell>
+                      </Table.Row>
+                    ) : (
+                      filteredPoliticalParties.map((item) => (
+                        <Table.Row
+                          key={item.id}
+                          className='transition-colors hover:bg-bg-weak-50/50'
+                        >
+                          {/* Party Name */}
+                          <Table.Cell>
+                            <span className='text-label-sm font-semibold text-text-strong-950'>
+                              {item.name}
+                            </span>
+                          </Table.Cell>
+
+                          {/* Abbreviation */}
+                          <Table.Cell>
+                            {item.abbreviation ? (
+                              <Badge.Root
+                                variant='lighter'
+                                color='gray'
+                                size='small'
+                              >
+                                {item.abbreviation}
+                              </Badge.Root>
+                            ) : (
+                              <span className='text-paragraph-sm text-text-soft-400'>
+                                —
+                              </span>
+                            )}
+                          </Table.Cell>
+
+                          {/* Actions */}
+                          <Table.Cell className='text-right'>
+                            <div className='inline-flex items-center gap-1.5'>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg'
+                                onClick={() =>
+                                  setPoliticalPartyModalState({
+                                    type: 'view',
+                                    item,
+                                  })
+                                }
+                                title='View details'
+                              >
+                                <CompactButton.Icon
+                                  as={RiEyeLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg hover:text-primary-base'
+                                onClick={() =>
+                                  setPoliticalPartyModalState({
+                                    type: 'update',
+                                    item,
+                                  })
+                                }
+                                title='Edit party'
+                              >
+                                <CompactButton.Icon
+                                  as={RiEditLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                              <CompactButton.Root
+                                type='button'
+                                variant='stroke'
+                                className='size-7 rounded-lg hover:text-error-base'
+                                onClick={() =>
+                                  setPoliticalPartyModalState({
+                                    type: 'delete',
+                                    item,
+                                  })
+                                }
+                                title='Delete party'
+                              >
+                                <CompactButton.Icon
+                                  as={RiDeleteBinLine}
+                                  className='size-4'
+                                />
+                              </CompactButton.Root>
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      ))
+                    )}
+                  </Table.Body>
+                </Table.Root>
+              )}
+            </SetupTablePanel>
           </div>
         </main>
       </div>

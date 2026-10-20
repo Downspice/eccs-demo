@@ -46,7 +46,8 @@ export function UpdateElectionModal({
           name: values.name.trim(),
           electionDate: values.electionDate || undefined,
           expectedTurnout:
-            values.expectedTurnout !== '' && values.expectedTurnout !== undefined
+            values.expectedTurnout !== '' &&
+            values.expectedTurnout !== undefined
               ? Number(values.expectedTurnout)
               : undefined,
         },
