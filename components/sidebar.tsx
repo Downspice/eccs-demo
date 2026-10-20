@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   RiArrowRightSLine,
+  RiBarChartBoxLine,
   RiCloseLine,
   RiEqualizerLine,
   RiMenu3Line,
@@ -22,6 +23,11 @@ export type NavigationLink = {
 
 export const navigationLinks: NavigationLink[] = [
   { icon: RiEqualizerLine, label: 'Setups', href: '/setups' },
+  {
+    icon: RiBarChartBoxLine,
+    label: 'Election Collation',
+    href: '/election-collation',
+  },
 ];
 
 function useCollapsedState({
