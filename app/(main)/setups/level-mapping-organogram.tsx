@@ -4,12 +4,9 @@ import * as React from 'react';
 import type { LevelMappingItem } from '@/services/level-mappings';
 import {
   RiAddLine,
-  RiArrowDownSLine,
-  RiArrowRightSLine,
   RiDeleteBinLine,
   RiEditLine,
   RiEyeLine,
-  RiFullscreenLine,
   RiGovernmentLine,
   RiNodeTree,
   RiSubtractLine,
@@ -77,26 +74,55 @@ export function LevelMappingOrganogram({
     setZoom((prev) => Math.max(0.6, Math.round((prev - 0.15) * 100) / 100));
   const handleResetZoom = () => setZoom(1);
 
-  // Build the hierarchical tree data structure from flat mappings
+  // Build the hierarchical tree data structure ensuring all subordinates connect directly to their parent jurisdiction
   const chartData = React.useMemo<TreeNode[]>(() => {
     if (!mappings || mappings.length === 0) return [];
 
-    const itemMap = new Map<string, LevelMappingItem>();
+    const itemByIdMap = new Map<string, LevelMappingItem>();
+    const itemByNameMap = new Map<string, LevelMappingItem>();
     const childrenMap = new Map<string, LevelMappingItem[]>();
 
+    // Index all items by ID and normalized Name
     mappings.forEach((item) => {
-      itemMap.set(item.id, item);
-    });
-
-    mappings.forEach((item) => {
-      if (item.upper_level_id && itemMap.has(item.upper_level_id)) {
-        const list = childrenMap.get(item.upper_level_id) || [];
-        list.push(item);
-        childrenMap.set(item.upper_level_id, list);
+      itemByIdMap.set(item.id, item);
+      if (item.name) {
+        itemByNameMap.set(item.name.trim().toLowerCase(), item);
       }
     });
 
-    // Recursively build tree nodes
+    // Helper to find the parent item by upper_level_id OR upperLevelName
+    const getParentItem = (
+      item: LevelMappingItem,
+    ): LevelMappingItem | undefined => {
+      // 1. Try matching by upper_level_id
+      if (item.upper_level_id && itemByIdMap.has(item.upper_level_id)) {
+        const parent = itemByIdMap.get(item.upper_level_id);
+        if (parent && parent.id !== item.id) return parent;
+      }
+      // 2. Try matching by upperLevelName (backend often provides the name of the parent)
+      if (
+        item.upperLevelName &&
+        itemByNameMap.has(item.upperLevelName.trim().toLowerCase())
+      ) {
+        const parent = itemByNameMap.get(
+          item.upperLevelName.trim().toLowerCase(),
+        );
+        if (parent && parent.id !== item.id) return parent;
+      }
+      return undefined;
+    };
+
+    // Attach each child jurisdiction directly to its parent jurisdiction's bucket
+    mappings.forEach((item) => {
+      const parent = getParentItem(item);
+      if (parent && parent.id !== item.id) {
+        const list = childrenMap.get(parent.id) || [];
+        list.push(item);
+        childrenMap.set(parent.id, list);
+      }
+    });
+
+    // Recursively build tree nodes from parent down to leaf units
     const buildTreeNode = (item: LevelMappingItem): TreeNode => {
       const childItems = childrenMap.get(item.id) || [];
       return {
@@ -106,77 +132,30 @@ export function LevelMappingOrganogram({
         data: {
           item,
           childCount: childItems.length,
-          isElectionRoot: false,
+          parent: getParentItem(item),
         },
         children: childItems.map(buildTreeNode),
       };
     };
 
-    // Root nodes: mappings without an upper_level_id, or whose upper_level_id is not in the set
-    const rootItems = mappings.filter(
-      (m) => !m.upper_level_id || !itemMap.has(m.upper_level_id),
-    );
+    // Root nodes: mappings that have NO parent jurisdiction in the hierarchy
+    const rootItems = mappings.filter((m) => !getParentItem(m));
 
-    const rootNodes = rootItems.map(buildTreeNode);
+    // Sort roots alphabetically by name for consistent layout
+    rootItems.sort((a, b) => a.name.localeCompare(b.name));
 
-    // If electionName exists, create an apex root node for the election
-    if (electionName) {
-      return [
-        {
-          key: 'election-apex-root',
-          label: electionName,
-          expanded: expandedAll,
-          data: {
-            isElectionRoot: true,
-            electionName,
-            totalUnits: mappings.length,
-          },
-          children: rootNodes,
-        },
-      ];
-    }
+    return rootItems.map(buildTreeNode);
+  }, [mappings, expandedAll]);
 
-    return rootNodes;
-  }, [mappings, electionName, expandedAll]);
-
-  // Custom node template rendering
+  // Custom node template rendering for each jurisdiction card
   const nodeTemplate = (node: TreeNode) => {
-    if (!node.data) return null;
-
-    // Apex Election Node
-    if (node.data.isElectionRoot) {
-      return (
-        <div className='flex flex-col items-center gap-2 rounded-2xl bg-bg-white-0 p-4 shadow-regular-sm ring-1 ring-inset ring-stroke-soft-200 transition-all hover:shadow-regular-md'>
-          <div className='flex items-center gap-2'>
-            <div className='flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary-base/10 text-primary-base'>
-              <RiGovernmentLine className='size-4' />
-            </div>
-            <div className='text-left'>
-              <span className='block text-paragraph-xs font-medium uppercase tracking-wider text-text-soft-400'>
-                Election Territory Root
-              </span>
-              <span className='block text-label-sm font-semibold text-text-strong-950'>
-                {node.data.electionName}
-              </span>
-            </div>
-          </div>
-          <div className='flex items-center gap-2 border-t border-stroke-soft-200/60 pt-2 text-paragraph-xs text-text-sub-600'>
-            <Badge.Root variant='lighter' color='blue' size='small'>
-              <RiNodeTree className='size-3 shrink-0' />
-              <span>
-                {node.data.totalUnits} mapped{' '}
-                {node.data.totalUnits === 1 ? 'unit' : 'units'}
-              </span>
-            </Badge.Root>
-          </div>
-        </div>
-      );
-    }
+    if (!node.data || !node.data.item) return null;
 
     const item: LevelMappingItem = node.data.item;
+    const parent: LevelMappingItem | undefined = node.data.parent;
     const childCount: number = node.data.childCount || 0;
     const isMatchingSearch =
-      searchQuery.trim() &&
+      Boolean(searchQuery.trim()) &&
       item.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const badgeColor = getLevelBadgeColor(item.levelName);
@@ -187,29 +166,32 @@ export function LevelMappingOrganogram({
           'group relative w-60 rounded-xl bg-bg-white-0 p-3.5 text-left shadow-regular-xs ring-1 ring-inset transition-all duration-200',
           'hover:shadow-regular-md hover:ring-stroke-sub-300',
           isMatchingSearch
-            ? 'ring-2 ring-primary-base bg-primary-base/[0.03]'
+            ? 'ring-2 ring-primary-base bg-primary-base/[0.04]'
             : 'ring-stroke-soft-200',
         )}
       >
         {/* Top meta row: Level badge + child count */}
         <div className='flex items-center justify-between gap-1.5'>
           <Badge.Root variant='lighter' color={badgeColor} size='small'>
-            {item.levelName || 'Unit'}
+            {item.levelName || 'Jurisdiction'}
           </Badge.Root>
 
           {childCount > 0 ? (
-            <span className='inline-flex items-center gap-1 text-[11px] font-medium text-text-soft-400 group-hover:text-text-sub-600 transition-colors'>
-              <RiNodeTree className='size-3' />
+            <span
+              className='inline-flex items-center gap-1 text-[11px] font-medium text-text-sub-600 transition-colors'
+              title={`${childCount} sub-jurisdictions connected`}
+            >
+              <RiNodeTree className='size-3 text-primary-base' />
               <span>{childCount}</span>
             </span>
           ) : (
             <span className='text-[10px] text-text-disabled-300 font-medium'>
-              Leaf
+              Terminal Unit
             </span>
           )}
         </div>
 
-        {/* Unit title */}
+        {/* Unit title & Parent indicator */}
         <div className='mt-2.5'>
           <h4
             className={cn(
@@ -220,17 +202,19 @@ export function LevelMappingOrganogram({
           >
             {item.name}
           </h4>
-          {item.upperLevelName ? (
+          {parent || item.upperLevelName ? (
             <p
               className='mt-0.5 truncate text-paragraph-xs text-text-sub-600'
-              title={`Parent: ${item.upperLevelName}`}
+              title={`Parent Jurisdiction: ${parent?.name || item.upperLevelName}`}
             >
               <span className='text-text-soft-400'>under </span>
-              {item.upperLevelName}
+              <span className='font-medium text-text-sub-600'>
+                {parent?.name || item.upperLevelName}
+              </span>
             </p>
           ) : (
-            <p className='mt-0.5 text-paragraph-xs text-text-soft-400'>
-              Root Jurisdiction
+            <p className='mt-0.5 text-paragraph-xs font-medium text-primary-base'>
+              Top-Level Jurisdiction
             </p>
           )}
         </div>
@@ -286,7 +270,7 @@ export function LevelMappingOrganogram({
                 onCreateSubordinate(item);
               }}
               className='inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-text-sub-600 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
-              title='Add subordinate unit under this'
+              title='Add subordinate unit under this jurisdiction'
             >
               <RiAddLine className='size-3' />
               <span>Sub-unit</span>
@@ -333,15 +317,23 @@ export function LevelMappingOrganogram({
   return (
     <div className='relative flex flex-col w-full'>
       {/* Top Controls Bar */}
-      <div className='flex items-center justify-between border-b border-stroke-soft-200 px-4 py-2.5 bg-bg-weak-50/50'>
+      <div className='flex flex-wrap items-center justify-between gap-3 border-b border-stroke-soft-200 px-4 py-2.5 bg-bg-weak-50/50'>
         <div className='flex items-center gap-2'>
+          {electionName && (
+            <div className='flex items-center gap-1.5 rounded-lg border border-stroke-soft-200 bg-bg-white-0 px-2.5 py-1 shadow-regular-xs'>
+              <RiGovernmentLine className='size-3.5 text-primary-base' />
+              <span className='text-paragraph-xs font-semibold text-text-strong-950'>
+                {electionName}
+              </span>
+            </div>
+          )}
           <span className='text-paragraph-xs font-medium text-text-sub-600'>
-            Hierarchical Organogram ({mappings.length}{' '}
-            {mappings.length === 1 ? 'unit' : 'units'})
+            {mappings.length} {mappings.length === 1 ? 'unit' : 'jurisdictions'}{' '}
+            mapped
           </span>
           {searchQuery && (
             <Badge.Root variant='lighter' color='blue' size='small'>
-              Filtering by &quot;{searchQuery}&quot;
+              Highlighting &quot;{searchQuery}&quot;
             </Badge.Root>
           )}
         </div>
@@ -351,7 +343,7 @@ export function LevelMappingOrganogram({
           <button
             type='button'
             onClick={() => setExpandedAll((prev) => !prev)}
-            className='inline-flex items-center gap-1 rounded-lg border border-stroke-soft-200 bg-bg-white-0 px-2 py-1 text-paragraph-xs font-medium text-text-sub-600 shadow-regular-xs hover:bg-bg-weak-50 hover:text-text-strong-950 transition-colors'
+            className='inline-flex items-center gap-1 rounded-lg border border-stroke-soft-200 bg-bg-white-0 px-2.5 py-1 text-paragraph-xs font-medium text-text-sub-600 shadow-regular-xs hover:bg-bg-weak-50 hover:text-text-strong-950 transition-colors'
           >
             {expandedAll ? (
               <>

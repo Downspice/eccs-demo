@@ -164,7 +164,7 @@ export default function SetupsPage() {
 
   const levelMappings = React.useMemo<LevelMappingItem[]>(() => {
     if (!rawLevelMappings || !Array.isArray(rawLevelMappings)) return [];
-    return rawLevelMappings.flatMap((group: LevelMappingGroup) =>
+    const flattened = rawLevelMappings.flatMap((group: LevelMappingGroup) =>
       (group.mappings || []).map((m: LevelMappingItem) => ({
         ...m,
         levelId: m.levelId || group.levelId,
@@ -172,6 +172,48 @@ export default function SetupsPage() {
         electionId: m.electionId || activeElectionId,
       })),
     );
+
+    // Map units by name and id to reliably associate parent jurisdictions
+    const nameToItemMap = new Map<string, LevelMappingItem>();
+    const idToItemMap = new Map<string, LevelMappingItem>();
+
+    flattened.forEach((item) => {
+      idToItemMap.set(item.id, item);
+      if (item.name) {
+        nameToItemMap.set(item.name.trim().toLowerCase(), item);
+      }
+    });
+
+    return flattened.map((item) => {
+      let upper_level_id = item.upper_level_id;
+      let upperLevelName = item.upperLevelName;
+
+      // If upper_level_id is present but upperLevelName is missing, resolve name
+      if (
+        upper_level_id &&
+        !upperLevelName &&
+        idToItemMap.has(upper_level_id)
+      ) {
+        upperLevelName = idToItemMap.get(upper_level_id)!.name;
+      }
+
+      // If upperLevelName is present but upper_level_id is missing, resolve id
+      if (
+        upperLevelName &&
+        !upper_level_id &&
+        nameToItemMap.has(upperLevelName.trim().toLowerCase())
+      ) {
+        upper_level_id = nameToItemMap.get(
+          upperLevelName.trim().toLowerCase(),
+        )!.id;
+      }
+
+      return {
+        ...item,
+        upper_level_id,
+        upperLevelName,
+      };
+    });
   }, [rawLevelMappings, activeElectionId]);
 
   const candidates = React.useMemo<CandidateItem[]>(() => {
@@ -847,7 +889,7 @@ export default function SetupsPage() {
               ) : activeModule === 'level-mapping' ? (
                 levelMappingView === 'organogram' ? (
                   <LevelMappingOrganogram
-                    mappings={filteredLevelMappings}
+                    mappings={levelMappings}
                     electionName={activeElectionName}
                     isLoading={isLevelMappingsLoading}
                     searchQuery={levelMappingSearch}
