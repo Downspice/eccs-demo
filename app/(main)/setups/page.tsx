@@ -8,7 +8,6 @@ import {
   RiEditLine,
   RiEqualizerLine,
   RiEyeLine,
-  RiShieldCheckLine,
 } from '@remixicon/react';
 
 import * as Badge from '@/components/ui/badge';
@@ -30,27 +29,6 @@ const SETUP_MODULES: SetupModuleItem[] = [
     label: 'Levels',
     description:
       'Configure security maturity levels, classification codes, and mandatory control thresholds.',
-  },
-  {
-    id: 'controls',
-    label: 'Controls',
-    badge: 'Coming Soon',
-    description:
-      'Define technical safeguards, baseline controls, and verification criteria.',
-  },
-  {
-    id: 'frameworks',
-    label: 'Frameworks',
-    badge: 'Coming Soon',
-    description:
-      'Map controls to ISO 27001, SOC 2, NIST CSF, and custom regulatory standards.',
-  },
-  {
-    id: 'policies',
-    label: 'Policies',
-    badge: 'Coming Soon',
-    description:
-      'Manage organizational governance, compliance mandates, and access policies.',
   },
 ];
 
@@ -111,9 +89,6 @@ export default function SetupsPage() {
             <h1 className='text-title-h5 font-semibold text-text-strong-950 sm:text-title-h4'>
               System Setups
             </h1>
-            <Badge.Root variant='lighter' color='blue' size='small'>
-              {currentModule?.label}
-            </Badge.Root>
           </div>
           <p className='text-paragraph-sm text-text-sub-600'>
             Configure security maturity levels, classification codes, and
@@ -142,202 +117,164 @@ export default function SetupsPage() {
                 <h2 className='text-title-h5 font-semibold text-text-strong-950 capitalize'>
                   {currentModule?.label}
                 </h2>
-                {activeModule === 'levels' && (
-                  <Badge.Root variant='lighter' color='blue' size='small'>
-                    {filteredSetups.length} tiers
-                  </Badge.Root>
-                )}
               </div>
               <p className='text-paragraph-sm text-text-sub-600'>
                 {currentModule?.description}
               </p>
             </div>
 
-            {activeModule === 'levels' && (
-              <div>
-                <Button.Root
-                  variant='primary'
-                  mode='filled'
-                  size='small'
-                  onClick={() => setModalState({ type: 'create' })}
-                >
-                  <Button.Icon as={RiAddLine} />
-                  <span>New Level</span>
-                </Button.Root>
-              </div>
-            )}
+            <div>
+              <Button.Root
+                variant='primary'
+                mode='filled'
+                size='small'
+                onClick={() => setModalState({ type: 'create' })}
+              >
+                <Button.Icon as={RiAddLine} />
+                <span>New Level</span>
+              </Button.Root>
+            </div>
           </div>
 
-          {activeModule === 'levels' ? (
-            <>
-              {/* Search and Filters */}
-              <SetupFilters
-                filters={filters}
-                onChange={(updated) =>
-                  setFilters((prev) => ({ ...prev, ...updated }))
-                }
-                onReset={() => setFilters({ search: '', status: 'all' })}
-              />
+          {/* Search and Filters */}
+          <SetupFilters
+            filters={filters}
+            onChange={(updated) =>
+              setFilters((prev) => ({ ...prev, ...updated }))
+            }
+            onReset={() => setFilters({ search: '', status: 'all' })}
+          />
 
-              {/* Main Table Content */}
-              <div className='overflow-hidden rounded-2xl border border-stroke-soft-200 bg-bg-white-0 shadow-xs'>
-                <Table.Root>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.Head className='w-[120px]'>Code</Table.Head>
-                      <Table.Head>Level & Classification</Table.Head>
-                      <Table.Head className='w-[140px]'>Controls</Table.Head>
-                      <Table.Head className='w-[160px]'>
-                        Certification Status
-                      </Table.Head>
-                      <Table.Head className='w-[120px] text-right'>
-                        Actions
-                      </Table.Head>
+          {/* Main Table Content */}
+          <div className='overflow-hidden rounded-2xl bg-bg-white-0 shadow-xs'>
+            <Table.Root>
+              <Table.Header>
+                <Table.Row>
+                  <Table.Head className='w-[120px]'>Code</Table.Head>
+                  <Table.Head>Level & Classification</Table.Head>
+                  <Table.Head className='w-[140px]'>Controls</Table.Head>
+                  <Table.Head className='w-[160px]'>
+                    Certification Status
+                  </Table.Head>
+                  <Table.Head className='w-[120px] text-right'>
+                    Actions
+                  </Table.Head>
+                </Table.Row>
+              </Table.Header>
+
+              <Table.Body>
+                {isLoading ? (
+                  <Table.Row>
+                    <Table.Cell
+                      colSpan={5}
+                      className='py-12 text-center text-text-sub-600'
+                    >
+                      Loading levels...
+                    </Table.Cell>
+                  </Table.Row>
+                ) : filteredSetups.length === 0 ? (
+                  <Table.Row>
+                    <Table.Cell colSpan={5} className='py-12 text-center'>
+                      <p className='text-label-sm font-semibold text-text-strong-950'>
+                        No levels found
+                      </p>
+                      <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                        Try adjusting your search criteria or status filter.
+                      </p>
+                    </Table.Cell>
+                  </Table.Row>
+                ) : (
+                  filteredSetups.map((item) => (
+                    <Table.Row
+                      key={item.id}
+                      className='transition-colors hover:bg-bg-weak-50/50'
+                    >
+                      {/* Level Code */}
+                      <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
+                        {item.code}
+                      </Table.Cell>
+
+                      {/* Level Name & Title & Description */}
+                      <Table.Cell>
+                        <div className='flex flex-col'>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-label-sm font-semibold text-text-strong-950'>
+                              {item.name}
+                            </span>
+                            <span className='text-text-soft-400'>•</span>
+                            <span className='text-paragraph-sm font-medium text-text-sub-600'>
+                              {item.title}
+                            </span>
+                          </div>
+                          {item.description && (
+                            <span className='text-paragraph-xs text-text-soft-400 line-clamp-1 mt-0.5'>
+                              {item.description}
+                            </span>
+                          )}
+                        </div>
+                      </Table.Cell>
+
+                      {/* Controls Required */}
+                      <Table.Cell>
+                        <Badge.Root variant='lighter' color='gray' size='small'>
+                          {item.controlsCount || 0} Controls
+                        </Badge.Root>
+                      </Table.Cell>
+
+                      {/* Status */}
+                      <Table.Cell>
+                        <StatusBadge.Root
+                          status={item.isEnabled ? 'completed' : 'disabled'}
+                          variant='stroke'
+                        >
+                          <StatusBadge.Dot />
+                          {item.isEnabled
+                            ? 'Active & Enforced'
+                            : 'Inactive / Draft'}
+                        </StatusBadge.Root>
+                      </Table.Cell>
+
+                      {/* Actions */}
+                      <Table.Cell className='text-right'>
+                        <div className='inline-flex items-center gap-1'>
+                          <button
+                            type='button'
+                            onClick={() =>
+                              setModalState({ type: 'view', item })
+                            }
+                            className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-text-strong-950 transition-colors'
+                            title='View details'
+                          >
+                            <RiEyeLine className='size-4' />
+                          </button>
+                          <button
+                            type='button'
+                            onClick={() =>
+                              setModalState({ type: 'update', item })
+                            }
+                            className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
+                            title='Edit level'
+                          >
+                            <RiEditLine className='size-4' />
+                          </button>
+                          <button
+                            type='button'
+                            onClick={() =>
+                              setModalState({ type: 'delete', item })
+                            }
+                            className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-error-base transition-colors'
+                            title='Delete level'
+                          >
+                            <RiDeleteBinLine className='size-4' />
+                          </button>
+                        </div>
+                      </Table.Cell>
                     </Table.Row>
-                  </Table.Header>
-
-                  <Table.Body>
-                    {isLoading ? (
-                      <Table.Row>
-                        <Table.Cell
-                          colSpan={5}
-                          className='py-12 text-center text-text-sub-600'
-                        >
-                          Loading levels...
-                        </Table.Cell>
-                      </Table.Row>
-                    ) : filteredSetups.length === 0 ? (
-                      <Table.Row>
-                        <Table.Cell colSpan={5} className='py-12 text-center'>
-                          <p className='text-label-sm font-semibold text-text-strong-950'>
-                            No levels found
-                          </p>
-                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                            Try adjusting your search criteria or status filter.
-                          </p>
-                        </Table.Cell>
-                      </Table.Row>
-                    ) : (
-                      filteredSetups.map((item) => (
-                        <Table.Row
-                          key={item.id}
-                          className='transition-colors hover:bg-bg-weak-50/50'
-                        >
-                          {/* Level Code */}
-                          <Table.Cell className='font-mono text-label-xs font-semibold text-text-strong-950'>
-                            {item.code}
-                          </Table.Cell>
-
-                          {/* Level Name & Title & Description */}
-                          <Table.Cell>
-                            <div className='flex flex-col'>
-                              <div className='flex items-center gap-2'>
-                                <span className='text-label-sm font-semibold text-text-strong-950'>
-                                  {item.name}
-                                </span>
-                                <span className='text-text-soft-400'>•</span>
-                                <span className='text-paragraph-sm font-medium text-text-sub-600'>
-                                  {item.title}
-                                </span>
-                              </div>
-                              {item.description && (
-                                <span className='text-paragraph-xs text-text-soft-400 line-clamp-1 mt-0.5'>
-                                  {item.description}
-                                </span>
-                              )}
-                            </div>
-                          </Table.Cell>
-
-                          {/* Controls Required */}
-                          <Table.Cell>
-                            <Badge.Root
-                              variant='lighter'
-                              color='gray'
-                              size='small'
-                            >
-                              {item.controlsCount || 0} Controls
-                            </Badge.Root>
-                          </Table.Cell>
-
-                          {/* Status */}
-                          <Table.Cell>
-                            <StatusBadge.Root
-                              status={item.isEnabled ? 'completed' : 'disabled'}
-                              variant='stroke'
-                            >
-                              <StatusBadge.Dot />
-                              {item.isEnabled
-                                ? 'Active & Enforced'
-                                : 'Inactive / Draft'}
-                            </StatusBadge.Root>
-                          </Table.Cell>
-
-                          {/* Actions */}
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center gap-1'>
-                              <button
-                                type='button'
-                                onClick={() =>
-                                  setModalState({ type: 'view', item })
-                                }
-                                className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-text-strong-950 transition-colors'
-                                title='View details'
-                              >
-                                <RiEyeLine className='size-4' />
-                              </button>
-                              <button
-                                type='button'
-                                onClick={() =>
-                                  setModalState({ type: 'update', item })
-                                }
-                                className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
-                                title='Edit level'
-                              >
-                                <RiEditLine className='size-4' />
-                              </button>
-                              <button
-                                type='button'
-                                onClick={() =>
-                                  setModalState({ type: 'delete', item })
-                                }
-                                className='rounded-md p-1.5 text-text-soft-400 hover:bg-bg-weak-50 hover:text-error-base transition-colors'
-                                title='Delete level'
-                              >
-                                <RiDeleteBinLine className='size-4' />
-                              </button>
-                            </div>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))
-                    )}
-                  </Table.Body>
-                </Table.Root>
-              </div>
-            </>
-          ) : (
-            <div className='flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-stroke-soft-200 bg-bg-white-0 py-16 text-center shadow-xs'>
-              <div className='flex size-12 items-center justify-center rounded-xl bg-bg-weak-50 text-text-sub-600 mb-4'>
-                <RiShieldCheckLine className='size-6' />
-              </div>
-              <h3 className='text-title-h6 font-semibold text-text-strong-950'>
-                {currentModule?.label} Setup
-              </h3>
-              <p className='text-paragraph-sm text-text-sub-600 mt-1 max-w-md'>
-                {currentModule?.description ||
-                  'This setup section is currently in planning. For the setups, only Levels are active.'}
-              </p>
-              <div className='mt-5'>
-                <Button.Root
-                  variant='neutral'
-                  mode='stroke'
-                  size='small'
-                  onClick={() => setActiveModule('levels')}
-                >
-                  <span>Switch to Levels Setup</span>
-                </Button.Root>
-              </div>
-            </div>
-          )}
+                  ))
+                )}
+              </Table.Body>
+            </Table.Root>
+          </div>
         </main>
       </div>
 
