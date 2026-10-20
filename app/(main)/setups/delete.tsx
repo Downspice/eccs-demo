@@ -26,7 +26,7 @@ export function DeleteSetupModal({
 
   const handleDelete = () => {
     deleteLevel.mutate(
-      { id: item.id },
+      { id: item.id, electionId: item.electionId },
       {
         onSuccess: () => {
           onSuccess?.(item.id);
@@ -42,20 +42,24 @@ export function DeleteSetupModal({
         <Modal.Header
           icon={RiDeleteBinLine}
           title='Delete Level Setup'
-          description='Are you sure you want to remove this compliance level?'
+          description='Are you sure you want to remove this electoral level?'
         />
 
         <Modal.Body className='py-4'>
           <div className='rounded-xl bg-error-lighter/20 border border-error-base/20 p-3.5 text-paragraph-sm text-text-strong-950'>
-            <p className='font-semibold text-error-base'>
-              {item.name}: {item.title}
-            </p>
+            <p className='font-semibold text-error-base'>{item.name}</p>
             <p className='mt-1 text-paragraph-xs text-text-sub-600'>
-              Code: <span className='font-mono font-medium'>{item.code}</span>
+              Rank:{' '}
+              <span className='font-medium'>Level {item.levelRank ?? 1}</span>
             </p>
+            {item.description && (
+              <p className='mt-1 text-paragraph-xs text-text-sub-600'>
+                {item.description}
+              </p>
+            )}
             <p className='mt-2 text-paragraph-xs text-text-sub-600'>
-              Deleting this level will unassign any mapped controls or audit
-              checkpoints. This action cannot be undone.
+              Deleting this level will permanently remove it from the election
+              setup. This action cannot be undone.
             </p>
           </div>
         </Modal.Body>

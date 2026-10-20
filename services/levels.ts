@@ -42,8 +42,24 @@ export interface UpdateLevelPayload {
 
 // --- Queries ---
 
-export function useGetLevels() {
-  return useBaseQuery<LevelItem[]>(['levels'], '/levels');
+export function useGetLevels(electionId?: string) {
+  return useBaseQuery<LevelItem[]>(
+    ['levels', electionId || 'all'],
+    () => (electionId ? `/levels/electionid/${electionId}` : '/levels'),
+    {
+      enabled: electionId !== undefined ? Boolean(electionId) : true,
+    },
+  );
+}
+
+export function useGetLevelsByElection(electionId?: string) {
+  return useBaseQuery<LevelItem[]>(
+    ['levels', 'election', electionId],
+    () => `/levels/electionid/${electionId}`,
+    {
+      enabled: Boolean(electionId),
+    },
+  );
 }
 
 export function useGetLevelsPaginated(params?: PaginationParams) {
@@ -65,27 +81,66 @@ export function useGetLevel(id?: TId) {
 export function useCreateLevel() {
   return useBaseMutation<LevelItem, CreateLevelPayload>(
     ['create-level'],
-    '/levels',
+    (payload) => `/levels/election/${payload.electionId}`,
     'post',
-    () => [['levels'], ['levels-paginated']],
+    (payload) => [
+      ['levels'],
+      ['levels', payload.electionId],
+      ['levels', 'election', payload.electionId],
+      ['levels-paginated'],
+    ],
+    {
+      transformPayload: (payload) => [
+        {
+          id: payload.id || crypto.randomUUID(),
+          name: payload.name.trim(),
+          description: payload.description?.trim() || '',
+          levelRank: Number(payload.levelRank),
+          electionId: payload.electionId,
+        },
+      ],
+    },
   );
 }
 
 export function useUpdateLevel() {
   return useBaseMutation<LevelItem, UpdateLevelPayload>(
     ['update-level'],
-    '/levels',
+    (payload) => `/levels/election/${payload.electionId}`,
     'post',
-    (payload) => [['levels'], ['level', payload.id], ['levels-paginated']],
+    (payload) => [
+      ['levels'],
+      ['level', payload.id],
+      ['levels', payload.electionId],
+      ['levels', 'election', payload.electionId],
+      ['levels-paginated'],
+    ],
+    {
+      transformPayload: (payload) => [
+        {
+          id: payload.id,
+          name: payload.name.trim(),
+          description: payload.description?.trim() || '',
+          levelRank: Number(payload.levelRank),
+          electionId: payload.electionId,
+        },
+      ],
+    },
   );
 }
 
 export function useDeleteLevel() {
-  return useBaseMutation<void, { id: TId }>(
+  return useBaseMutation<void, { id: TId; electionId?: string }>(
     ['delete-level'],
     (payload) => `/levels/${payload.id}`,
     'delete',
-    (payload) => [['levels'], ['level', payload.id], ['levels-paginated']],
+    (payload) => [
+      ['levels'],
+      ['level', payload.id],
+      ['levels', payload.electionId],
+      ['levels', 'election', payload.electionId],
+      ['levels-paginated'],
+    ],
   );
 }
 

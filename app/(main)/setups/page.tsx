@@ -76,11 +76,35 @@ const SETUP_MODULES: SetupModuleItem[] = [
 ];
 
 export default function SetupsPage() {
-  const { data: rawLevels, isLoading: isLevelsLoading } = useGetLevels();
   const { data: rawElections, isLoading: isElectionsLoading } =
     useGetElections();
   const { data: rawPoliticalParties, isLoading: isPoliticalPartiesLoading } =
     useGetPoliticalParties();
+
+  const elections = React.useMemo<ElectionItem[]>(() => {
+    if (Array.isArray(rawElections)) return rawElections;
+    if (
+      rawElections &&
+      typeof rawElections === 'object' &&
+      Array.isArray((rawElections as { data?: ElectionItem[] }).data)
+    ) {
+      return (rawElections as { data: ElectionItem[] }).data;
+    }
+    return [];
+  }, [rawElections]);
+
+  const [selectedElectionId, setSelectedElectionId] =
+    React.useState<string>('');
+
+  React.useEffect(() => {
+    if (!selectedElectionId && elections.length > 0) {
+      setSelectedElectionId(elections[0].id);
+    }
+  }, [elections, selectedElectionId]);
+
+  const activeElectionId = selectedElectionId || elections[0]?.id;
+  const { data: rawLevels, isLoading: isLevelsLoading } =
+    useGetLevels(activeElectionId);
 
   // Defensive array normalization guarantees levels, elections, politicalParties are always arrays
   const levels = React.useMemo<LevelItem[]>(() => {
@@ -94,18 +118,6 @@ export default function SetupsPage() {
     }
     return [];
   }, [rawLevels]);
-
-  const elections = React.useMemo<ElectionItem[]>(() => {
-    if (Array.isArray(rawElections)) return rawElections;
-    if (
-      rawElections &&
-      typeof rawElections === 'object' &&
-      Array.isArray((rawElections as { data?: ElectionItem[] }).data)
-    ) {
-      return (rawElections as { data: ElectionItem[] }).data;
-    }
-    return [];
-  }, [rawElections]);
 
   const politicalParties = React.useMemo<PoliticalPartyItem[]>(() => {
     if (Array.isArray(rawPoliticalParties)) return rawPoliticalParties;
@@ -748,6 +760,7 @@ export default function SetupsPage() {
       {/* Sibling Action Modals - Levels */}
       <CreateSetupModal
         open={modalState.type === 'create'}
+        defaultElectionId={activeElectionId}
         onClose={() => setModalState({ type: null })}
       />
 

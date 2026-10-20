@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useGetElections, type ElectionItem } from '@/services/elections';
 import { useCreateLevel, type LevelItem } from '@/services/levels';
 import { RiAddLine } from '@remixicon/react';
 import { useFormik } from 'formik';
@@ -14,6 +15,7 @@ import type { SetupFormData } from './types';
 
 interface CreateSetupModalProps {
   open: boolean;
+  defaultElectionId?: string;
   onClose: () => void;
   onSuccess?: (item: LevelItem) => void;
 }
@@ -42,13 +44,33 @@ const INITIAL_FORM_DATA: SetupFormData = {
 
 export function CreateSetupModal({
   open,
+  defaultElectionId,
   onClose,
   onSuccess,
 }: CreateSetupModalProps) {
   const createLevel = useCreateLevel();
+  const { data: rawElections } = useGetElections();
+
+  const elections = React.useMemo<ElectionItem[]>(() => {
+    if (Array.isArray(rawElections)) return rawElections;
+    if (
+      rawElections &&
+      typeof rawElections === 'object' &&
+      Array.isArray((rawElections as { data?: ElectionItem[] }).data)
+    ) {
+      return (rawElections as { data: ElectionItem[] }).data;
+    }
+    return [];
+  }, [rawElections]);
+
+  const initialElectionId = defaultElectionId || elections[0]?.id || '';
 
   const formik = useFormik<SetupFormData>({
-    initialValues: INITIAL_FORM_DATA,
+    initialValues: {
+      ...INITIAL_FORM_DATA,
+      electionId: initialElectionId,
+    },
+    enableReinitialize: true,
     validationSchema: levelValidationSchema,
     validateOnBlur: true,
     validateOnChange: true,
