@@ -21,10 +21,13 @@ import {
   RiEditLine,
   RiEqualizerLine,
   RiEyeLine,
+  RiGitForkLine,
   RiGroupLine,
   RiSearchLine,
+  RiTableLine,
 } from '@remixicon/react';
 
+import { cn } from '@/utils/cn';
 import * as Badge from '@/components/ui/badge';
 import * as Button from '@/components/ui/button';
 import * as CompactButton from '@/components/ui/compact-button';
@@ -48,6 +51,7 @@ import {
   DeleteSetupModal,
 } from './delete';
 import { SetupFilters, type SetupFilterState } from './filters';
+import { LevelMappingOrganogram } from './level-mapping-organogram';
 import { SetupTablePanel } from './setup-table-panel';
 import { SetupTabs, type SetupModuleItem } from './tabs';
 import type {
@@ -133,6 +137,9 @@ export default function SetupsPage() {
   }, [elections, selectedElectionId]);
 
   const activeElectionId = selectedElectionId || elections[0]?.id;
+  const activeElectionName = React.useMemo(() => {
+    return elections.find((e) => e.id === activeElectionId)?.name;
+  }, [elections, activeElectionId]);
 
   // Active election datasets
   const { data: rawLevels, isLoading: isLevelsLoading } =
@@ -199,6 +206,9 @@ export default function SetupsPage() {
     search: '',
   });
   const [levelMappingSearch, setLevelMappingSearch] = React.useState('');
+  const [levelMappingView, setLevelMappingView] = React.useState<
+    'table' | 'organogram'
+  >('table');
   const [candidateSearch, setCandidateSearch] = React.useState('');
   const [electionSearch, setElectionSearch] = React.useState('');
   const [politicalPartySearch, setPoliticalPartySearch] = React.useState('');
@@ -523,30 +533,64 @@ export default function SetupsPage() {
                   </Input.Root>
                 </div>
 
-                {elections.length > 1 && (
-                  <div className='flex items-center gap-2'>
-                    <span className='text-label-xs font-medium text-text-sub-600'>
-                      Election:
-                    </span>
-                    <div className='w-56'>
-                      <Select.Root
-                        value={activeElectionId}
-                        onValueChange={(val) => setSelectedElectionId(val)}
-                      >
-                        <Select.Trigger className='w-full'>
-                          <Select.Value placeholder='Select election...' />
-                        </Select.Trigger>
-                        <Select.Content position='popper'>
-                          {elections.map((elec) => (
-                            <Select.Item key={elec.id} value={elec.id}>
-                              {elec.name}
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Root>
-                    </div>
+                <div className='flex items-center gap-3'>
+                  {/* View Switcher: Table vs Organogram */}
+                  <div className='flex items-center gap-1 rounded-10 bg-bg-weak-50 p-1 border border-stroke-soft-200'>
+                    <button
+                      type='button'
+                      onClick={() => setLevelMappingView('table')}
+                      className={cn(
+                        'flex items-center gap-1.5 px-2.5 py-1 text-paragraph-xs font-medium rounded-md transition-colors',
+                        levelMappingView === 'table'
+                          ? 'bg-bg-white-0 text-text-strong-950 shadow-toggle-switch'
+                          : 'text-text-sub-600 hover:text-text-strong-950',
+                      )}
+                      title='Table View'
+                    >
+                      <RiTableLine className='size-3.5' />
+                      <span>Table</span>
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => setLevelMappingView('organogram')}
+                      className={cn(
+                        'flex items-center gap-1.5 px-2.5 py-1 text-paragraph-xs font-medium rounded-md transition-colors',
+                        levelMappingView === 'organogram'
+                          ? 'bg-bg-white-0 text-text-strong-950 shadow-toggle-switch'
+                          : 'text-text-sub-600 hover:text-text-strong-950',
+                      )}
+                      title='Organogram View'
+                    >
+                      <RiGitForkLine className='size-3.5' />
+                      <span>Organogram</span>
+                    </button>
                   </div>
-                )}
+
+                  {elections.length > 1 && (
+                    <div className='flex items-center gap-2'>
+                      <span className='text-label-xs font-medium text-text-sub-600'>
+                        Election:
+                      </span>
+                      <div className='w-56'>
+                        <Select.Root
+                          value={activeElectionId}
+                          onValueChange={(val) => setSelectedElectionId(val)}
+                        >
+                          <Select.Trigger className='w-full'>
+                            <Select.Value placeholder='Select election...' />
+                          </Select.Trigger>
+                          <Select.Content position='popper'>
+                            {elections.map((elec) => (
+                              <Select.Item key={elec.id} value={elec.id}>
+                                {elec.name}
+                              </Select.Item>
+                            ))}
+                          </Select.Content>
+                        </Select.Root>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : activeModule === 'candidates' ? (
               <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
@@ -801,167 +845,190 @@ export default function SetupsPage() {
                   </Table.Body>
                 </Table.Root>
               ) : activeModule === 'level-mapping' ? (
-                <Table.Root scrollable>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.Head>Territory / Unit Name</Table.Head>
-                      <Table.Head className='w-[160px]'>Level Tier</Table.Head>
-                      <Table.Head className='w-[220px]'>
-                        Parent Jurisdiction
-                      </Table.Head>
-                      <Table.Head>Election</Table.Head>
-                      <Table.Head className='w-[120px] text-right'>
-                        Actions
-                      </Table.Head>
-                    </Table.Row>
-                  </Table.Header>
+                levelMappingView === 'organogram' ? (
+                  <LevelMappingOrganogram
+                    mappings={filteredLevelMappings}
+                    electionName={activeElectionName}
+                    isLoading={isLevelMappingsLoading}
+                    searchQuery={levelMappingSearch}
+                    onView={(item) =>
+                      setLevelMappingModalState({ type: 'view', item })
+                    }
+                    onEdit={(item) =>
+                      setLevelMappingModalState({ type: 'update', item })
+                    }
+                    onDelete={(item) =>
+                      setLevelMappingModalState({ type: 'delete', item })
+                    }
+                    onCreateSubordinate={() =>
+                      setLevelMappingModalState({ type: 'create' })
+                    }
+                  />
+                ) : (
+                  <Table.Root scrollable>
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.Head>Territory / Unit Name</Table.Head>
+                        <Table.Head className='w-[160px]'>
+                          Level Tier
+                        </Table.Head>
+                        <Table.Head className='w-[220px]'>
+                          Parent Jurisdiction
+                        </Table.Head>
+                        <Table.Head>Election</Table.Head>
+                        <Table.Head className='w-[120px] text-right'>
+                          Actions
+                        </Table.Head>
+                      </Table.Row>
+                    </Table.Header>
 
-                  <Table.Body>
-                    {isLevelMappingsLoading ? (
-                      Array.from({ length: 5 }).map((_, idx) => (
-                        <Table.Row key={`skeleton-mapping-${idx}`}>
-                          <Table.Cell>
-                            <Skeleton className='h-4 w-40' />
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Skeleton className='h-5 w-20 rounded-full' />
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Skeleton className='h-4 w-32' />
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Skeleton className='h-4 w-28' />
-                          </Table.Cell>
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center justify-end gap-1.5'>
-                              <Skeleton className='size-7 rounded-lg' />
-                              <Skeleton className='size-7 rounded-lg' />
-                              <Skeleton className='size-7 rounded-lg' />
-                            </div>
+                    <Table.Body>
+                      {isLevelMappingsLoading ? (
+                        Array.from({ length: 5 }).map((_, idx) => (
+                          <Table.Row key={`skeleton-mapping-${idx}`}>
+                            <Table.Cell>
+                              <Skeleton className='h-4 w-40' />
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Skeleton className='h-5 w-20 rounded-full' />
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Skeleton className='h-4 w-32' />
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Skeleton className='h-4 w-28' />
+                            </Table.Cell>
+                            <Table.Cell className='text-right'>
+                              <div className='inline-flex items-center justify-end gap-1.5'>
+                                <Skeleton className='size-7 rounded-lg' />
+                                <Skeleton className='size-7 rounded-lg' />
+                                <Skeleton className='size-7 rounded-lg' />
+                              </div>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))
+                      ) : filteredLevelMappings.length === 0 ? (
+                        <Table.Row>
+                          <Table.Cell colSpan={5} className='py-12 text-center'>
+                            <p className='text-label-sm font-semibold text-text-strong-950'>
+                              No level mappings found
+                            </p>
+                            <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                              Try adjusting your search criteria or register a
+                              new territorial mapping.
+                            </p>
                           </Table.Cell>
                         </Table.Row>
-                      ))
-                    ) : filteredLevelMappings.length === 0 ? (
-                      <Table.Row>
-                        <Table.Cell colSpan={5} className='py-12 text-center'>
-                          <p className='text-label-sm font-semibold text-text-strong-950'>
-                            No level mappings found
-                          </p>
-                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                            Try adjusting your search criteria or register a new
-                            territorial mapping.
-                          </p>
-                        </Table.Cell>
-                      </Table.Row>
-                    ) : (
-                      filteredLevelMappings.map((item) => (
-                        <Table.Row
-                          key={item.id}
-                          className='transition-colors hover:bg-bg-weak-50/50'
-                        >
-                          {/* Unit Name */}
-                          <Table.Cell>
-                            <span className='text-label-sm font-semibold text-text-strong-950'>
-                              {item.name}
-                            </span>
-                          </Table.Cell>
-
-                          {/* Tier */}
-                          <Table.Cell>
-                            <Badge.Root
-                              variant='lighter'
-                              color='gray'
-                              size='small'
-                            >
-                              {item.levelName || 'Level'}
-                            </Badge.Root>
-                          </Table.Cell>
-
-                          {/* Parent Jurisdiction */}
-                          <Table.Cell>
-                            {item.upperLevelName ? (
-                              <span className='text-paragraph-sm text-text-strong-950 font-medium'>
-                                {item.upperLevelName}
+                      ) : (
+                        filteredLevelMappings.map((item) => (
+                          <Table.Row
+                            key={item.id}
+                            className='transition-colors hover:bg-bg-weak-50/50'
+                          >
+                            {/* Unit Name */}
+                            <Table.Cell>
+                              <span className='text-label-sm font-semibold text-text-strong-950'>
+                                {item.name}
                               </span>
-                            ) : (
+                            </Table.Cell>
+
+                            {/* Tier */}
+                            <Table.Cell>
                               <Badge.Root
                                 variant='lighter'
-                                color='blue'
+                                color='gray'
                                 size='small'
                               >
-                                Root Level
+                                {item.levelName || 'Level'}
                               </Badge.Root>
-                            )}
-                          </Table.Cell>
+                            </Table.Cell>
 
-                          {/* Election */}
-                          <Table.Cell>
-                            <span className='text-paragraph-xs text-text-sub-600'>
-                              {item.electionName || 'Election'}
-                            </span>
-                          </Table.Cell>
+                            {/* Parent Jurisdiction */}
+                            <Table.Cell>
+                              {item.upperLevelName ? (
+                                <span className='text-paragraph-sm text-text-strong-950 font-medium'>
+                                  {item.upperLevelName}
+                                </span>
+                              ) : (
+                                <Badge.Root
+                                  variant='lighter'
+                                  color='blue'
+                                  size='small'
+                                >
+                                  Root Level
+                                </Badge.Root>
+                              )}
+                            </Table.Cell>
 
-                          {/* Actions */}
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center gap-1.5'>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg'
-                                onClick={() =>
-                                  setLevelMappingModalState({
-                                    type: 'view',
-                                    item,
-                                  })
-                                }
-                                title='View details'
-                              >
-                                <CompactButton.Icon
-                                  as={RiEyeLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg hover:text-primary-base'
-                                onClick={() =>
-                                  setLevelMappingModalState({
-                                    type: 'update',
-                                    item,
-                                  })
-                                }
-                                title='Edit mapping'
-                              >
-                                <CompactButton.Icon
-                                  as={RiEditLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg hover:text-error-base'
-                                onClick={() =>
-                                  setLevelMappingModalState({
-                                    type: 'delete',
-                                    item,
-                                  })
-                                }
-                                title='Delete mapping'
-                              >
-                                <CompactButton.Icon
-                                  as={RiDeleteBinLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                            </div>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))
-                    )}
-                  </Table.Body>
-                </Table.Root>
+                            {/* Election */}
+                            <Table.Cell>
+                              <span className='text-paragraph-xs text-text-sub-600'>
+                                {item.electionName || 'Election'}
+                              </span>
+                            </Table.Cell>
+
+                            {/* Actions */}
+                            <Table.Cell className='text-right'>
+                              <div className='inline-flex items-center gap-1.5'>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg'
+                                  onClick={() =>
+                                    setLevelMappingModalState({
+                                      type: 'view',
+                                      item,
+                                    })
+                                  }
+                                  title='View details'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiEyeLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg hover:text-primary-base'
+                                  onClick={() =>
+                                    setLevelMappingModalState({
+                                      type: 'update',
+                                      item,
+                                    })
+                                  }
+                                  title='Edit mapping'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiEditLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg hover:text-error-base'
+                                  onClick={() =>
+                                    setLevelMappingModalState({
+                                      type: 'delete',
+                                      item,
+                                    })
+                                  }
+                                  title='Delete mapping'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiDeleteBinLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                              </div>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))
+                      )}
+                    </Table.Body>
+                  </Table.Root>
+                )
               ) : activeModule === 'candidates' ? (
                 <Table.Root scrollable>
                   <Table.Header>

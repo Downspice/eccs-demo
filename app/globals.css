@@ -543,3 +543,67 @@
   min-width: 0;
   padding-left: var(--slide-spacing);
 }
+
+/* AlignUI Theme for PrimeReact OrganizationChart */
+.align-ui-orgchart .p-organizationchart-table {
+  border-spacing: 0;
+  border-collapse: separate;
+  margin: 0 auto;
+}
+
+.align-ui-orgchart .p-organizationchart-table > tbody > tr > td {
+  text-align: center;
+  vertical-align: top;
+  padding: 0 0.875rem;
+}
+
+.align-ui-orgchart .p-organizationchart-node-content {
+  display: inline-block;
+  position: relative;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.align-ui-orgchart .p-organizationchart-node-content .p-node-toggler {
+  position: absolute;
+  bottom: -0.875rem;
+  left: 50%;
+  margin-left: -0.75rem;
+  z-index: 10;
+  cursor: pointer;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background-color: hsl(var(--bg-white-0));
+  border: 1px solid hsl(var(--stroke-soft-200));
+  color: hsl(var(--text-sub-600));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.align-ui-orgchart .p-organizationchart-node-content .p-node-toggler:hover {
+  background-color: hsl(var(--bg-weak-50));
+  color: hsl(var(--text-strong-950));
+  border-color: hsl(var(--stroke-strong-950));
+  transform: scale(1.1);
+}
+
+.align-ui-orgchart .p-organizationchart-line-down {
+  margin: 0 auto;
+  height: 24px;
+  width: 2px;
+  background-color: hsl(var(--stroke-soft-200));
+}
+
+.align-ui-orgchart .p-organizationchart-line-left {
+  border-right: 2px solid hsl(var(--stroke-soft-200));
+}
+
+.align-ui-orgchart .p-organizationchart-line-top {
+  border-top: 2px solid hsl(var(--stroke-soft-200));
+}
