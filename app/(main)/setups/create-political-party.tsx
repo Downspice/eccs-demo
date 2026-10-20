@@ -27,10 +27,15 @@ export const politicalPartyValidationSchema = Yup.object().shape({
     .min(2, 'Political party name must be at least 2 characters')
     .max(120, 'Political party name cannot exceed 120 characters')
     .required('Political party name is required'),
+  abbreviation: Yup.string()
+    .trim()
+    .max(20, 'Abbreviation cannot exceed 20 characters')
+    .required('Abbreviation is required'),
 });
 
 const INITIAL_FORM_DATA: PoliticalPartyFormData = {
   name: '',
+  abbreviation: '',
 };
 
 export function CreatePoliticalPartyModal({
@@ -46,12 +51,19 @@ export function CreatePoliticalPartyModal({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      createPoliticalParty.mutate(values, {
-        onSuccess: (newItem) => {
-          onSuccess?.(newItem);
-          handleClose();
+      createPoliticalParty.mutate(
+        {
+          name: values.name.trim(),
+          abbreviation: values.abbreviation?.trim().toUpperCase() || '',
+          imagePath: values.imagePath || '/',
         },
-      });
+        {
+          onSuccess: (newItem) => {
+            onSuccess?.(newItem);
+            handleClose();
+          },
+        },
+      );
     },
   });
 

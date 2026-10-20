@@ -33,6 +33,7 @@ export function UpdatePoliticalPartyModal({
   const formik = useFormik<PoliticalPartyFormData>({
     initialValues: {
       name: item?.name || '',
+      abbreviation: item?.abbreviation || '',
     },
     validationSchema: politicalPartyValidationSchema,
     enableReinitialize: true,
@@ -44,7 +45,9 @@ export function UpdatePoliticalPartyModal({
       updatePoliticalParty.mutate(
         {
           id: item.id,
-          name: values.name,
+          name: values.name.trim(),
+          abbreviation: values.abbreviation?.trim().toUpperCase() || '',
+          imagePath: item.imagePath || '/',
         },
         {
           onSuccess: (updated) => {

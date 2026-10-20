@@ -45,7 +45,7 @@ export function PoliticalPartyForm({
               name='name'
               type='text'
               disabled={disabled}
-              placeholder='e.g. Democratic Alliance, Green Progress Party'
+              placeholder='e.g. National Democratic Congress'
               value={values.name}
               onChange={handleChange}
               onBlur={handleBlur}
@@ -59,6 +59,35 @@ export function PoliticalPartyForm({
           <p className='text-paragraph-xs text-text-soft-400'>
             Enter the registered legal name of the political organization or
             party.
+          </p>
+        )}
+      </div>
+
+      {/* Abbreviation */}
+      <div className='flex flex-col gap-1.5'>
+        <Label.Root htmlFor='abbreviation'>Abbreviation / Acronym</Label.Root>
+        <Input.Root
+          hasError={Boolean(touched.abbreviation && errors.abbreviation)}
+        >
+          <Input.Wrapper>
+            <input
+              id='abbreviation'
+              name='abbreviation'
+              type='text'
+              disabled={disabled}
+              placeholder='e.g. NDC, NPP'
+              value={values.abbreviation || ''}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50 uppercase'
+            />
+          </Input.Wrapper>
+        </Input.Root>
+        {touched.abbreviation && errors.abbreviation ? (
+          <Hint.Root hasError>{errors.abbreviation}</Hint.Root>
+        ) : (
+          <p className='text-paragraph-xs text-text-soft-400'>
+            Short party acronym displayed on ballots, manifests, and badges.
           </p>
         )}
       </div>

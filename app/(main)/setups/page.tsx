@@ -316,6 +316,7 @@ export default function SetupsPage() {
     return politicalParties.filter(
       (item) =>
         item.name?.toLowerCase().includes(query) ||
+        item.abbreviation?.toLowerCase().includes(query) ||
         item.id?.toLowerCase().includes(query),
     );
   }, [politicalParties, politicalPartySearch]);
@@ -1241,6 +1242,7 @@ export default function SetupsPage() {
                 <Table.Header>
                   <Table.Row>
                     <Table.Head>Party Name</Table.Head>
+                    <Table.Head className='w-[160px]'>Abbreviation</Table.Head>
                     <Table.Head className='w-[120px] text-right'>
                       Actions
                     </Table.Head>
@@ -1254,6 +1256,9 @@ export default function SetupsPage() {
                         <Table.Cell>
                           <Skeleton className='h-4 w-48' />
                         </Table.Cell>
+                        <Table.Cell>
+                          <Skeleton className='h-5 w-16 rounded-full' />
+                        </Table.Cell>
                         <Table.Cell className='text-right'>
                           <div className='inline-flex items-center justify-end gap-1.5'>
                             <Skeleton className='size-7 rounded-lg' />
@@ -1265,7 +1270,7 @@ export default function SetupsPage() {
                     ))
                   ) : filteredPoliticalParties.length === 0 ? (
                     <Table.Row>
-                      <Table.Cell colSpan={2} className='py-12 text-center'>
+                      <Table.Cell colSpan={3} className='py-12 text-center'>
                         <p className='text-label-sm font-semibold text-text-strong-950'>
                           No political parties found
                         </p>
@@ -1286,6 +1291,23 @@ export default function SetupsPage() {
                           <span className='text-label-sm font-semibold text-text-strong-950'>
                             {item.name}
                           </span>
+                        </Table.Cell>
+
+                        {/* Abbreviation */}
+                        <Table.Cell>
+                          {item.abbreviation ? (
+                            <Badge.Root
+                              variant='lighter'
+                              color='gray'
+                              size='small'
+                            >
+                              {item.abbreviation}
+                            </Badge.Root>
+                          ) : (
+                            <span className='text-paragraph-sm text-text-soft-400'>
+                              —
+                            </span>
+                          )}
                         </Table.Cell>
 
                         {/* Actions */}

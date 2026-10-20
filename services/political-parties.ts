@@ -79,7 +79,7 @@ export function useCreatePoliticalParty() {
               .join('')
               .toUpperCase() ||
             'PP',
-          imagePath: payload.imagePath || '/images/party-default.png',
+          imagePath: payload.imagePath || '/',
         };
         return [item];
       },
@@ -111,7 +111,7 @@ export function useUpdatePoliticalParty() {
               .join('')
               .toUpperCase() ||
             'PP',
-          imagePath: payload.imagePath || '/images/party-default.png',
+          imagePath: payload.imagePath || '/',
         };
         return [item];
       },
