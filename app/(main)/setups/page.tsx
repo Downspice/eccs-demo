@@ -1,10 +1,11 @@
 'use client';
 
 import * as React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
 import { useGetCandidates, type CandidateItem } from '@/services/candidates';
 import { useGetElections, type ElectionItem } from '@/services/elections';
 import {
-  useGetLevelMappings,
   type LevelMappingGroup,
   type LevelMappingItem,
 } from '@/services/level-mappings';
@@ -50,6 +51,7 @@ import {
   DeletePoliticalPartyModal,
   DeleteSetupModal,
 } from './delete';
+import { ElectionMultiSelect } from './election-multi-select';
 import { SetupFilters, type SetupFilterState } from './filters';
 import { LevelMappingOrganogram } from './level-mapping-organogram';
 import { SetupTablePanel } from './setup-table-panel';
@@ -127,40 +129,125 @@ export default function SetupsPage() {
     return [];
   }, [rawElections]);
 
-  const [selectedElectionId, setSelectedElectionId] =
-    React.useState<string>('');
+  const [selectedElectionIds, setSelectedElectionIds] = React.useState<
+    string[]
+  >([]);
 
-  React.useEffect(() => {
-    if (!selectedElectionId && elections.length > 0) {
-      setSelectedElectionId(elections[0].id);
-    }
-  }, [elections, selectedElectionId]);
+  const activeElectionId =
+    selectedElectionIds.length === 1
+      ? selectedElectionIds[0]
+      : elections[0]?.id || '';
 
-  const activeElectionId = selectedElectionId || elections[0]?.id;
   const activeElectionName = React.useMemo(() => {
-    return elections.find((e) => e.id === activeElectionId)?.name;
-  }, [elections, activeElectionId]);
+    if (selectedElectionIds.length === 1) {
+      return (
+        elections.find((e) => e.id === selectedElectionIds[0])?.name ||
+        elections[0]?.name
+      );
+    }
+    if (selectedElectionIds.length > 1) {
+      return `${selectedElectionIds.length} Elections Selected`;
+    }
+    return elections[0]?.name || 'All Elections';
+  }, [elections, selectedElectionIds]);
 
-  // Active election datasets
-  const { data: rawLevels, isLoading: isLevelsLoading } =
-    useGetLevels(activeElectionId);
+  const electionIdsKey = React.useMemo(
+    () => elections.map((e) => e.id).sort().join(','),
+    [elections],
+  );
+
+  // Datasets across elections (frontend multiselect will filter these locally)
+  const { data: rawLevels, isLoading: isLevelsLoading } = useGetLevels();
+
   const { data: rawLevelMappings, isLoading: isLevelMappingsLoading } =
-    useGetLevelMappings(activeElectionId);
-  const { data: rawCandidates, isLoading: isCandidatesLoading } =
-    useGetCandidates(activeElectionId);
+    useQuery({
+      queryKey: ['level-mappings', 'all-elections', electionIdsKey],
+      queryFn: async () => {
+        if (elections.length === 0) return [];
+        const results = await Promise.all(
+          elections.map(async (elec) => {
+            try {
+              const res = await apiClient<any>(
+                `/level-mapping/election/${elec.id}`,
+              );
+              const groups: LevelMappingGroup[] = Array.isArray(res)
+                ? res
+                : res && typeof res === 'object' && Array.isArray(res.data)
+                  ? res.data
+                  : [];
+              return groups.map((g) => ({
+                ...g,
+                electionId: elec.id,
+                electionName: elec.name,
+                mappings: (g.mappings || []).map((m) => ({
+                  ...m,
+                  electionId: m.electionId || elec.id,
+                  electionName: m.electionName || elec.name,
+                })),
+              }));
+            } catch {
+              return [];
+            }
+          }),
+        );
+        return results.flat();
+      },
+      enabled: elections.length > 0,
+    });
+
+  const { data: rawCandidates, isLoading: isCandidatesLoading } = useQuery({
+    queryKey: ['candidates', 'all-elections', electionIdsKey],
+    queryFn: async () => {
+      if (elections.length === 0) return [];
+      const results = await Promise.all(
+        elections.map(async (elec) => {
+          try {
+            const res = await apiClient<any>(
+              `/candidate/electionid/${elec.id}`,
+            );
+            const data: CandidateItem[] = Array.isArray(res)
+              ? res
+              : res && typeof res === 'object' && Array.isArray(res.data)
+                ? res.data
+                : [];
+            return data.map((c) => ({
+              ...c,
+              electionId: c.electionId || elec.id,
+              electionName: c.electionName || elec.name,
+            }));
+          } catch {
+            return [];
+          }
+        }),
+      );
+      return results.flat();
+    },
+    enabled: elections.length > 0,
+  });
 
   // Normalized arrays
   const levels = React.useMemo<LevelItem[]>(() => {
-    if (Array.isArray(rawLevels)) return rawLevels;
-    if (
+    let list: LevelItem[] = [];
+    if (Array.isArray(rawLevels)) list = rawLevels;
+    else if (
       rawLevels &&
       typeof rawLevels === 'object' &&
       Array.isArray((rawLevels as { data?: LevelItem[] }).data)
     ) {
-      return (rawLevels as { data: LevelItem[] }).data;
+      list = (rawLevels as { data: LevelItem[] }).data;
     }
-    return [];
-  }, [rawLevels]);
+
+    return list.map((item) => {
+      if (item.electionId) return item;
+      const matched = elections.find(
+        (e) => e.name.toLowerCase() === item.electionName?.toLowerCase(),
+      );
+      return {
+        ...item,
+        electionId: matched?.id,
+      };
+    });
+  }, [rawLevels, elections]);
 
   const levelMappings = React.useMemo<LevelMappingItem[]>(() => {
     if (!rawLevelMappings || !Array.isArray(rawLevelMappings)) return [];
@@ -294,6 +381,19 @@ export default function SetupsPage() {
   // Filtered dataset for Levels
   const filteredLevels = React.useMemo(() => {
     return levels.filter((item) => {
+      // Election multiselect filter (client-side)
+      if (selectedElectionIds.length > 0) {
+        const matchesElection =
+          (item.electionId && selectedElectionIds.includes(item.electionId)) ||
+          (item.electionName &&
+            selectedElectionIds.some(
+              (id) =>
+                elections.find((e) => e.id === id)?.name.toLowerCase() ===
+                item.electionName?.toLowerCase(),
+            ));
+        if (!matchesElection) return false;
+      }
+
       // Search filter
       if (filters.search.trim()) {
         const query = filters.search.toLowerCase();
@@ -316,33 +416,64 @@ export default function SetupsPage() {
 
       return true;
     });
-  }, [levels, filters]);
+  }, [levels, filters, selectedElectionIds, elections]);
 
   // Filtered dataset for Level Mappings
   const filteredLevelMappings = React.useMemo(() => {
-    if (!levelMappingSearch.trim()) return levelMappings;
+    let list = levelMappings;
+    if (selectedElectionIds.length > 0) {
+      list = list.filter((item) => {
+        return (
+          (item.electionId && selectedElectionIds.includes(item.electionId)) ||
+          (item.electionName &&
+            selectedElectionIds.some(
+              (id) =>
+                elections.find((e) => e.id === id)?.name.toLowerCase() ===
+                item.electionName?.toLowerCase(),
+            ))
+        );
+      });
+    }
+
+    if (!levelMappingSearch.trim()) return list;
     const query = levelMappingSearch.toLowerCase();
-    return levelMappings.filter(
+    return list.filter(
       (item) =>
         item.name?.toLowerCase().includes(query) ||
         item.levelName?.toLowerCase().includes(query) ||
         item.upperLevelName?.toLowerCase().includes(query) ||
+        item.electionName?.toLowerCase().includes(query) ||
         item.id?.toLowerCase().includes(query),
     );
-  }, [levelMappings, levelMappingSearch]);
+  }, [levelMappings, levelMappingSearch, selectedElectionIds, elections]);
 
   // Filtered dataset for Candidates
   const filteredCandidates = React.useMemo(() => {
-    if (!candidateSearch.trim()) return candidates;
+    let list = candidates;
+    if (selectedElectionIds.length > 0) {
+      list = list.filter((item) => {
+        return (
+          (item.electionId && selectedElectionIds.includes(item.electionId)) ||
+          (item.electionName &&
+            selectedElectionIds.some(
+              (id) =>
+                elections.find((e) => e.id === id)?.name.toLowerCase() ===
+                item.electionName?.toLowerCase(),
+            ))
+        );
+      });
+    }
+
+    if (!candidateSearch.trim()) return list;
     const query = candidateSearch.toLowerCase();
-    return candidates.filter(
+    return list.filter(
       (item) =>
         item.name?.toLowerCase().includes(query) ||
         item.politicalPartyName?.toLowerCase().includes(query) ||
         item.electionName?.toLowerCase().includes(query) ||
         item.id?.toLowerCase().includes(query),
     );
-  }, [candidates, candidateSearch]);
+  }, [candidates, candidateSearch, selectedElectionIds, elections]);
 
   // Filtered dataset for Elections
   const filteredElections = React.useMemo(() => {
@@ -524,30 +655,11 @@ export default function SetupsPage() {
                   }
                   onReset={() => setFilters({ search: '' })}
                 />
-                {elections.length > 1 && (
-                  <div className='flex items-center gap-2'>
-                    <span className='text-label-xs font-medium text-text-sub-600'>
-                      Election:
-                    </span>
-                    <div className='w-56'>
-                      <Select.Root
-                        value={activeElectionId}
-                        onValueChange={(val) => setSelectedElectionId(val)}
-                      >
-                        <Select.Trigger className='w-full'>
-                          <Select.Value placeholder='Select election...' />
-                        </Select.Trigger>
-                        <Select.Content position='popper'>
-                          {elections.map((elec) => (
-                            <Select.Item key={elec.id} value={elec.id}>
-                              {elec.name}
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Root>
-                    </div>
-                  </div>
-                )}
+                <ElectionMultiSelect
+                  elections={elections}
+                  selectedElectionIds={selectedElectionIds}
+                  onChange={setSelectedElectionIds}
+                />
               </div>
             ) : activeModule === 'level-mapping' ? (
               <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
@@ -609,30 +721,11 @@ export default function SetupsPage() {
                     </button>
                   </div>
 
-                  {elections.length > 1 && (
-                    <div className='flex items-center gap-2'>
-                      <span className='text-label-xs font-medium text-text-sub-600'>
-                        Election:
-                      </span>
-                      <div className='w-56'>
-                        <Select.Root
-                          value={activeElectionId}
-                          onValueChange={(val) => setSelectedElectionId(val)}
-                        >
-                          <Select.Trigger className='w-full'>
-                            <Select.Value placeholder='Select election...' />
-                          </Select.Trigger>
-                          <Select.Content position='popper'>
-                            {elections.map((elec) => (
-                              <Select.Item key={elec.id} value={elec.id}>
-                                {elec.name}
-                              </Select.Item>
-                            ))}
-                          </Select.Content>
-                        </Select.Root>
-                      </div>
-                    </div>
-                  )}
+                  <ElectionMultiSelect
+                    elections={elections}
+                    selectedElectionIds={selectedElectionIds}
+                    onChange={setSelectedElectionIds}
+                  />
                 </div>
               </div>
             ) : activeModule === 'candidates' ? (
@@ -662,30 +755,11 @@ export default function SetupsPage() {
                   </Input.Root>
                 </div>
 
-                {elections.length > 1 && (
-                  <div className='flex items-center gap-2'>
-                    <span className='text-label-xs font-medium text-text-sub-600'>
-                      Election:
-                    </span>
-                    <div className='w-56'>
-                      <Select.Root
-                        value={activeElectionId}
-                        onValueChange={(val) => setSelectedElectionId(val)}
-                      >
-                        <Select.Trigger className='w-full'>
-                          <Select.Value placeholder='Select election...' />
-                        </Select.Trigger>
-                        <Select.Content position='popper'>
-                          {elections.map((elec) => (
-                            <Select.Item key={elec.id} value={elec.id}>
-                              {elec.name}
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Root>
-                    </div>
-                  </div>
-                )}
+                <ElectionMultiSelect
+                  elections={elections}
+                  selectedElectionIds={selectedElectionIds}
+                  onChange={setSelectedElectionIds}
+                />
               </div>
             ) : activeModule === 'elections' ? (
               <div className='flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
@@ -890,8 +964,8 @@ export default function SetupsPage() {
               ) : activeModule === 'level-mapping' ? (
                 levelMappingView === 'organogram' ? (
                   <LevelMappingOrganogram
-                    mappings={levelMappings}
-                    levels={levels}
+                    mappings={filteredLevelMappings}
+                    levels={filteredLevels}
                     electionName={activeElectionName}
                     isLoading={isLevelMappingsLoading}
                     searchQuery={levelMappingSearch}
