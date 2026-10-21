@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import {
-  useCreateElectionCollation,
   useGetResultsByLevelMapping,
+  useVerifyElectionCollation,
 } from '@/services/election-collations';
 import type { LevelMappingItem } from '@/services/level-mappings';
 import {
@@ -37,27 +37,18 @@ export function ViewStationCollationModal({
     station?.id,
     false,
   );
-  const createCollation = useCreateElectionCollation();
+  const verifyCollation = useVerifyElectionCollation();
 
   const hasCollation = Boolean(collationData?.collation);
   const collation = collationData?.collation;
 
   const handleVerify = async () => {
-    if (!collation || !station) return;
+    if (!collation?.id || !station) return;
     try {
-      await createCollation.mutateAsync({
-        id: collation.id,
-        electionId: collation.electionId || station.electionId,
+      await verifyCollation.mutateAsync({
+        collationId: collation.id,
+        electionId: collation.electionId || station.electionId || '',
         levelMappingId: station.id,
-        spoiltBallot: Number(collation.spoiltBallot || 0),
-        pathToResultsImage: collation.pathToResultsImage || '/',
-        status: true,
-        results: (collation.results || []).map((r) => ({
-          candidateId: r.candidateId,
-          candidateName: r.candidateName,
-          total: Number(r.total || 0),
-          percentage: Number(r.percentage || 0),
-        })),
       });
       onClose();
     } catch (err) {
@@ -197,11 +188,13 @@ export function ViewStationCollationModal({
               mode='filled'
               size='small'
               onClick={handleVerify}
-              disabled={createCollation.isPending}
+              disabled={verifyCollation.isPending || !collation?.id}
             >
               <Button.Icon as={RiCheckDoubleLine} />
               <span>
-                {createCollation.isPending ? 'Verifying...' : 'Verify Collation'}
+                {verifyCollation.isPending
+                  ? 'Verifying...'
+                  : 'Verify Collation'}
               </span>
             </Button.Root>
           )}

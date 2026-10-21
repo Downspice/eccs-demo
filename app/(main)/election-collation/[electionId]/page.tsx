@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useGetCandidates, type CandidateItem } from '@/services/candidates';
 import {
-  useCreateElectionCollation,
   useGetElectionCandidateResults,
   useGetResultsByLevelMapping,
+  useVerifyElectionCollation,
   type ElectionCollationSummaryData,
 } from '@/services/election-collations';
 import { useGetElections, type ElectionItem } from '@/services/elections';
@@ -50,6 +50,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import * as Switch from '@/components/ui/switch';
 import * as Table from '@/components/ui/table';
 
+import { CandidateLeaderboardBarChart } from '../candidate-leaderboard-chart';
+import { RecordCollationModal } from '../record-collation-modal';
+import { ViewStationCollationModal } from '../view-station-collation';
+
 function getPaginationItems(
   current: number,
   total: number,
@@ -65,10 +69,6 @@ function getPaginationItems(
   }
   return [1, '...', current - 1, current, current + 1, '...', total];
 }
-
-import { CandidateLeaderboardBarChart } from '../candidate-leaderboard-chart';
-import { RecordCollationModal } from '../record-collation-modal';
-import { ViewStationCollationModal } from '../view-station-collation';
 
 interface StationRegistryRowProps {
   station: LevelMappingItem;
@@ -87,28 +87,19 @@ function StationRegistryRow({
     station.id,
     false,
   );
-  const createCollation = useCreateElectionCollation();
+  const verifyCollation = useVerifyElectionCollation();
 
   const collation = collationData?.collation;
   const isCollated = Boolean(collation);
   const isVerified = Boolean(collation?.status);
 
   const handleVerify = async () => {
-    if (!collation) return;
+    if (!collation?.id) return;
     try {
-      await createCollation.mutateAsync({
-        id: collation.id,
+      await verifyCollation.mutateAsync({
+        collationId: collation.id,
         electionId: collation.electionId || electionId,
         levelMappingId: station.id,
-        spoiltBallot: Number(collation.spoiltBallot || 0),
-        pathToResultsImage: collation.pathToResultsImage || '/',
-        status: true,
-        results: (collation.results || []).map((r) => ({
-          candidateId: r.candidateId,
-          candidateName: r.candidateName,
-          total: Number(r.total || 0),
-          percentage: Number(r.percentage || 0),
-        })),
       });
     } catch (err) {
       console.error('Failed to verify collation:', err);
@@ -190,12 +181,12 @@ function StationRegistryRow({
                   mode='filled'
                   size='xxsmall'
                   onClick={handleVerify}
-                  disabled={createCollation.isPending}
+                  disabled={verifyCollation.isPending || !collation?.id}
                   title='Verify and certify station results'
                 >
                   <Button.Icon as={RiCheckDoubleLine} />
                   <span>
-                    {createCollation.isPending ? 'Verifying...' : 'Verify'}
+                    {verifyCollation.isPending ? 'Verifying...' : 'Verify'}
                   </span>
                 </Button.Root>
               </>
@@ -985,7 +976,9 @@ export default function ElectionCollationDetailPage({
                       <Pagination.Root variant='basic'>
                         <Pagination.NavButton
                           type='button'
-                          onClick={() => setStationPage((p) => Math.max(1, p - 1))}
+                          onClick={() =>
+                            setStationPage((p) => Math.max(1, p - 1))
+                          }
                           disabled={stationPage === 1}
                           aria-label='Previous page'
                         >

@@ -105,6 +105,28 @@ export function useGetResultsForCandidate(
 
 // --- Mutations ---
 
+export interface VerifyElectionCollationPayload {
+  collationId: string;
+  electionId: string;
+  levelMappingId: string;
+}
+
+export function useVerifyElectionCollation() {
+  return useBaseMutation<CollationItem, VerifyElectionCollationPayload>(
+    ['verify-election-collation'],
+    (payload) => `/election-collations/${payload.collationId}/verify`,
+    'put',
+    (payload) => [
+      ['election-collations'],
+      ['election-collations', 'election', payload.electionId],
+      ['election-collations', 'level-mapping', payload.levelMappingId],
+    ],
+    {
+      transformPayload: () => undefined,
+    },
+  );
+}
+
 export function useCreateElectionCollation() {
   return useBaseMutation<
     ElectionCollationSummaryData,
