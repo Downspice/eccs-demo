@@ -15,8 +15,8 @@ import * as Badge from '@/components/ui/badge';
 import * as Hint from '@/components/ui/hint';
 import * as Input from '@/components/ui/input';
 import * as Label from '@/components/ui/label';
-import * as Select from '@/components/ui/select';
 import * as Switch from '@/components/ui/switch';
+import { LevelMappingSearchSelect } from '@/components/level-mapping-search-select';
 
 export interface CollationFormCandidateVote {
   candidateId: string;
@@ -121,23 +121,19 @@ export function CollationForm({
         <Label.Root htmlFor='levelMappingId'>
           Polling Station / Jurisdiction
         </Label.Root>
-        <Select.Root
+        <LevelMappingSearchSelect
+          id='levelMappingId'
           value={values.levelMappingId}
-          onValueChange={(val) => setFieldValue('levelMappingId', val)}
+          onChange={(val) => setFieldValue('levelMappingId', val)}
+          onBlur={() =>
+            handleBlur({ target: { name: 'levelMappingId' } } as any)
+          }
+          items={stations}
+          placeholder='Select polling station...'
           disabled={disabled}
           hasError={Boolean(touched.levelMappingId && errors.levelMappingId)}
-        >
-          <Select.Trigger id='levelMappingId' className='w-full'>
-            <Select.Value placeholder='Select polling station...' />
-          </Select.Trigger>
-          <Select.Content position='popper'>
-            {stations.map((st) => (
-              <Select.Item key={st.id} value={st.id}>
-                {st.name} {st.upperLevelName ? `(${st.upperLevelName})` : ''}
-              </Select.Item>
-            ))}
-          </Select.Content>
-        </Select.Root>
+          searchPlaceholder='Search polling stations...'
+        />
         {touched.levelMappingId && errors.levelMappingId ? (
           <Hint.Root hasError>{errors.levelMappingId as string}</Hint.Root>
         ) : (

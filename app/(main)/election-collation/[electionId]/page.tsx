@@ -26,11 +26,9 @@ import {
   RiCheckDoubleLine,
   RiCloseLine,
   RiEyeLine,
-  RiFileChartLine,
   RiGovernmentLine,
   RiGroupLine,
   RiInboxArchiveLine,
-  RiPrinterLine,
   RiRefreshLine,
   RiSearchLine,
   RiTimeLine,
@@ -288,9 +286,9 @@ export default function ElectionCollationDetailPage({
     React.useState<LevelMappingItem | null>(null);
 
   // Navigation tab within collation
-  const [activeTab, setActiveTab] = React.useState<
-    'standings' | 'stations' | 'audit'
-  >('standings');
+  const [activeTab, setActiveTab] = React.useState<'standings' | 'stations'>(
+    'standings',
+  );
   const [stationSearch, setStationSearch] = React.useState('');
 
   // Key Aggregates from Collation Controller API
@@ -724,20 +722,6 @@ export default function ElectionCollationDetailPage({
                     Stations Collation Registry ({pollingStations.length})
                   </span>
                 </button>
-
-                <button
-                  type='button'
-                  onClick={() => setActiveTab('audit')}
-                  className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 text-paragraph-xs font-medium rounded-md transition-colors',
-                    activeTab === 'audit'
-                      ? 'bg-bg-white-0 text-text-strong-950 shadow-toggle-switch'
-                      : 'text-text-sub-600 hover:text-text-strong-950',
-                  )}
-                >
-                  <RiFileChartLine className='size-3.5' />
-                  <span>Audit Certificate</span>
-                </button>
               </div>
 
               {/* Search bar for stations */}
@@ -1022,95 +1006,6 @@ export default function ElectionCollationDetailPage({
                     )}
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* Tab 3: Official Collation Certificate Audit */}
-            {activeTab === 'audit' && (
-              <div className='rounded-2xl border border-stroke-soft-200 bg-bg-white-0 p-6 shadow-regular-xs'>
-                <div className='flex flex-col gap-1 border-b border-stroke-soft-200 pb-4 sm:flex-row sm:items-center sm:justify-between'>
-                  <div>
-                    <h3 className='text-label-lg font-bold text-text-strong-950'>
-                      Form EC-8B Collation Certificate
-                    </h3>
-                    <p className='text-paragraph-sm text-text-sub-600'>
-                      Constituency / Jurisdictional Collation Declaration
-                      Certificate for {activeElection?.name || 'Election'}.
-                    </p>
-                  </div>
-
-                  <Badge.Root variant='lighter' color='blue' size='small'>
-                    Official Form EC-8B
-                  </Badge.Root>
-                </div>
-
-                <div className='mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3'>
-                  <div className='rounded-xl bg-bg-weak-50 p-4 border border-stroke-soft-200'>
-                    <span className='text-paragraph-xs font-semibold text-text-soft-400 uppercase'>
-                      Total Registered Voters
-                    </span>
-                    <p className='mt-1 text-title-h4 font-bold text-text-strong-950'>
-                      {Number(totalExpectedTurnout).toLocaleString()}
-                    </p>
-                  </div>
-
-                  <div className='rounded-xl bg-bg-weak-50 p-4 border border-stroke-soft-200'>
-                    <span className='text-paragraph-xs font-semibold text-text-soft-400 uppercase'>
-                      Total Valid Votes Counted
-                    </span>
-                    <p className='mt-1 text-title-h4 font-bold text-emerald-600'>
-                      {totalValidVotes.toLocaleString()}
-                    </p>
-                  </div>
-
-                  <div className='rounded-xl bg-bg-weak-50 p-4 border border-stroke-soft-200'>
-                    <span className='text-paragraph-xs font-semibold text-text-soft-400 uppercase'>
-                      Total Rejected Ballots
-                    </span>
-                    <p className='mt-1 text-title-h4 font-bold text-error-base'>
-                      {totalSpoiltBallots.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Candidate Breakdown in Audit */}
-                <div className='mt-6 overflow-hidden rounded-xl border border-stroke-soft-200'>
-                  <div className='grid grid-cols-[1fr,150px,120px] bg-bg-weak-50 px-4 py-2.5 text-paragraph-xs font-bold text-text-sub-600 uppercase tracking-wider'>
-                    <span>Candidate</span>
-                    <span className='text-right'>Total Valid Votes</span>
-                    <span className='text-right'>Percentage</span>
-                  </div>
-                  <div className='divide-y divide-stroke-soft-200'>
-                    {results.map((r) => (
-                      <div
-                        key={r.candidateId}
-                        className='grid grid-cols-[1fr,150px,120px] items-center px-4 py-3'
-                      >
-                        <span className='font-semibold text-text-strong-950'>
-                          {r.candidateName}
-                        </span>
-                        <span className='text-right font-semibold text-text-strong-950'>
-                          {r.total.toLocaleString()}
-                        </span>
-                        <span className='text-right font-bold text-primary-base'>
-                          {r.percentage}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className='mt-6 flex justify-end gap-3'>
-                  <Button.Root
-                    variant='primary'
-                    mode='filled'
-                    size='small'
-                    onClick={() => window.print()}
-                  >
-                    <Button.Icon as={RiPrinterLine} />
-                    <span>Print Form EC-8B Certificate</span>
-                  </Button.Root>
-                </div>
               </div>
             )}
           </div>

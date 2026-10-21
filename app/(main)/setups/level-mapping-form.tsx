@@ -16,6 +16,7 @@ import * as Input from '@/components/ui/input';
 import * as Label from '@/components/ui/label';
 import * as Select from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LevelMappingSearchSelect } from '@/components/level-mapping-search-select';
 
 import type { LevelMappingFormData } from './types';
 
@@ -233,46 +234,22 @@ export function LevelMappingForm({
         </Label.Root>
         {isMappingsLoading ? (
           <Skeleton className='h-10 w-full rounded-lg' />
-        ) : existingUnits.length > 0 ? (
-          <Select.Root
-            value={values.upper_level_id || '__NONE__'}
-            onValueChange={(val) =>
-              setFieldValue('upper_level_id', val === '__NONE__' ? '' : val)
-            }
-            disabled={disabled}
-          >
-            <Select.Trigger id='upper_level_id' className='w-full'>
-              <Select.Value placeholder='None (Top-Level Jurisdiction)' />
-            </Select.Trigger>
-            <Select.Content position='popper'>
-              <Select.Item value='__NONE__'>
-                None (Top-Level Jurisdiction)
-              </Select.Item>
-              {existingUnits
-                .filter((u) => u.id !== values.id)
-                .map((unit) => (
-                  <Select.Item key={unit.id} value={unit.id}>
-                    {unit.name} ({unit.levelName})
-                  </Select.Item>
-                ))}
-            </Select.Content>
-          </Select.Root>
         ) : (
-          <Input.Root>
-            <Input.Wrapper>
-              <input
-                id='upper_level_id'
-                name='upper_level_id'
-                type='text'
-                disabled={disabled}
-                placeholder='Enter Parent Unit (leave blank if top-level)'
-                value={values.upper_level_id || ''}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
-              />
-            </Input.Wrapper>
-          </Input.Root>
+          <LevelMappingSearchSelect
+            id='upper_level_id'
+            value={values.upper_level_id || ''}
+            onChange={(val) => setFieldValue('upper_level_id', val)}
+            onBlur={() =>
+              handleBlur({ target: { name: 'upper_level_id' } } as any)
+            }
+            items={existingUnits.filter((u) => u.id !== values.id)}
+            placeholder='None (Top-Level Jurisdiction)'
+            disabled={disabled}
+            hasError={Boolean(touched.upper_level_id && errors.upper_level_id)}
+            allowClear
+            clearLabel='None (Top-Level Jurisdiction)'
+            searchPlaceholder='Search parent unit by name or tier...'
+          />
         )}
         {parentItem && values.upper_level_id === parentItem.id && (
           <span className='inline-flex items-center gap-1 text-[11px] font-medium text-primary-base'>
