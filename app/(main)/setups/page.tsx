@@ -1,8 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
 import { useGetCandidates, type CandidateItem } from '@/services/candidates';
 import { useGetElections, type ElectionItem } from '@/services/elections';
 import {
@@ -16,6 +14,8 @@ import {
 } from '@/services/political-parties';
 import {
   RiAddLine,
+  RiArrowLeftSLine,
+  RiArrowRightSLine,
   RiCalendarLine,
   RiCloseLine,
   RiDeleteBinLine,
@@ -27,12 +27,15 @@ import {
   RiSearchLine,
   RiTableLine,
 } from '@remixicon/react';
+import { useQuery } from '@tanstack/react-query';
 
+import { apiClient } from '@/lib/api/client';
 import { cn } from '@/utils/cn';
 import * as Badge from '@/components/ui/badge';
 import * as Button from '@/components/ui/button';
 import * as CompactButton from '@/components/ui/compact-button';
 import * as Input from '@/components/ui/input';
+import * as Pagination from '@/components/ui/pagination';
 import * as Select from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import * as Table from '@/components/ui/table';
@@ -111,6 +114,110 @@ const SETUP_MODULES: SetupModuleItem[] = [
   },
 ];
 
+const PAGE_SIZE = 10;
+
+function getPaginationItems(
+  current: number,
+  total: number,
+): (number | string)[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, i) => i + 1);
+  }
+  if (current <= 4) {
+    return [1, 2, 3, 4, 5, '...', total];
+  }
+  if (current >= total - 3) {
+    return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+  }
+  return [1, '...', current - 1, current, current + 1, '...', total];
+}
+
+interface SetupPaginationFooterProps {
+  currentPage: number;
+  totalItems: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  itemLabel: string;
+  isLoading?: boolean;
+}
+
+function SetupPaginationFooter({
+  currentPage,
+  totalItems,
+  pageSize,
+  onPageChange,
+  itemLabel,
+  isLoading,
+}: SetupPaginationFooterProps) {
+  if (isLoading || totalItems === 0) return null;
+
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(totalItems, currentPage * pageSize);
+
+  return (
+    <div className='flex flex-col items-center justify-between gap-3 border-t border-stroke-soft-200 px-4 py-3 sm:flex-row bg-bg-white-0 shrink-0'>
+      <span className='text-paragraph-xs text-text-sub-600'>
+        Showing{' '}
+        <strong className='font-semibold text-text-strong-950'>
+          {startItem}
+        </strong>{' '}
+        to{' '}
+        <strong className='font-semibold text-text-strong-950'>
+          {endItem}
+        </strong>{' '}
+        of{' '}
+        <strong className='font-semibold text-text-strong-950'>
+          {totalItems}
+        </strong>{' '}
+        {itemLabel}
+      </span>
+
+      {totalPages > 1 && (
+        <Pagination.Root variant='basic'>
+          <Pagination.NavButton
+            type='button'
+            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            aria-label='Previous page'
+          >
+            <Pagination.NavIcon as={RiArrowLeftSLine} />
+          </Pagination.NavButton>
+
+          {getPaginationItems(currentPage, totalPages).map((item, index) =>
+            typeof item === 'number' ? (
+              <Pagination.Item
+                key={`page-${item}`}
+                type='button'
+                current={item === currentPage}
+                onClick={() => onPageChange(item)}
+              >
+                {item}
+              </Pagination.Item>
+            ) : (
+              <span
+                key={`ellipsis-${index}`}
+                className='flex h-8 min-w-8 items-center justify-center text-label-sm text-text-soft-400 select-none'
+              >
+                …
+              </span>
+            ),
+          )}
+
+          <Pagination.NavButton
+            type='button'
+            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            aria-label='Next page'
+          >
+            <Pagination.NavIcon as={RiArrowRightSLine} />
+          </Pagination.NavButton>
+        </Pagination.Root>
+      )}
+    </div>
+  );
+}
+
 export default function SetupsPage() {
   const { data: rawElections, isLoading: isElectionsLoading } =
     useGetElections();
@@ -152,7 +259,11 @@ export default function SetupsPage() {
   }, [elections, selectedElectionIds]);
 
   const electionIdsKey = React.useMemo(
-    () => elections.map((e) => e.id).sort().join(','),
+    () =>
+      elections
+        .map((e) => e.id)
+        .sort()
+        .join(','),
     [elections],
   );
 
@@ -343,6 +454,13 @@ export default function SetupsPage() {
   const [electionSearch, setElectionSearch] = React.useState('');
   const [politicalPartySearch, setPoliticalPartySearch] = React.useState('');
 
+  // Pagination states (10 items per page)
+  const [levelsPage, setLevelsPage] = React.useState(1);
+  const [levelMappingsPage, setLevelMappingsPage] = React.useState(1);
+  const [candidatesPage, setCandidatesPage] = React.useState(1);
+  const [electionsPage, setElectionsPage] = React.useState(1);
+  const [politicalPartiesPage, setPoliticalPartiesPage] = React.useState(1);
+
   // Modal states
   const [modalState, setModalState] = React.useState<ModalState>({
     type: null,
@@ -498,6 +616,80 @@ export default function SetupsPage() {
         item.id?.toLowerCase().includes(query),
     );
   }, [politicalParties, politicalPartySearch]);
+
+  // Reset pages when filters change
+  React.useEffect(() => {
+    setLevelsPage(1);
+  }, [filters.search, selectedElectionIds]);
+
+  React.useEffect(() => {
+    setLevelMappingsPage(1);
+  }, [levelMappingSearch, selectedElectionIds]);
+
+  React.useEffect(() => {
+    setCandidatesPage(1);
+  }, [candidateSearch, selectedElectionIds]);
+
+  React.useEffect(() => {
+    setElectionsPage(1);
+  }, [electionSearch]);
+
+  React.useEffect(() => {
+    setPoliticalPartiesPage(1);
+  }, [politicalPartySearch]);
+
+  // Clamp pages when datasets shrink
+  React.useEffect(() => {
+    const totalPages = Math.ceil(filteredLevels.length / PAGE_SIZE) || 1;
+    if (levelsPage > totalPages) setLevelsPage(totalPages);
+  }, [filteredLevels.length, levelsPage]);
+
+  React.useEffect(() => {
+    const totalPages = Math.ceil(filteredLevelMappings.length / PAGE_SIZE) || 1;
+    if (levelMappingsPage > totalPages) setLevelMappingsPage(totalPages);
+  }, [filteredLevelMappings.length, levelMappingsPage]);
+
+  React.useEffect(() => {
+    const totalPages = Math.ceil(filteredCandidates.length / PAGE_SIZE) || 1;
+    if (candidatesPage > totalPages) setCandidatesPage(totalPages);
+  }, [filteredCandidates.length, candidatesPage]);
+
+  React.useEffect(() => {
+    const totalPages = Math.ceil(filteredElections.length / PAGE_SIZE) || 1;
+    if (electionsPage > totalPages) setElectionsPage(totalPages);
+  }, [filteredElections.length, electionsPage]);
+
+  React.useEffect(() => {
+    const totalPages =
+      Math.ceil(filteredPoliticalParties.length / PAGE_SIZE) || 1;
+    if (politicalPartiesPage > totalPages) setPoliticalPartiesPage(totalPages);
+  }, [filteredPoliticalParties.length, politicalPartiesPage]);
+
+  // Paginated subsets (10 items per page)
+  const paginatedLevels = React.useMemo(() => {
+    const start = (levelsPage - 1) * PAGE_SIZE;
+    return filteredLevels.slice(start, start + PAGE_SIZE);
+  }, [filteredLevels, levelsPage]);
+
+  const paginatedLevelMappings = React.useMemo(() => {
+    const start = (levelMappingsPage - 1) * PAGE_SIZE;
+    return filteredLevelMappings.slice(start, start + PAGE_SIZE);
+  }, [filteredLevelMappings, levelMappingsPage]);
+
+  const paginatedCandidates = React.useMemo(() => {
+    const start = (candidatesPage - 1) * PAGE_SIZE;
+    return filteredCandidates.slice(start, start + PAGE_SIZE);
+  }, [filteredCandidates, candidatesPage]);
+
+  const paginatedElections = React.useMemo(() => {
+    const start = (electionsPage - 1) * PAGE_SIZE;
+    return filteredElections.slice(start, start + PAGE_SIZE);
+  }, [filteredElections, electionsPage]);
+
+  const paginatedPoliticalParties = React.useMemo(() => {
+    const start = (politicalPartiesPage - 1) * PAGE_SIZE;
+    return filteredPoliticalParties.slice(start, start + PAGE_SIZE);
+  }, [filteredPoliticalParties, politicalPartiesPage]);
 
   // Modules with dynamic counts
   const modulesWithCounts = React.useMemo(() => {
@@ -822,145 +1014,156 @@ export default function SetupsPage() {
             {/* Main Table Content */}
             <SetupTablePanel>
               {activeModule === 'levels' ? (
-                <Table.Root scrollable>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.Head className='w-[100px]'>Rank</Table.Head>
-                      <Table.Head>Level Name & Description</Table.Head>
-                      <Table.Head>Associated Election</Table.Head>
-                      <Table.Head className='w-[120px] text-right'>
-                        Actions
-                      </Table.Head>
-                    </Table.Row>
-                  </Table.Header>
-
-                  <Table.Body>
-                    {isLevelsLoading ? (
-                      Array.from({ length: 5 }).map((_, idx) => (
-                        <Table.Row key={`skeleton-level-${idx}`}>
-                          <Table.Cell>
-                            <Skeleton className='h-5 w-16 rounded-full' />
-                          </Table.Cell>
-                          <Table.Cell>
-                            <div className='flex flex-col gap-1.5'>
-                              <Skeleton className='h-4 w-36' />
-                              <Skeleton className='h-3 w-56' />
-                            </div>
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Skeleton className='h-4 w-28' />
-                          </Table.Cell>
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center justify-end gap-1.5'>
-                              <Skeleton className='size-7 rounded-lg' />
-                              <Skeleton className='size-7 rounded-lg' />
-                              <Skeleton className='size-7 rounded-lg' />
-                            </div>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))
-                    ) : filteredLevels.length === 0 ? (
+                <>
+                  <Table.Root scrollable>
+                    <Table.Header>
                       <Table.Row>
-                        <Table.Cell colSpan={4} className='py-12 text-center'>
-                          <p className='text-label-sm font-semibold text-text-strong-950'>
-                            No levels found
-                          </p>
-                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                            Try adjusting your search criteria or register a new
-                            level.
-                          </p>
-                        </Table.Cell>
+                        <Table.Head className='w-[100px]'>Rank</Table.Head>
+                        <Table.Head>Level Name & Description</Table.Head>
+                        <Table.Head>Associated Election</Table.Head>
+                        <Table.Head className='w-[120px] text-right'>
+                          Actions
+                        </Table.Head>
                       </Table.Row>
-                    ) : (
-                      filteredLevels.map((item) => (
-                        <Table.Row
-                          key={item.id}
-                          className='transition-colors hover:bg-bg-weak-50/50'
-                        >
-                          {/* Level Rank */}
-                          <Table.Cell>
-                            <Badge.Root
-                              variant='lighter'
-                              color='gray'
-                              size='small'
-                            >
-                              Rank {item.levelRank ?? 1}
-                            </Badge.Root>
-                          </Table.Cell>
+                    </Table.Header>
 
-                          {/* Level Name & Description */}
-                          <Table.Cell>
-                            <div className='flex flex-col'>
-                              <span className='text-label-sm font-semibold text-text-strong-950'>
-                                {item.name}
-                              </span>
-                              {item.description && (
-                                <span className='text-paragraph-xs text-text-soft-400 line-clamp-1 mt-0.5'>
-                                  {item.description}
-                                </span>
-                              )}
-                            </div>
-                          </Table.Cell>
-
-                          {/* Associated Election */}
-                          <Table.Cell>
-                            <span className='text-paragraph-xs text-text-sub-600'>
-                              {item.electionName || 'National Level'}
-                            </span>
-                          </Table.Cell>
-
-                          {/* Actions */}
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center gap-1.5'>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg'
-                                onClick={() =>
-                                  setModalState({ type: 'view', item })
-                                }
-                                title='View details'
-                              >
-                                <CompactButton.Icon
-                                  as={RiEyeLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg hover:text-primary-base'
-                                onClick={() =>
-                                  setModalState({ type: 'update', item })
-                                }
-                                title='Edit level'
-                              >
-                                <CompactButton.Icon
-                                  as={RiEditLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg hover:text-error-base'
-                                onClick={() =>
-                                  setModalState({ type: 'delete', item })
-                                }
-                                title='Delete level'
-                              >
-                                <CompactButton.Icon
-                                  as={RiDeleteBinLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                            </div>
+                    <Table.Body>
+                      {isLevelsLoading ? (
+                        Array.from({ length: 5 }).map((_, idx) => (
+                          <Table.Row key={`skeleton-level-${idx}`}>
+                            <Table.Cell>
+                              <Skeleton className='h-5 w-16 rounded-full' />
+                            </Table.Cell>
+                            <Table.Cell>
+                              <div className='flex flex-col gap-1.5'>
+                                <Skeleton className='h-4 w-36' />
+                                <Skeleton className='h-3 w-56' />
+                              </div>
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Skeleton className='h-4 w-28' />
+                            </Table.Cell>
+                            <Table.Cell className='text-right'>
+                              <div className='inline-flex items-center justify-end gap-1.5'>
+                                <Skeleton className='size-7 rounded-lg' />
+                                <Skeleton className='size-7 rounded-lg' />
+                                <Skeleton className='size-7 rounded-lg' />
+                              </div>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))
+                      ) : filteredLevels.length === 0 ? (
+                        <Table.Row>
+                          <Table.Cell colSpan={4} className='py-12 text-center'>
+                            <p className='text-label-sm font-semibold text-text-strong-950'>
+                              No levels found
+                            </p>
+                            <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                              Try adjusting your search criteria or register a
+                              new level.
+                            </p>
                           </Table.Cell>
                         </Table.Row>
-                      ))
-                    )}
-                  </Table.Body>
-                </Table.Root>
+                      ) : (
+                        paginatedLevels.map((item) => (
+                          <Table.Row
+                            key={item.id}
+                            className='transition-colors hover:bg-bg-weak-50/50'
+                          >
+                            {/* Level Rank */}
+                            <Table.Cell>
+                              <Badge.Root
+                                variant='lighter'
+                                color='gray'
+                                size='small'
+                              >
+                                Rank {item.levelRank ?? 1}
+                              </Badge.Root>
+                            </Table.Cell>
+
+                            {/* Level Name & Description */}
+                            <Table.Cell>
+                              <div className='flex flex-col'>
+                                <span className='text-label-sm font-semibold text-text-strong-950'>
+                                  {item.name}
+                                </span>
+                                {item.description && (
+                                  <span className='text-paragraph-xs text-text-soft-400 line-clamp-1 mt-0.5'>
+                                    {item.description}
+                                  </span>
+                                )}
+                              </div>
+                            </Table.Cell>
+
+                            {/* Associated Election */}
+                            <Table.Cell>
+                              <span className='text-paragraph-xs text-text-sub-600'>
+                                {item.electionName || 'National Level'}
+                              </span>
+                            </Table.Cell>
+
+                            {/* Actions */}
+                            <Table.Cell className='text-right'>
+                              <div className='inline-flex items-center gap-1.5'>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg'
+                                  onClick={() =>
+                                    setModalState({ type: 'view', item })
+                                  }
+                                  title='View details'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiEyeLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg hover:text-primary-base'
+                                  onClick={() =>
+                                    setModalState({ type: 'update', item })
+                                  }
+                                  title='Edit level'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiEditLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg hover:text-error-base'
+                                  onClick={() =>
+                                    setModalState({ type: 'delete', item })
+                                  }
+                                  title='Delete level'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiDeleteBinLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                              </div>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))
+                      )}
+                    </Table.Body>
+                  </Table.Root>
+
+                  <SetupPaginationFooter
+                    currentPage={levelsPage}
+                    totalItems={filteredLevels.length}
+                    pageSize={PAGE_SIZE}
+                    onPageChange={setLevelsPage}
+                    itemLabel='levels'
+                    isLoading={isLevelsLoading}
+                  />
+                </>
               ) : activeModule === 'level-mapping' ? (
                 levelMappingView === 'organogram' ? (
                   <LevelMappingOrganogram
@@ -986,16 +1189,191 @@ export default function SetupsPage() {
                     }
                   />
                 ) : (
+                  <>
+                    <Table.Root scrollable>
+                      <Table.Header>
+                        <Table.Row>
+                          <Table.Head>Territory / Unit Name</Table.Head>
+                          <Table.Head className='w-[160px]'>
+                            Level Tier
+                          </Table.Head>
+                          <Table.Head className='w-[220px]'>
+                            Parent Jurisdiction
+                          </Table.Head>
+                          <Table.Head>Election</Table.Head>
+                          <Table.Head className='w-[120px] text-right'>
+                            Actions
+                          </Table.Head>
+                        </Table.Row>
+                      </Table.Header>
+
+                      <Table.Body>
+                        {isLevelMappingsLoading ? (
+                          Array.from({ length: 5 }).map((_, idx) => (
+                            <Table.Row key={`skeleton-mapping-${idx}`}>
+                              <Table.Cell>
+                                <Skeleton className='h-4 w-40' />
+                              </Table.Cell>
+                              <Table.Cell>
+                                <Skeleton className='h-5 w-20 rounded-full' />
+                              </Table.Cell>
+                              <Table.Cell>
+                                <Skeleton className='h-4 w-32' />
+                              </Table.Cell>
+                              <Table.Cell>
+                                <Skeleton className='h-4 w-28' />
+                              </Table.Cell>
+                              <Table.Cell className='text-right'>
+                                <div className='inline-flex items-center justify-end gap-1.5'>
+                                  <Skeleton className='size-7 rounded-lg' />
+                                  <Skeleton className='size-7 rounded-lg' />
+                                  <Skeleton className='size-7 rounded-lg' />
+                                </div>
+                              </Table.Cell>
+                            </Table.Row>
+                          ))
+                        ) : filteredLevelMappings.length === 0 ? (
+                          <Table.Row>
+                            <Table.Cell
+                              colSpan={5}
+                              className='py-12 text-center'
+                            >
+                              <p className='text-label-sm font-semibold text-text-strong-950'>
+                                No level mappings found
+                              </p>
+                              <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                                Try adjusting your search criteria or register a
+                                new territorial mapping.
+                              </p>
+                            </Table.Cell>
+                          </Table.Row>
+                        ) : (
+                          paginatedLevelMappings.map((item) => (
+                            <Table.Row
+                              key={item.id}
+                              className='transition-colors hover:bg-bg-weak-50/50'
+                            >
+                              {/* Unit Name */}
+                              <Table.Cell>
+                                <span className='text-label-sm font-semibold text-text-strong-950'>
+                                  {item.name}
+                                </span>
+                              </Table.Cell>
+
+                              {/* Tier */}
+                              <Table.Cell>
+                                <Badge.Root
+                                  variant='lighter'
+                                  color='gray'
+                                  size='small'
+                                >
+                                  {item.levelName || 'Level'}
+                                </Badge.Root>
+                              </Table.Cell>
+
+                              {/* Parent Jurisdiction */}
+                              <Table.Cell>
+                                {item.upperLevelName ? (
+                                  <span className='text-paragraph-sm text-text-strong-950 font-medium'>
+                                    {item.upperLevelName}
+                                  </span>
+                                ) : (
+                                  <Badge.Root
+                                    variant='lighter'
+                                    color='blue'
+                                    size='small'
+                                  >
+                                    Root Level
+                                  </Badge.Root>
+                                )}
+                              </Table.Cell>
+
+                              {/* Election */}
+                              <Table.Cell>
+                                <span className='text-paragraph-xs text-text-sub-600'>
+                                  {item.electionName || 'Election'}
+                                </span>
+                              </Table.Cell>
+
+                              {/* Actions */}
+                              <Table.Cell className='text-right'>
+                                <div className='inline-flex items-center gap-1.5'>
+                                  <CompactButton.Root
+                                    type='button'
+                                    variant='stroke'
+                                    className='size-7 rounded-lg'
+                                    onClick={() =>
+                                      setLevelMappingModalState({
+                                        type: 'view',
+                                        item,
+                                      })
+                                    }
+                                    title='View details'
+                                  >
+                                    <CompactButton.Icon
+                                      as={RiEyeLine}
+                                      className='size-4'
+                                    />
+                                  </CompactButton.Root>
+                                  <CompactButton.Root
+                                    type='button'
+                                    variant='stroke'
+                                    className='size-7 rounded-lg hover:text-primary-base'
+                                    onClick={() =>
+                                      setLevelMappingModalState({
+                                        type: 'update',
+                                        item,
+                                      })
+                                    }
+                                    title='Edit mapping'
+                                  >
+                                    <CompactButton.Icon
+                                      as={RiEditLine}
+                                      className='size-4'
+                                    />
+                                  </CompactButton.Root>
+                                  <CompactButton.Root
+                                    type='button'
+                                    variant='stroke'
+                                    className='size-7 rounded-lg hover:text-error-base'
+                                    onClick={() =>
+                                      setLevelMappingModalState({
+                                        type: 'delete',
+                                        item,
+                                      })
+                                    }
+                                    title='Delete mapping'
+                                  >
+                                    <CompactButton.Icon
+                                      as={RiDeleteBinLine}
+                                      className='size-4'
+                                    />
+                                  </CompactButton.Root>
+                                </div>
+                              </Table.Cell>
+                            </Table.Row>
+                          ))
+                        )}
+                      </Table.Body>
+                    </Table.Root>
+
+                    <SetupPaginationFooter
+                      currentPage={levelMappingsPage}
+                      totalItems={filteredLevelMappings.length}
+                      pageSize={PAGE_SIZE}
+                      onPageChange={setLevelMappingsPage}
+                      itemLabel='mappings'
+                      isLoading={isLevelMappingsLoading}
+                    />
+                  </>
+                )
+              ) : activeModule === 'candidates' ? (
+                <>
                   <Table.Root scrollable>
                     <Table.Header>
                       <Table.Row>
-                        <Table.Head>Territory / Unit Name</Table.Head>
-                        <Table.Head className='w-[160px]'>
-                          Level Tier
-                        </Table.Head>
-                        <Table.Head className='w-[220px]'>
-                          Parent Jurisdiction
-                        </Table.Head>
+                        <Table.Head>Candidate Name</Table.Head>
+                        <Table.Head>Political Party</Table.Head>
                         <Table.Head>Election</Table.Head>
                         <Table.Head className='w-[120px] text-right'>
                           Actions
@@ -1004,14 +1382,11 @@ export default function SetupsPage() {
                     </Table.Header>
 
                     <Table.Body>
-                      {isLevelMappingsLoading ? (
+                      {isCandidatesLoading ? (
                         Array.from({ length: 5 }).map((_, idx) => (
-                          <Table.Row key={`skeleton-mapping-${idx}`}>
+                          <Table.Row key={`skeleton-candidate-${idx}`}>
                             <Table.Cell>
-                              <Skeleton className='h-4 w-40' />
-                            </Table.Cell>
-                            <Table.Cell>
-                              <Skeleton className='h-5 w-20 rounded-full' />
+                              <Skeleton className='h-4 w-44' />
                             </Table.Cell>
                             <Table.Cell>
                               <Skeleton className='h-4 w-32' />
@@ -1028,57 +1403,37 @@ export default function SetupsPage() {
                             </Table.Cell>
                           </Table.Row>
                         ))
-                      ) : filteredLevelMappings.length === 0 ? (
+                      ) : filteredCandidates.length === 0 ? (
                         <Table.Row>
-                          <Table.Cell colSpan={5} className='py-12 text-center'>
+                          <Table.Cell colSpan={4} className='py-12 text-center'>
                             <p className='text-label-sm font-semibold text-text-strong-950'>
-                              No level mappings found
+                              No candidates found
                             </p>
                             <p className='text-paragraph-xs text-text-sub-600 mt-1'>
                               Try adjusting your search criteria or register a
-                              new territorial mapping.
+                              new candidate.
                             </p>
                           </Table.Cell>
                         </Table.Row>
                       ) : (
-                        filteredLevelMappings.map((item) => (
+                        paginatedCandidates.map((item) => (
                           <Table.Row
                             key={item.id}
                             className='transition-colors hover:bg-bg-weak-50/50'
                           >
-                            {/* Unit Name */}
+                            {/* Candidate Name */}
                             <Table.Cell>
                               <span className='text-label-sm font-semibold text-text-strong-950'>
                                 {item.name}
                               </span>
                             </Table.Cell>
 
-                            {/* Tier */}
+                            {/* Political Party */}
                             <Table.Cell>
-                              <Badge.Root
-                                variant='lighter'
-                                color='gray'
-                                size='small'
-                              >
-                                {item.levelName || 'Level'}
-                              </Badge.Root>
-                            </Table.Cell>
-
-                            {/* Parent Jurisdiction */}
-                            <Table.Cell>
-                              {item.upperLevelName ? (
-                                <span className='text-paragraph-sm text-text-strong-950 font-medium'>
-                                  {item.upperLevelName}
-                                </span>
-                              ) : (
-                                <Badge.Root
-                                  variant='lighter'
-                                  color='blue'
-                                  size='small'
-                                >
-                                  Root Level
-                                </Badge.Root>
-                              )}
+                              <span className='text-paragraph-sm text-text-strong-950 font-medium'>
+                                {item.politicalPartyName ||
+                                  item.politicalPartyId}
+                              </span>
                             </Table.Cell>
 
                             {/* Election */}
@@ -1096,7 +1451,7 @@ export default function SetupsPage() {
                                   variant='stroke'
                                   className='size-7 rounded-lg'
                                   onClick={() =>
-                                    setLevelMappingModalState({
+                                    setCandidateModalState({
                                       type: 'view',
                                       item,
                                     })
@@ -1113,12 +1468,12 @@ export default function SetupsPage() {
                                   variant='stroke'
                                   className='size-7 rounded-lg hover:text-primary-base'
                                   onClick={() =>
-                                    setLevelMappingModalState({
+                                    setCandidateModalState({
                                       type: 'update',
                                       item,
                                     })
                                   }
-                                  title='Edit mapping'
+                                  title='Edit candidate'
                                 >
                                   <CompactButton.Icon
                                     as={RiEditLine}
@@ -1130,12 +1485,12 @@ export default function SetupsPage() {
                                   variant='stroke'
                                   className='size-7 rounded-lg hover:text-error-base'
                                   onClick={() =>
-                                    setLevelMappingModalState({
+                                    setCandidateModalState({
                                       type: 'delete',
                                       item,
                                     })
                                   }
-                                  title='Delete mapping'
+                                  title='Delete candidate'
                                 >
                                   <CompactButton.Icon
                                     as={RiDeleteBinLine}
@@ -1149,430 +1504,332 @@ export default function SetupsPage() {
                       )}
                     </Table.Body>
                   </Table.Root>
-                )
-              ) : activeModule === 'candidates' ? (
-                <Table.Root scrollable>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.Head>Candidate Name</Table.Head>
-                      <Table.Head>Political Party</Table.Head>
-                      <Table.Head>Election</Table.Head>
-                      <Table.Head className='w-[120px] text-right'>
-                        Actions
-                      </Table.Head>
-                    </Table.Row>
-                  </Table.Header>
 
-                  <Table.Body>
-                    {isCandidatesLoading ? (
-                      Array.from({ length: 5 }).map((_, idx) => (
-                        <Table.Row key={`skeleton-candidate-${idx}`}>
-                          <Table.Cell>
-                            <Skeleton className='h-4 w-44' />
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Skeleton className='h-4 w-32' />
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Skeleton className='h-4 w-28' />
-                          </Table.Cell>
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center justify-end gap-1.5'>
-                              <Skeleton className='size-7 rounded-lg' />
-                              <Skeleton className='size-7 rounded-lg' />
-                              <Skeleton className='size-7 rounded-lg' />
-                            </div>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))
-                    ) : filteredCandidates.length === 0 ? (
-                      <Table.Row>
-                        <Table.Cell colSpan={4} className='py-12 text-center'>
-                          <p className='text-label-sm font-semibold text-text-strong-950'>
-                            No candidates found
-                          </p>
-                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                            Try adjusting your search criteria or register a new
-                            candidate.
-                          </p>
-                        </Table.Cell>
-                      </Table.Row>
-                    ) : (
-                      filteredCandidates.map((item) => (
-                        <Table.Row
-                          key={item.id}
-                          className='transition-colors hover:bg-bg-weak-50/50'
-                        >
-                          {/* Candidate Name */}
-                          <Table.Cell>
-                            <span className='text-label-sm font-semibold text-text-strong-950'>
-                              {item.name}
-                            </span>
-                          </Table.Cell>
-
-                          {/* Political Party */}
-                          <Table.Cell>
-                            <span className='text-paragraph-sm text-text-strong-950 font-medium'>
-                              {item.politicalPartyName || item.politicalPartyId}
-                            </span>
-                          </Table.Cell>
-
-                          {/* Election */}
-                          <Table.Cell>
-                            <span className='text-paragraph-xs text-text-sub-600'>
-                              {item.electionName || 'Election'}
-                            </span>
-                          </Table.Cell>
-
-                          {/* Actions */}
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center gap-1.5'>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg'
-                                onClick={() =>
-                                  setCandidateModalState({ type: 'view', item })
-                                }
-                                title='View details'
-                              >
-                                <CompactButton.Icon
-                                  as={RiEyeLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg hover:text-primary-base'
-                                onClick={() =>
-                                  setCandidateModalState({
-                                    type: 'update',
-                                    item,
-                                  })
-                                }
-                                title='Edit candidate'
-                              >
-                                <CompactButton.Icon
-                                  as={RiEditLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg hover:text-error-base'
-                                onClick={() =>
-                                  setCandidateModalState({
-                                    type: 'delete',
-                                    item,
-                                  })
-                                }
-                                title='Delete candidate'
-                              >
-                                <CompactButton.Icon
-                                  as={RiDeleteBinLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                            </div>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))
-                    )}
-                  </Table.Body>
-                </Table.Root>
+                  <SetupPaginationFooter
+                    currentPage={candidatesPage}
+                    totalItems={filteredCandidates.length}
+                    pageSize={PAGE_SIZE}
+                    onPageChange={setCandidatesPage}
+                    itemLabel='candidates'
+                    isLoading={isCandidatesLoading}
+                  />
+                </>
               ) : activeModule === 'elections' ? (
-                <Table.Root scrollable>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.Head>Election Name</Table.Head>
-                      <Table.Head className='w-[180px]'>
-                        Election Date
-                      </Table.Head>
-                      <Table.Head className='w-[180px]'>
-                        Expected Turnout
-                      </Table.Head>
-                      <Table.Head className='w-[120px] text-right'>
-                        Actions
-                      </Table.Head>
-                    </Table.Row>
-                  </Table.Header>
+                <>
+                  <Table.Root scrollable>
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.Head>Election Name</Table.Head>
+                        <Table.Head className='w-[180px]'>
+                          Election Date
+                        </Table.Head>
+                        <Table.Head className='w-[180px]'>
+                          Expected Turnout
+                        </Table.Head>
+                        <Table.Head className='w-[120px] text-right'>
+                          Actions
+                        </Table.Head>
+                      </Table.Row>
+                    </Table.Header>
 
-                  <Table.Body>
-                    {isElectionsLoading ? (
-                      Array.from({ length: 5 }).map((_, idx) => (
-                        <Table.Row key={`skeleton-election-${idx}`}>
-                          <Table.Cell>
-                            <Skeleton className='h-4 w-48' />
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Skeleton className='h-4 w-28' />
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Skeleton className='h-5 w-24 rounded-full' />
-                          </Table.Cell>
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center justify-end gap-1.5'>
-                              <Skeleton className='size-7 rounded-lg' />
-                              <Skeleton className='size-7 rounded-lg' />
-                              <Skeleton className='size-7 rounded-lg' />
-                            </div>
+                    <Table.Body>
+                      {isElectionsLoading ? (
+                        Array.from({ length: 5 }).map((_, idx) => (
+                          <Table.Row key={`skeleton-election-${idx}`}>
+                            <Table.Cell>
+                              <Skeleton className='h-4 w-48' />
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Skeleton className='h-4 w-28' />
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Skeleton className='h-5 w-24 rounded-full' />
+                            </Table.Cell>
+                            <Table.Cell className='text-right'>
+                              <div className='inline-flex items-center justify-end gap-1.5'>
+                                <Skeleton className='size-7 rounded-lg' />
+                                <Skeleton className='size-7 rounded-lg' />
+                                <Skeleton className='size-7 rounded-lg' />
+                              </div>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))
+                      ) : filteredElections.length === 0 ? (
+                        <Table.Row>
+                          <Table.Cell colSpan={4} className='py-12 text-center'>
+                            <p className='text-label-sm font-semibold text-text-strong-950'>
+                              No elections found
+                            </p>
+                            <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                              Try adjusting your search criteria or register a
+                              new election.
+                            </p>
                           </Table.Cell>
                         </Table.Row>
-                      ))
-                    ) : filteredElections.length === 0 ? (
-                      <Table.Row>
-                        <Table.Cell colSpan={4} className='py-12 text-center'>
-                          <p className='text-label-sm font-semibold text-text-strong-950'>
-                            No elections found
-                          </p>
-                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                            Try adjusting your search criteria or register a new
-                            election.
-                          </p>
-                        </Table.Cell>
-                      </Table.Row>
-                    ) : (
-                      filteredElections.map((item) => (
-                        <Table.Row
-                          key={item.id}
-                          className='transition-colors hover:bg-bg-weak-50/50'
-                        >
-                          {/* Election Name */}
-                          <Table.Cell>
-                            <span className='text-label-sm font-semibold text-text-strong-950'>
-                              {item.name}
-                            </span>
-                          </Table.Cell>
-
-                          {/* Election Date */}
-                          <Table.Cell>
-                            <div className='flex items-center gap-1.5 text-text-sub-600'>
-                              <RiCalendarLine className='size-3.5 text-text-soft-400 shrink-0' />
-                              <span className='text-paragraph-sm'>
-                                {item.electionDate || '—'}
+                      ) : (
+                        paginatedElections.map((item) => (
+                          <Table.Row
+                            key={item.id}
+                            className='transition-colors hover:bg-bg-weak-50/50'
+                          >
+                            {/* Election Name */}
+                            <Table.Cell>
+                              <span className='text-label-sm font-semibold text-text-strong-950'>
+                                {item.name}
                               </span>
-                            </div>
-                          </Table.Cell>
+                            </Table.Cell>
 
-                          {/* Expected Turnout */}
-                          <Table.Cell>
-                            {item.expectedTurnout != null ? (
-                              <Badge.Root
-                                variant='lighter'
-                                color='blue'
-                                size='small'
-                              >
-                                <RiGroupLine className='size-3 shrink-0' />
-                                <span>
-                                  {Number(
-                                    item.expectedTurnout,
-                                  ).toLocaleString()}{' '}
-                                  voters
+                            {/* Election Date */}
+                            <Table.Cell>
+                              <div className='flex items-center gap-1.5 text-text-sub-600'>
+                                <RiCalendarLine className='size-3.5 text-text-soft-400 shrink-0' />
+                                <span className='text-paragraph-sm'>
+                                  {item.electionDate || '—'}
                                 </span>
-                              </Badge.Root>
-                            ) : (
-                              <span className='text-paragraph-sm text-text-soft-400'>
-                                —
-                              </span>
-                            )}
-                          </Table.Cell>
+                              </div>
+                            </Table.Cell>
 
-                          {/* Actions */}
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center gap-1.5'>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg'
-                                onClick={() =>
-                                  setElectionModalState({ type: 'view', item })
-                                }
-                                title='View details'
-                              >
-                                <CompactButton.Icon
-                                  as={RiEyeLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg hover:text-primary-base'
-                                onClick={() =>
-                                  setElectionModalState({
-                                    type: 'update',
-                                    item,
-                                  })
-                                }
-                                title='Edit election'
-                              >
-                                <CompactButton.Icon
-                                  as={RiEditLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg hover:text-error-base'
-                                onClick={() =>
-                                  setElectionModalState({
-                                    type: 'delete',
-                                    item,
-                                  })
-                                }
-                                title='Delete election'
-                              >
-                                <CompactButton.Icon
-                                  as={RiDeleteBinLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                            </div>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))
-                    )}
-                  </Table.Body>
-                </Table.Root>
+                            {/* Expected Turnout */}
+                            <Table.Cell>
+                              {item.expectedTurnout != null ? (
+                                <Badge.Root
+                                  variant='lighter'
+                                  color='blue'
+                                  size='small'
+                                >
+                                  <RiGroupLine className='size-3 shrink-0' />
+                                  <span>
+                                    {Number(
+                                      item.expectedTurnout,
+                                    ).toLocaleString()}{' '}
+                                    voters
+                                  </span>
+                                </Badge.Root>
+                              ) : (
+                                <span className='text-paragraph-sm text-text-soft-400'>
+                                  —
+                                </span>
+                              )}
+                            </Table.Cell>
+
+                            {/* Actions */}
+                            <Table.Cell className='text-right'>
+                              <div className='inline-flex items-center gap-1.5'>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg'
+                                  onClick={() =>
+                                    setElectionModalState({
+                                      type: 'view',
+                                      item,
+                                    })
+                                  }
+                                  title='View details'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiEyeLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg hover:text-primary-base'
+                                  onClick={() =>
+                                    setElectionModalState({
+                                      type: 'update',
+                                      item,
+                                    })
+                                  }
+                                  title='Edit election'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiEditLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg hover:text-error-base'
+                                  onClick={() =>
+                                    setElectionModalState({
+                                      type: 'delete',
+                                      item,
+                                    })
+                                  }
+                                  title='Delete election'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiDeleteBinLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                              </div>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))
+                      )}
+                    </Table.Body>
+                  </Table.Root>
+
+                  <SetupPaginationFooter
+                    currentPage={electionsPage}
+                    totalItems={filteredElections.length}
+                    pageSize={PAGE_SIZE}
+                    onPageChange={setElectionsPage}
+                    itemLabel='elections'
+                    isLoading={isElectionsLoading}
+                  />
+                </>
               ) : (
-                <Table.Root scrollable>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.Head>Party Name</Table.Head>
-                      <Table.Head className='w-[160px]'>
-                        Abbreviation
-                      </Table.Head>
-                      <Table.Head className='w-[120px] text-right'>
-                        Actions
-                      </Table.Head>
-                    </Table.Row>
-                  </Table.Header>
-
-                  <Table.Body>
-                    {isPoliticalPartiesLoading ? (
-                      Array.from({ length: 5 }).map((_, idx) => (
-                        <Table.Row key={`skeleton-party-${idx}`}>
-                          <Table.Cell>
-                            <Skeleton className='h-4 w-48' />
-                          </Table.Cell>
-                          <Table.Cell>
-                            <Skeleton className='h-5 w-16 rounded-full' />
-                          </Table.Cell>
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center justify-end gap-1.5'>
-                              <Skeleton className='size-7 rounded-lg' />
-                              <Skeleton className='size-7 rounded-lg' />
-                              <Skeleton className='size-7 rounded-lg' />
-                            </div>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))
-                    ) : filteredPoliticalParties.length === 0 ? (
+                <>
+                  <Table.Root scrollable>
+                    <Table.Header>
                       <Table.Row>
-                        <Table.Cell colSpan={3} className='py-12 text-center'>
-                          <p className='text-label-sm font-semibold text-text-strong-950'>
-                            No political parties found
-                          </p>
-                          <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                            Try adjusting your search criteria or register a new
-                            political party.
-                          </p>
-                        </Table.Cell>
+                        <Table.Head>Party Name</Table.Head>
+                        <Table.Head className='w-[160px]'>
+                          Abbreviation
+                        </Table.Head>
+                        <Table.Head className='w-[120px] text-right'>
+                          Actions
+                        </Table.Head>
                       </Table.Row>
-                    ) : (
-                      filteredPoliticalParties.map((item) => (
-                        <Table.Row
-                          key={item.id}
-                          className='transition-colors hover:bg-bg-weak-50/50'
-                        >
-                          {/* Party Name */}
-                          <Table.Cell>
-                            <span className='text-label-sm font-semibold text-text-strong-950'>
-                              {item.name}
-                            </span>
-                          </Table.Cell>
+                    </Table.Header>
 
-                          {/* Abbreviation */}
-                          <Table.Cell>
-                            {item.abbreviation ? (
-                              <Badge.Root
-                                variant='lighter'
-                                color='gray'
-                                size='small'
-                              >
-                                {item.abbreviation}
-                              </Badge.Root>
-                            ) : (
-                              <span className='text-paragraph-sm text-text-soft-400'>
-                                —
-                              </span>
-                            )}
-                          </Table.Cell>
-
-                          {/* Actions */}
-                          <Table.Cell className='text-right'>
-                            <div className='inline-flex items-center gap-1.5'>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg'
-                                onClick={() =>
-                                  setPoliticalPartyModalState({
-                                    type: 'view',
-                                    item,
-                                  })
-                                }
-                                title='View details'
-                              >
-                                <CompactButton.Icon
-                                  as={RiEyeLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg hover:text-primary-base'
-                                onClick={() =>
-                                  setPoliticalPartyModalState({
-                                    type: 'update',
-                                    item,
-                                  })
-                                }
-                                title='Edit party'
-                              >
-                                <CompactButton.Icon
-                                  as={RiEditLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                              <CompactButton.Root
-                                type='button'
-                                variant='stroke'
-                                className='size-7 rounded-lg hover:text-error-base'
-                                onClick={() =>
-                                  setPoliticalPartyModalState({
-                                    type: 'delete',
-                                    item,
-                                  })
-                                }
-                                title='Delete party'
-                              >
-                                <CompactButton.Icon
-                                  as={RiDeleteBinLine}
-                                  className='size-4'
-                                />
-                              </CompactButton.Root>
-                            </div>
+                    <Table.Body>
+                      {isPoliticalPartiesLoading ? (
+                        Array.from({ length: 5 }).map((_, idx) => (
+                          <Table.Row key={`skeleton-party-${idx}`}>
+                            <Table.Cell>
+                              <Skeleton className='h-4 w-48' />
+                            </Table.Cell>
+                            <Table.Cell>
+                              <Skeleton className='h-5 w-16 rounded-full' />
+                            </Table.Cell>
+                            <Table.Cell className='text-right'>
+                              <div className='inline-flex items-center justify-end gap-1.5'>
+                                <Skeleton className='size-7 rounded-lg' />
+                                <Skeleton className='size-7 rounded-lg' />
+                                <Skeleton className='size-7 rounded-lg' />
+                              </div>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))
+                      ) : filteredPoliticalParties.length === 0 ? (
+                        <Table.Row>
+                          <Table.Cell colSpan={3} className='py-12 text-center'>
+                            <p className='text-label-sm font-semibold text-text-strong-950'>
+                              No political parties found
+                            </p>
+                            <p className='text-paragraph-xs text-text-sub-600 mt-1'>
+                              Try adjusting your search criteria or register a
+                              new political party.
+                            </p>
                           </Table.Cell>
                         </Table.Row>
-                      ))
-                    )}
-                  </Table.Body>
-                </Table.Root>
+                      ) : (
+                        paginatedPoliticalParties.map((item) => (
+                          <Table.Row
+                            key={item.id}
+                            className='transition-colors hover:bg-bg-weak-50/50'
+                          >
+                            {/* Party Name */}
+                            <Table.Cell>
+                              <span className='text-label-sm font-semibold text-text-strong-950'>
+                                {item.name}
+                              </span>
+                            </Table.Cell>
+
+                            {/* Abbreviation */}
+                            <Table.Cell>
+                              {item.abbreviation ? (
+                                <Badge.Root
+                                  variant='lighter'
+                                  color='gray'
+                                  size='small'
+                                >
+                                  {item.abbreviation}
+                                </Badge.Root>
+                              ) : (
+                                <span className='text-paragraph-sm text-text-soft-400'>
+                                  —
+                                </span>
+                              )}
+                            </Table.Cell>
+
+                            {/* Actions */}
+                            <Table.Cell className='text-right'>
+                              <div className='inline-flex items-center gap-1.5'>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg'
+                                  onClick={() =>
+                                    setPoliticalPartyModalState({
+                                      type: 'view',
+                                      item,
+                                    })
+                                  }
+                                  title='View details'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiEyeLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg hover:text-primary-base'
+                                  onClick={() =>
+                                    setPoliticalPartyModalState({
+                                      type: 'update',
+                                      item,
+                                    })
+                                  }
+                                  title='Edit party'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiEditLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                                <CompactButton.Root
+                                  type='button'
+                                  variant='stroke'
+                                  className='size-7 rounded-lg hover:text-error-base'
+                                  onClick={() =>
+                                    setPoliticalPartyModalState({
+                                      type: 'delete',
+                                      item,
+                                    })
+                                  }
+                                  title='Delete party'
+                                >
+                                  <CompactButton.Icon
+                                    as={RiDeleteBinLine}
+                                    className='size-4'
+                                  />
+                                </CompactButton.Root>
+                              </div>
+                            </Table.Cell>
+                          </Table.Row>
+                        ))
+                      )}
+                    </Table.Body>
+                  </Table.Root>
+
+                  <SetupPaginationFooter
+                    currentPage={politicalPartiesPage}
+                    totalItems={filteredPoliticalParties.length}
+                    pageSize={PAGE_SIZE}
+                    onPageChange={setPoliticalPartiesPage}
+                    itemLabel='parties'
+                    isLoading={isPoliticalPartiesLoading}
+                  />
+                </>
               )}
             </SetupTablePanel>
           </div>

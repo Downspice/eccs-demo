@@ -18,6 +18,7 @@ import {
 } from '@remixicon/react';
 import { OrganizationChart } from 'primereact/organizationchart';
 import type { TreeNode } from 'primereact/treenode';
+import { createPortal } from 'react-dom';
 
 import { cn } from '@/utils/cn';
 import * as Badge from '@/components/ui/badge';
@@ -81,6 +82,10 @@ export function LevelMappingOrganogram({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        const hasOpenDialog = Boolean(
+          document.querySelector('[role="dialog"][data-state="open"]'),
+        );
+        if (hasOpenDialog) return;
         setIsFullscreen(false);
       }
     };
@@ -413,11 +418,12 @@ export function LevelMappingOrganogram({
     );
   }
 
-  return (
+  const organogramContent = (
     <div
       className={cn(
         'relative flex flex-col w-full bg-bg-white-0 transition-all duration-200',
-        isFullscreen && 'fixed inset-0 z-40 h-screen w-screen overflow-hidden',
+        isFullscreen &&
+          'fixed inset-0 z-[49] h-screen w-screen overflow-hidden',
       )}
     >
       {/* Top Controls Bar */}
@@ -555,6 +561,12 @@ export function LevelMappingOrganogram({
       </div>
     </div>
   );
+
+  if (isFullscreen && typeof document !== 'undefined') {
+    return createPortal(organogramContent, document.body);
+  }
+
+  return organogramContent;
 }
 
 export default LevelMappingOrganogram;
