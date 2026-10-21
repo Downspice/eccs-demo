@@ -56,7 +56,7 @@ export type CandidateModalState =
 
 export type LevelMappingModalState =
   | { type: null }
-  | { type: 'create' }
+  | { type: 'create'; parentItem?: LevelMappingItem | null }
   | { type: 'update'; item: LevelMappingItem }
   | { type: 'view'; item: LevelMappingItem }
   | { type: 'delete'; item: LevelMappingItem };

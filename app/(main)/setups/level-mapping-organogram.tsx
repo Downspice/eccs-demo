@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import type { LevelMappingItem } from '@/services/level-mappings';
+import type { LevelItem } from '@/services/levels';
 import {
   RiAddLine,
   RiDeleteBinLine,
@@ -23,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 interface LevelMappingOrganogramProps {
   mappings: LevelMappingItem[];
+  levels?: LevelItem[];
   electionName?: string;
   isLoading?: boolean;
   onView: (item: LevelMappingItem) => void;
@@ -57,6 +59,7 @@ function getLevelBadgeColor(
 
 export function LevelMappingOrganogram({
   mappings,
+  levels,
   electionName,
   isLoading = false,
   onView,
@@ -67,6 +70,70 @@ export function LevelMappingOrganogram({
 }: LevelMappingOrganogramProps) {
   const [zoom, setZoom] = React.useState<number>(1);
   const [expandedAll, setExpandedAll] = React.useState<boolean>(true);
+
+  // Identify the lowest level tier in this election hierarchy
+  const lowestLevelInfo = React.useMemo(() => {
+    let maxRank = -Infinity;
+    let lowestId: string | null = null;
+    let lowestName: string | null = null;
+
+    if (levels && levels.length > 0) {
+      const sorted = [...levels].sort(
+        (a, b) => (a.levelRank ?? 0) - (b.levelRank ?? 0),
+      );
+      const lowest = sorted[sorted.length - 1];
+      if (lowest) {
+        maxRank = lowest.levelRank ?? 0;
+        lowestId = lowest.id;
+        lowestName = lowest.name ? lowest.name.trim().toLowerCase() : null;
+      }
+    } else if (mappings && mappings.length > 0) {
+      for (const m of mappings) {
+        if (typeof m.levelRank === 'number' && m.levelRank > maxRank) {
+          maxRank = m.levelRank;
+          lowestId = m.levelId || null;
+          lowestName = m.levelName ? m.levelName.trim().toLowerCase() : null;
+        }
+      }
+    }
+
+    return {
+      maxRank: maxRank === -Infinity ? null : maxRank,
+      lowestId,
+      lowestName,
+    };
+  }, [levels, mappings]);
+
+  const checkIfLowestLevel = React.useCallback(
+    (item: LevelMappingItem): boolean => {
+      // If we have lowest level ID
+      if (
+        lowestLevelInfo.lowestId &&
+        item.levelId &&
+        item.levelId === lowestLevelInfo.lowestId
+      ) {
+        return true;
+      }
+      // If we have lowest level Name
+      if (
+        lowestLevelInfo.lowestName &&
+        item.levelName &&
+        item.levelName.trim().toLowerCase() === lowestLevelInfo.lowestName
+      ) {
+        return true;
+      }
+      // If rank matches or exceeds the maximum level rank
+      if (
+        lowestLevelInfo.maxRank !== null &&
+        typeof item.levelRank === 'number' &&
+        item.levelRank >= lowestLevelInfo.maxRank
+      ) {
+        return true;
+      }
+      return false;
+    },
+    [lowestLevelInfo],
+  );
 
   const handleZoomIn = () =>
     setZoom((prev) => Math.min(1.5, Math.round((prev + 0.15) * 100) / 100));
@@ -154,6 +221,7 @@ export function LevelMappingOrganogram({
     const item: LevelMappingItem = node.data.item;
     const parent: LevelMappingItem | undefined = node.data.parent;
     const childCount: number = node.data.childCount || 0;
+    const isLowestLevel = checkIfLowestLevel(item);
     const isMatchingSearch =
       Boolean(searchQuery.trim()) &&
       item.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -184,9 +252,16 @@ export function LevelMappingOrganogram({
               <RiNodeTree className='size-3 text-primary-base' />
               <span>{childCount}</span>
             </span>
+          ) : isLowestLevel ? (
+            <span
+              className='text-[10px] text-text-soft-400 font-medium'
+              title='Lowest level tier in the election hierarchy'
+            >
+              Lowest Tier
+            </span>
           ) : (
             <span className='text-[10px] text-text-disabled-300 font-medium'>
-              Terminal Unit
+              No sub-units
             </span>
           )}
         </div>
@@ -262,7 +337,7 @@ export function LevelMappingOrganogram({
             </CompactButton.Root>
           </div>
 
-          {onCreateSubordinate && (
+          {onCreateSubordinate && !isLowestLevel && (
             <button
               type='button'
               onClick={(e) => {
@@ -270,7 +345,7 @@ export function LevelMappingOrganogram({
                 onCreateSubordinate(item);
               }}
               className='inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-text-sub-600 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
-              title='Add subordinate unit under this jurisdiction'
+              title={`Add subordinate unit under ${item.name}`}
             >
               <RiAddLine className='size-3' />
               <span>Sub-unit</span>

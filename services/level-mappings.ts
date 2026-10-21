@@ -18,6 +18,7 @@ export interface LevelMappingItem {
   levelId?: string;
   electionId?: string;
   upper_level_id?: string | null;
+  levelRank?: number;
 }
 
 export interface LevelMappingGroup {

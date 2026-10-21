@@ -169,6 +169,7 @@ export default function SetupsPage() {
         ...m,
         levelId: m.levelId || group.levelId,
         levelName: m.levelName || group.levelName,
+        levelRank: m.levelRank ?? group.levelRank,
         electionId: m.electionId || activeElectionId,
       })),
     );
@@ -890,6 +891,7 @@ export default function SetupsPage() {
                 levelMappingView === 'organogram' ? (
                   <LevelMappingOrganogram
                     mappings={levelMappings}
+                    levels={levels}
                     electionName={activeElectionName}
                     isLoading={isLevelMappingsLoading}
                     searchQuery={levelMappingSearch}
@@ -902,8 +904,11 @@ export default function SetupsPage() {
                     onDelete={(item) =>
                       setLevelMappingModalState({ type: 'delete', item })
                     }
-                    onCreateSubordinate={() =>
-                      setLevelMappingModalState({ type: 'create' })
+                    onCreateSubordinate={(item) =>
+                      setLevelMappingModalState({
+                        type: 'create',
+                        parentItem: item,
+                      })
                     }
                   />
                 ) : (
@@ -1530,6 +1535,11 @@ export default function SetupsPage() {
       <CreateLevelMappingModal
         open={levelMappingModalState.type === 'create'}
         defaultElectionId={activeElectionId}
+        parentItem={
+          levelMappingModalState.type === 'create'
+            ? levelMappingModalState.parentItem
+            : null
+        }
         onClose={() => setLevelMappingModalState({ type: null })}
       />
 
