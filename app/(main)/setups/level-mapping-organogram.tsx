@@ -8,6 +8,8 @@ import {
   RiDeleteBinLine,
   RiEditLine,
   RiEyeLine,
+  RiFullscreenExitLine,
+  RiFullscreenLine,
   RiGovernmentLine,
   RiNodeTree,
   RiSubtractLine,
@@ -20,6 +22,7 @@ import type { TreeNode } from 'primereact/treenode';
 import { cn } from '@/utils/cn';
 import * as Badge from '@/components/ui/badge';
 import * as CompactButton from '@/components/ui/compact-button';
+import * as Kbd from '@/components/ui/kbd';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface LevelMappingOrganogramProps {
@@ -70,6 +73,27 @@ export function LevelMappingOrganogram({
 }: LevelMappingOrganogramProps) {
   const [zoom, setZoom] = React.useState<number>(1);
   const [expandedAll, setExpandedAll] = React.useState<boolean>(true);
+  const [isFullscreen, setIsFullscreen] = React.useState<boolean>(false);
+
+  // Keyboard shortcut (Escape) to exit fullscreen & lock body scroll
+  React.useEffect(() => {
+    if (!isFullscreen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsFullscreen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isFullscreen]);
 
   // Identify the lowest level tier in this election hierarchy
   const lowestLevelInfo = React.useMemo(() => {
@@ -390,9 +414,19 @@ export function LevelMappingOrganogram({
   }
 
   return (
-    <div className='relative flex flex-col w-full'>
+    <div
+      className={cn(
+        'relative flex flex-col w-full bg-bg-white-0 transition-all duration-200',
+        isFullscreen && 'fixed inset-0 z-40 h-screen w-screen overflow-hidden',
+      )}
+    >
       {/* Top Controls Bar */}
-      <div className='flex flex-wrap items-center justify-between gap-3 border-b border-stroke-soft-200 px-4 py-2.5 bg-bg-weak-50/50'>
+      <div
+        className={cn(
+          'flex flex-wrap items-center justify-between gap-3 border-b border-stroke-soft-200 px-4 py-2.5 bg-bg-weak-50/50 shrink-0 z-10 transition-colors',
+          isFullscreen && 'px-6 py-3 bg-bg-white-0 shadow-regular-xs',
+        )}
+      >
         <div className='flex items-center gap-2'>
           {electionName && (
             <div className='flex items-center gap-1.5 rounded-lg border border-stroke-soft-200 bg-bg-white-0 px-2.5 py-1 shadow-regular-xs'>
@@ -413,7 +447,7 @@ export function LevelMappingOrganogram({
           )}
         </div>
 
-        {/* Zoom & Expansion controls */}
+        {/* Zoom, Expansion & Fullscreen controls */}
         <div className='flex items-center gap-2'>
           <button
             type='button'
@@ -464,13 +498,52 @@ export function LevelMappingOrganogram({
               <RiZoomInLine className='size-3.5' />
             </button>
           </div>
+
+          <div className='h-4 w-px bg-stroke-soft-200' />
+
+          {/* Fullscreen Toggle */}
+          <button
+            type='button'
+            onClick={() => setIsFullscreen((prev) => !prev)}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-paragraph-xs font-medium shadow-regular-xs transition-colors',
+              isFullscreen
+                ? 'border-primary-base bg-primary-base/10 text-primary-base hover:bg-primary-base/15'
+                : 'border-stroke-soft-200 bg-bg-white-0 text-text-sub-600 hover:bg-bg-weak-50 hover:text-text-strong-950',
+            )}
+            title={
+              isFullscreen
+                ? 'Exit fullscreen (Esc)'
+                : 'View organogram fullscreen'
+            }
+          >
+            {isFullscreen ? (
+              <>
+                <RiFullscreenExitLine className='size-3.5' />
+                <span>Exit Fullscreen</span>
+                <Kbd.Root className='ml-0.5 text-[10px]'>Esc</Kbd.Root>
+              </>
+            ) : (
+              <>
+                <RiFullscreenLine className='size-3.5' />
+                <span>Fullscreen</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
       {/* Organogram Chart Canvas Area */}
-      <div className='relative min-h-[500px] max-h-[750px] w-full overflow-auto p-8 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px]'>
+      <div
+        className={cn(
+          'relative w-full overflow-auto bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px]',
+          isFullscreen
+            ? 'flex-1 h-full min-h-0 p-12'
+            : 'min-h-[500px] max-h-[750px] p-8',
+        )}
+      >
         <div
-          className='align-ui-orgchart flex justify-center transition-transform duration-200 ease-out origin-top'
+          className='align-ui-orgchart flex justify-center transition-transform duration-200 ease-out origin-top min-w-max pb-16'
           style={{ transform: `scale(${zoom})` }}
         >
           <OrganizationChart
