@@ -266,10 +266,34 @@ export default function ElectionCollationDetailPage({
     return [];
   }, [rawCandidates]);
 
-  // All jurisdictions across all hierarchy levels in this election
+  // Identify the lowest level tier in this election hierarchy
+  // Stations Collation Registry only shows units at the lowest tier (where results sheets are recorded)
+  const lowestRank = React.useMemo(() => {
+    if (
+      !rawLevelMappings ||
+      !Array.isArray(rawLevelMappings) ||
+      rawLevelMappings.length === 0
+    ) {
+      return null;
+    }
+    return Math.max(
+      ...rawLevelMappings.map((g: LevelMappingGroup) => g.levelRank ?? 0),
+    );
+  }, [rawLevelMappings]);
+
+  // Polling Stations: Only the lowest level units
   const pollingStations = React.useMemo<LevelMappingItem[]>(() => {
-    if (!rawLevelMappings || !Array.isArray(rawLevelMappings)) return [];
-    return rawLevelMappings.flatMap((group: LevelMappingGroup) =>
+    if (
+      !rawLevelMappings ||
+      !Array.isArray(rawLevelMappings) ||
+      lowestRank === null
+    ) {
+      return [];
+    }
+    const lowestGroups = rawLevelMappings.filter(
+      (g: LevelMappingGroup) => (g.levelRank ?? 0) === lowestRank,
+    );
+    return lowestGroups.flatMap((group: LevelMappingGroup) =>
       (group.mappings || []).map((m: LevelMappingItem) => ({
         ...m,
         levelId: m.levelId || group.levelId,
@@ -278,20 +302,7 @@ export default function ElectionCollationDetailPage({
         levelRank: m.levelRank ?? group.levelRank,
       })),
     );
-  }, [rawLevelMappings, electionId]);
-
-  // Available Level Tiers for Filtering
-  const availableTiers = React.useMemo(() => {
-    if (!rawLevelMappings || !Array.isArray(rawLevelMappings)) return [];
-    return rawLevelMappings.map((g: LevelMappingGroup) => ({
-      id: g.levelId,
-      name: g.levelName,
-      count: g.mappings?.length || 0,
-    }));
-  }, [rawLevelMappings]);
-
-  const [selectedTierFilter, setSelectedTierFilter] =
-    React.useState<string>('all');
+  }, [rawLevelMappings, lowestRank, electionId]);
 
   // Modals & Inspection State
   const [recordModalOpen, setRecordModalOpen] = React.useState(false);
@@ -339,23 +350,17 @@ export default function ElectionCollationDetailPage({
       ? leader.total - runnerUp.total
       : (leader?.total ?? 0);
 
-  // Filtered Polling Stations (by search & tier)
+  // Filtered Polling Stations (by search)
   const filteredStations = React.useMemo(() => {
-    let list = pollingStations;
-    if (selectedTierFilter !== 'all') {
-      list = list.filter((s) => s.levelId === selectedTierFilter);
-    }
-    if (stationSearch.trim()) {
-      const q = stationSearch.toLowerCase();
-      list = list.filter(
-        (s) =>
-          s.name.toLowerCase().includes(q) ||
-          s.levelName?.toLowerCase().includes(q) ||
-          s.upperLevelName?.toLowerCase().includes(q),
-      );
-    }
-    return list;
-  }, [pollingStations, selectedTierFilter, stationSearch]);
+    if (!stationSearch.trim()) return pollingStations;
+    const q = stationSearch.toLowerCase();
+    return pollingStations.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.levelName?.toLowerCase().includes(q) ||
+        s.upperLevelName?.toLowerCase().includes(q),
+    );
+  }, [pollingStations, stationSearch]);
 
   const [stationPage, setStationPage] = React.useState(1);
   const STATIONS_PER_PAGE = 10;
@@ -745,58 +750,30 @@ export default function ElectionCollationDetailPage({
                 </button>
               </div>
 
-              {/* Search & Tier Filter Controls for stations */}
+              {/* Search bar for stations */}
               {activeTab === 'stations' && (
-                <div className='flex flex-wrap items-center gap-2'>
-                  {availableTiers.length > 1 && (
-                    <div className='w-48'>
-                      <Select.Root
-                        value={selectedTierFilter}
-                        onValueChange={(val) => {
-                          setSelectedTierFilter(val);
-                          setStationPage(1);
-                        }}
-                      >
-                        <Select.Trigger className='h-9 w-full'>
-                          <Select.Value placeholder='All Level Tiers' />
-                        </Select.Trigger>
-                        <Select.Content>
-                          <Select.Item value='all'>
-                            All Tiers ({pollingStations.length})
-                          </Select.Item>
-                          {availableTiers.map((t) => (
-                            <Select.Item key={t.id} value={t.id}>
-                              {t.name} ({t.count})
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Root>
-                    </div>
-                  )}
-
-                  <div className='w-full sm:w-60'>
-                    <Input.Root>
-                      <Input.Wrapper>
-                        <Input.Icon as={RiSearchLine} />
-                        <input
-                          type='text'
-                          placeholder='Search stations...'
-                          value={stationSearch}
-                          onChange={(e) => setStationSearch(e.target.value)}
-                          className='w-full bg-transparent px-2.5 py-1.5 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
-                        />
-                        {stationSearch && (
-                          <button
-                            type='button'
-                            onClick={() => setStationSearch('')}
-                            className='px-2 text-text-soft-400 hover:text-text-sub-600'
-                          >
-                            <RiCloseLine className='size-4' />
-                          </button>
-                        )}
-                      </Input.Wrapper>
-                    </Input.Root>
-                  </div>
+                <div className='w-full sm:max-w-xs'>
+                  <Input.Root>
+                    <Input.Wrapper>
+                      <Input.Icon as={RiSearchLine} />
+                      <input
+                        type='text'
+                        placeholder='Search polling stations...'
+                        value={stationSearch}
+                        onChange={(e) => setStationSearch(e.target.value)}
+                        className='w-full bg-transparent px-2.5 py-1.5 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none'
+                      />
+                      {stationSearch && (
+                        <button
+                          type='button'
+                          onClick={() => setStationSearch('')}
+                          className='px-2 text-text-soft-400 hover:text-text-sub-600'
+                        >
+                          <RiCloseLine className='size-4' />
+                        </button>
+                      )}
+                    </Input.Wrapper>
+                  </Input.Root>
                 </div>
               )}
             </div>
