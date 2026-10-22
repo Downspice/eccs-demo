@@ -20,6 +20,7 @@ export interface DatePickerProps {
   name?: string;
   className?: string;
   clearable?: boolean;
+  modal?: boolean;
   formatDisplay?: (date: Date) => string;
 }
 
@@ -51,6 +52,7 @@ export function DatePicker({
   name,
   className,
   clearable = true,
+  modal = true,
   formatDisplay = (d: Date) => format(d, 'MMM dd, yyyy'),
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
@@ -73,7 +75,7 @@ export function DatePicker({
   };
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
+    <Popover.Root open={open} onOpenChange={setOpen} modal={modal}>
       <Popover.Trigger asChild>
         <button
           type='button'
@@ -127,17 +129,9 @@ export function DatePicker({
 
           {clearable && selectedDate && !disabled && (
             <span
-              role='button'
-              tabIndex={0}
               aria-label='Clear date'
               onClick={handleClear}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleClear(e as unknown as React.MouseEvent);
-                }
-              }}
-              className='size-5 rounded p-0.5 text-text-soft-400 hover:bg-bg-weak-100 hover:text-text-sub-600 transition-colors'
+              className='size-5 rounded p-0.5 text-text-soft-400 hover:bg-bg-weak-100 hover:text-text-sub-600 transition-colors cursor-pointer'
             >
               <RiCloseLine className='size-4' />
             </span>
@@ -149,13 +143,16 @@ export function DatePicker({
         align='start'
         sideOffset={6}
         showArrow={false}
-        className='p-3 rounded-2xl bg-bg-white-0 shadow-regular-md ring-1 ring-inset ring-stroke-soft-200'
+        className='z-[70] p-3 rounded-2xl bg-bg-white-0 shadow-regular-md ring-1 ring-inset ring-stroke-soft-200'
+        onOpenAutoFocus={(e) => {
+          // Prevent Safari from stealing focus or closing immediately when nested in Dialog
+          e.preventDefault();
+        }}
       >
         <Calendar
           mode='single'
           selected={selectedDate}
           onSelect={handleSelect}
-          initialFocus
         />
       </Popover.Content>
     </Popover.Root>
