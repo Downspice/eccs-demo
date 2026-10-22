@@ -1219,6 +1219,12 @@ export default function SetupsPage() {
                         parentItem: item,
                       })
                     }
+                    onCreateSubordinateBulk={(item) =>
+                      setLevelMappingModalState({
+                        type: 'bulk-create',
+                        parentItem: item,
+                      })
+                    }
                   />
                 ) : (
                   <>

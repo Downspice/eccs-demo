@@ -194,7 +194,7 @@ export function LevelMappingForm({
           <Select.Root
             value={values.levelId}
             onValueChange={(val) => setFieldValue('levelId', val)}
-            disabled={disabled || isLevelsLoading}
+            disabled={disabled || isLevelsLoading || Boolean(parentItem)}
             hasError={Boolean(touched.levelId && errors.levelId)}
           >
             <Select.Trigger id='levelId' className='w-full'>
@@ -218,9 +218,9 @@ export function LevelMappingForm({
           <Hint.Root hasError>{errors.levelId}</Hint.Root>
         )}
         {parentItem && values.levelId && !errors.levelId && (
-          <span className='inline-flex items-center gap-1 text-[11px] font-medium text-primary-base'>
-            <RiCheckLine className='size-3.5' />
-            Suggested immediate subordinate tier
+          <span className='inline-flex items-center gap-1 text-[11px] font-medium text-text-sub-600'>
+            <RiCheckLine className='size-3.5 text-primary-base' />
+            Subordinate tier locked to {parentItem.name}
           </span>
         )}
       </div>
@@ -244,7 +244,7 @@ export function LevelMappingForm({
               (u) => !mappingId || u.id !== mappingId,
             )}
             placeholder='None (Top-Level Jurisdiction)'
-            disabled={disabled}
+            disabled={disabled || Boolean(parentItem)}
             hasError={Boolean(touched.upper_level_id && errors.upper_level_id)}
             allowClear
             clearLabel='None (Top-Level Jurisdiction)'

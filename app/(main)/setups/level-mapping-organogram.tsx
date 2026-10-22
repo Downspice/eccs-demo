@@ -35,6 +35,7 @@ interface LevelMappingOrganogramProps {
   onEdit: (item: LevelMappingItem) => void;
   onDelete: (item: LevelMappingItem) => void;
   onCreateSubordinate?: (parentItem: LevelMappingItem) => void;
+  onCreateSubordinateBulk?: (parentItem: LevelMappingItem) => void;
   searchQuery?: string;
 }
 
@@ -70,6 +71,7 @@ export function LevelMappingOrganogram({
   onEdit,
   onDelete,
   onCreateSubordinate,
+  onCreateSubordinateBulk,
   searchQuery = '',
 }: LevelMappingOrganogramProps) {
   const [zoom, setZoom] = React.useState<number>(1);
@@ -260,7 +262,7 @@ export function LevelMappingOrganogram({
     return (
       <div
         className={cn(
-          'group relative w-60 rounded-xl bg-bg-white-0 p-3.5 text-left shadow-regular-xs ring-1 ring-inset transition-all duration-200',
+          'group relative w-64 rounded-xl bg-bg-white-0 p-3.5 text-left shadow-regular-xs ring-1 ring-inset transition-all duration-200',
           'hover:shadow-regular-md hover:ring-stroke-sub-300',
           isMatchingSearch
             ? 'ring-2 ring-primary-base bg-primary-base/[0.04]'
@@ -366,20 +368,39 @@ export function LevelMappingOrganogram({
             </CompactButton.Root>
           </div>
 
-          {onCreateSubordinate && !isLowestLevel && (
-            <button
-              type='button'
-              onClick={(e) => {
-                e.stopPropagation();
-                onCreateSubordinate(item);
-              }}
-              className='inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-text-sub-600 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
-              title={`Add subordinate unit under ${item.name}`}
-            >
-              <RiAddLine className='size-3' />
-              <span>Sub-unit</span>
-            </button>
-          )}
+          {!isLowestLevel &&
+            (onCreateSubordinate || onCreateSubordinateBulk) && (
+              <div className='flex items-center gap-1'>
+                {onCreateSubordinate && (
+                  <button
+                    type='button'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCreateSubordinate(item);
+                    }}
+                    className='inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-text-sub-600 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
+                    title={`Add subordinate unit under ${item.name}`}
+                  >
+                    <RiAddLine className='size-3' />
+                    <span>Sub-unit</span>
+                  </button>
+                )}
+                {onCreateSubordinateBulk && (
+                  <button
+                    type='button'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCreateSubordinateBulk(item);
+                    }}
+                    className='inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-text-sub-600 hover:bg-bg-weak-50 hover:text-primary-base transition-colors'
+                    title={`Bulk add subordinate units under ${item.name}`}
+                  >
+                    <RiAddLine className='size-3' />
+                    <span>Bulk</span>
+                  </button>
+                )}
+              </div>
+            )}
         </div>
       </div>
     );

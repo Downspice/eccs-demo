@@ -150,6 +150,8 @@ export function CreateBulkLevelMappingModal({
     const parentIndex = sortedLevels.findIndex(
       (l) =>
         l.id === parentItem.levelId ||
+        (parentItem.levelRank !== undefined &&
+          l.levelRank === parentItem.levelRank) ||
         (parentItem.levelName &&
           l.name.toLowerCase() === parentItem.levelName.toLowerCase()),
     );
@@ -229,17 +231,26 @@ export function CreateBulkLevelMappingModal({
   // Ensure fields are synchronized if levels/mappings finish loading after opening
   React.useEffect(() => {
     if (open && parentItem) {
-      if (suggestedLevelId && !formik.values.levelId) {
+      if (suggestedLevelId && formik.values.levelId !== suggestedLevelId) {
         formik.setFieldValue('levelId', suggestedLevelId);
       }
-      if (parentItem.id && !formik.values.upper_level_id) {
+      if (parentItem.id && formik.values.upper_level_id !== parentItem.id) {
         formik.setFieldValue('upper_level_id', parentItem.id);
       }
       if (targetElectionId && !formik.values.electionId) {
         formik.setFieldValue('electionId', targetElectionId);
       }
     }
-  }, [open, parentItem, suggestedLevelId, targetElectionId]);
+  }, [
+    open,
+    parentItem,
+    suggestedLevelId,
+    targetElectionId,
+    formik.values.levelId,
+    formik.values.upper_level_id,
+    formik.values.electionId,
+    formik.setFieldValue,
+  ]);
 
   const handleClose = () => {
     formik.resetForm();

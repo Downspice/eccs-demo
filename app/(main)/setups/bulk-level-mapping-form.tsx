@@ -10,6 +10,7 @@ import { useGetLevels, type LevelItem } from '@/services/levels';
 import {
   RiAddLine,
   RiArrowRightLine,
+  RiCheckLine,
   RiDeleteBinLine,
   RiInformationLine,
   RiNodeTree,
@@ -232,7 +233,12 @@ export function BulkLevelMappingForm({
               <Select.Root
                 value={values.levelId}
                 onValueChange={(val) => setFieldValue('levelId', val)}
-                disabled={disabled || !values.electionId || levels.length === 0}
+                disabled={
+                  disabled ||
+                  !values.electionId ||
+                  levels.length === 0 ||
+                  Boolean(parentItem)
+                }
               >
                 <Select.Trigger id='levelId' className='w-full'>
                   <Select.Value
@@ -260,6 +266,12 @@ export function BulkLevelMappingForm({
                 <Hint.Icon as={RiInformationLine} />
                 {errors.levelId as string}
               </Hint.Root>
+            )}
+            {parentItem && values.levelId && (
+              <span className='inline-flex items-center gap-1 text-[11px] font-medium text-text-sub-600'>
+                <RiCheckLine className='size-3.5 text-primary-base' />
+                Subordinate tier locked to {parentItem.name}
+              </span>
             )}
           </div>
         </div>
