@@ -76,13 +76,26 @@ export const useBaseMutation = <
     });
 
     // Automatically unwraps ApiResponse.data if nested, or returns direct response
-    if (
-      response &&
-      typeof response === 'object' &&
-      !Array.isArray(response) &&
-      'data' in response
-    ) {
-      return (response as { data: TResponse }).data;
+    if (response && typeof response === 'object' && !Array.isArray(response)) {
+      const respObj = response as Record<string, unknown>;
+      const code = (respObj.statuscode ?? respObj.statusCode) as
+        | number
+        | undefined;
+      if (typeof code === 'number' && code >= 400) {
+        const errorMsg =
+          typeof respObj.message === 'string'
+            ? respObj.message
+            : `Request failed with status code ${code}`;
+        const err = new Error(errorMsg) as any;
+        err.statuscode = code;
+        err.statusCode = code;
+        err.data = respObj;
+        throw err;
+      }
+
+      if ('data' in response) {
+        return (response as { data: TResponse }).data;
+      }
     }
 
     return response as TResponse;

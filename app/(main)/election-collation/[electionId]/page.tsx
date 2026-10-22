@@ -266,17 +266,50 @@ export default function ElectionCollationDetailPage({
     return [];
   }, [rawCandidates]);
 
+  // Identify the lowest level tier in this election hierarchy
+  // Results can only be recorded at the lowest level tier; higher levels are collated automatically.
+  const lowestLevelGroup = React.useMemo<LevelMappingGroup | null>(() => {
+    if (
+      !rawLevelMappings ||
+      !Array.isArray(rawLevelMappings) ||
+      rawLevelMappings.length === 0
+    ) {
+      return null;
+    }
+    const sorted = [...rawLevelMappings].sort(
+      (a, b) => (b.levelRank ?? 0) - (a.levelRank ?? 0),
+    );
+    return sorted[0] || null;
+  }, [rawLevelMappings]);
+
   const pollingStations = React.useMemo<LevelMappingItem[]>(() => {
     if (!rawLevelMappings || !Array.isArray(rawLevelMappings)) return [];
+
+    // If lowest level tier exists and has mappings, only show those as reportable stations
+    if (
+      lowestLevelGroup &&
+      Array.isArray(lowestLevelGroup.mappings) &&
+      lowestLevelGroup.mappings.length > 0
+    ) {
+      return lowestLevelGroup.mappings.map((m: LevelMappingItem) => ({
+        ...m,
+        levelId: m.levelId || lowestLevelGroup.levelId,
+        levelName: m.levelName || lowestLevelGroup.levelName,
+        electionId: m.electionId || electionId,
+        levelRank: m.levelRank ?? lowestLevelGroup.levelRank,
+      }));
+    }
+
     return rawLevelMappings.flatMap((group: LevelMappingGroup) =>
       (group.mappings || []).map((m: LevelMappingItem) => ({
         ...m,
         levelId: m.levelId || group.levelId,
         levelName: m.levelName || group.levelName,
         electionId: m.electionId || electionId,
+        levelRank: m.levelRank ?? group.levelRank,
       })),
     );
-  }, [rawLevelMappings, electionId]);
+  }, [rawLevelMappings, lowestLevelGroup, electionId]);
 
   // Modals & Inspection State
   const [recordModalOpen, setRecordModalOpen] = React.useState(false);

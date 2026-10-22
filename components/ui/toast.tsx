@@ -43,30 +43,70 @@ export function Toaster({ ...props }: ToasterProps) {
 }
 
 /**
- * Extracts a human-readable error message from backend responses or Error instances.
+ * Extracts a human-readable error message from backend responses,
+ * error payloads { statuscode, message, data }, AxiosErrors, or Error instances.
  */
 export function getErrorMessage(
   error: unknown,
   fallback = 'An unexpected error occurred',
 ): string {
   if (!error) return fallback;
-  if (typeof error === 'string') return error;
+  if (typeof error === 'string' && error.trim()) return error.trim();
 
-  const axiosErr = error as AxiosError<{
-    message?: string;
-    error?: string;
-    details?: string;
-  }>;
+  // 1. AxiosError with response.data
+  const axiosErr = error as AxiosError<any>;
   if (axiosErr.response?.data) {
     const data = axiosErr.response.data;
-    if (typeof data === 'string') return data;
-    if (data.message) return data.message;
-    if (data.error) return data.error;
-    if (data.details) return data.details;
+    if (typeof data === 'string' && data.trim()) return data.trim();
+    if (typeof data === 'object' && data !== null) {
+      if (typeof data.message === 'string' && data.message.trim()) {
+        return data.message.trim();
+      }
+      if (Array.isArray(data.message) && data.message.length > 0) {
+        return data.message.join(', ');
+      }
+      if (typeof data.error === 'string' && data.error.trim()) {
+        return data.error.trim();
+      }
+      if (typeof data.detail === 'string' && data.detail.trim()) {
+        return data.detail.trim();
+      }
+      if (typeof data.details === 'string' && data.details.trim()) {
+        return data.details.trim();
+      }
+      if (data.errors && typeof data.errors === 'object') {
+        const msgs = Object.values(data.errors).flat();
+        if (msgs.length > 0) return msgs.join(', ');
+      }
+    }
   }
 
-  if (error instanceof Error && error.message) {
-    return error.message;
+  // 2. Direct object like { statuscode: 400, message: "...", data: null }
+  if (typeof error === 'object' && error !== null) {
+    const obj = error as Record<string, unknown>;
+    if (typeof obj.message === 'string' && obj.message.trim()) {
+      return obj.message.trim();
+    }
+    if (Array.isArray(obj.message) && obj.message.length > 0) {
+      return obj.message.join(', ');
+    }
+    if (typeof obj.error === 'string' && obj.error.trim()) {
+      return obj.error.trim();
+    }
+    if (typeof obj.detail === 'string' && obj.detail.trim()) {
+      return obj.detail.trim();
+    }
+    if (typeof obj.details === 'string' && obj.details.trim()) {
+      return obj.details.trim();
+    }
+    if (obj.errors && typeof obj.errors === 'object') {
+      const msgs = Object.values(obj.errors).flat();
+      if (msgs.length > 0) return msgs.join(', ');
+    }
+  }
+
+  if (error instanceof Error && error.message && error.message.trim()) {
+    return error.message.trim();
   }
 
   return fallback;
@@ -97,9 +137,17 @@ export const toast = {
       typeof optionsOrFallback === 'string'
         ? optionsOrFallback
         : optionsOrFallback?.fallback || 'Action failed';
-    const description = getErrorMessage(titleOrError, fallback);
+    const message = getErrorMessage(titleOrError, fallback);
     const title =
-      typeof optionsOrFallback === 'string' ? optionsOrFallback : 'Error';
+      typeof optionsOrFallback === 'string'
+        ? optionsOrFallback
+        : optionsOrFallback?.fallback || 'Action failed';
+
+    // Show message as description if it provides additional context beyond the title
+    const description =
+      message && message.toLowerCase() !== title.toLowerCase()
+        ? message
+        : undefined;
 
     return sonnerToast.error(title, {
       description,
