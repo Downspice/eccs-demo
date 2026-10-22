@@ -154,22 +154,6 @@ export function CreateSetupModal({
           />
 
           <Modal.Body className='py-5'>
-            {onSwitchToBulk && (
-              <div className='mb-4 flex items-center justify-between rounded-xl bg-bg-weak-50 px-3.5 py-2 text-paragraph-xs ring-1 ring-inset ring-stroke-soft-200'>
-                <div className='flex items-center gap-2 text-text-sub-600'>
-                  <RiStackLine className='size-4 text-primary-base shrink-0' />
-                  <span>Configuring multiple levels for this election?</span>
-                </div>
-                <button
-                  type='button'
-                  onClick={onSwitchToBulk}
-                  className='font-semibold text-primary-base hover:underline'
-                >
-                  Switch to bulk mode
-                </button>
-              </div>
-            )}
-
             <SetupForm
               values={formik.values}
               errors={formik.errors}
@@ -181,26 +165,44 @@ export function CreateSetupModal({
             />
           </Modal.Body>
 
-          <Modal.Footer>
-            <Button.Root
-              type='button'
-              variant='neutral'
-              mode='stroke'
-              size='small'
-              onClick={handleClose}
-              disabled={createLevel.isPending}
-            >
-              Cancel
-            </Button.Root>
-            <Button.Root
-              type='submit'
-              variant='primary'
-              mode='filled'
-              size='small'
-              disabled={createLevel.isPending || !formik.isValid}
-            >
-              {createLevel.isPending ? 'Saving...' : 'Create Level'}
-            </Button.Root>
+          <Modal.Footer className='justify-between'>
+            <div>
+              {onSwitchToBulk && (
+                <Button.Root
+                  type='button'
+                  variant='neutral'
+                  mode='stroke'
+                  size='small'
+                  onClick={onSwitchToBulk}
+                  disabled={createLevel.isPending}
+                >
+                  <Button.Icon as={RiStackLine} />
+                  <span>Switch to Bulk</span>
+                </Button.Root>
+              )}
+            </div>
+
+            <div className='flex items-center gap-2'>
+              <Button.Root
+                type='button'
+                variant='neutral'
+                mode='stroke'
+                size='small'
+                onClick={handleClose}
+                disabled={createLevel.isPending}
+              >
+                Cancel
+              </Button.Root>
+              <Button.Root
+                type='submit'
+                variant='primary'
+                mode='filled'
+                size='small'
+                disabled={createLevel.isPending || !formik.isValid}
+              >
+                {createLevel.isPending ? 'Saving...' : 'Create Level'}
+              </Button.Root>
+            </div>
           </Modal.Footer>
         </form>
       </Modal.Content>

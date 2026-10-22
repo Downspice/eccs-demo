@@ -232,7 +232,9 @@ export function BulkLevelMappingForm({
     const newItems: string[] = [];
     for (let i = 0; i < count; i++) {
       const num = start + i;
-      const numStr = genPadZeros ? String(num).padStart(padLength, '0') : String(num);
+      const numStr = genPadZeros
+        ? String(num).padStart(padLength, '0')
+        : String(num);
       newItems.push(`${genPrefix}${numStr}`);
     }
 
@@ -244,23 +246,6 @@ export function BulkLevelMappingForm({
 
   return (
     <div className='flex flex-col gap-5'>
-      {/* Switch Banner */}
-      {onSwitchToSingle && (
-        <div className='flex items-center justify-between rounded-xl bg-bg-weak-50 px-3.5 py-2 text-paragraph-xs ring-1 ring-inset ring-stroke-soft-200'>
-          <div className='flex items-center gap-2 text-text-sub-600'>
-            <RiStackLine className='size-4 text-primary-base shrink-0' />
-            <span>Adding multiple jurisdictions or polling stations at once.</span>
-          </div>
-          <button
-            type='button'
-            onClick={onSwitchToSingle}
-            className='font-semibold text-primary-base hover:underline'
-          >
-            Switch to single mode
-          </button>
-        </div>
-      )}
-
       {/* Target Hierarchy & Location Card */}
       <div className='rounded-xl border border-stroke-soft-200 bg-bg-weak-50/40 p-3.5'>
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
@@ -415,7 +400,9 @@ export function BulkLevelMappingForm({
               className='inline-flex items-center gap-1 rounded-lg border border-stroke-soft-200 bg-bg-white-0 px-2.5 py-1 text-paragraph-xs font-medium text-text-sub-600 shadow-xs transition-colors hover:border-primary-base hover:text-primary-base'
             >
               <RiHashtag className='size-3.5' />
-              <span>{showGenerator ? 'Close Generator' : 'Auto-Generate Sequence'}</span>
+              <span>
+                {showGenerator ? 'Close Generator' : 'Auto-Generate Sequence'}
+              </span>
             </button>
 
             <button
@@ -599,10 +586,12 @@ export function BulkLevelMappingForm({
         ) : (
           <div className='flex items-center justify-between text-[11px] text-text-soft-400'>
             <span>
-              Tip: Paste from spreadsheets, CSVs, or text documents. Empty lines are cleaned automatically.
+              Tip: Paste from spreadsheets, CSVs, or text documents. Empty lines
+              are cleaned automatically.
             </span>
             <span>
-              {analysis.uniqueCount} unique {analysis.uniqueCount === 1 ? 'entry' : 'entries'}
+              {analysis.uniqueCount} unique{' '}
+              {analysis.uniqueCount === 1 ? 'entry' : 'entries'}
             </span>
           </div>
         )}
@@ -621,7 +610,8 @@ export function BulkLevelMappingForm({
               {analysis.duplicateCount > 0 && (
                 <span className='inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-200'>
                   <RiErrorWarningLine className='size-3 text-amber-600' />
-                  {analysis.duplicateCount} duplicate {analysis.duplicateCount === 1 ? 'item' : 'items'}
+                  {analysis.duplicateCount} duplicate{' '}
+                  {analysis.duplicateCount === 1 ? 'item' : 'items'}
                 </span>
               )}
               <span className='text-[11px] text-text-soft-400'>
@@ -645,7 +635,10 @@ export function BulkLevelMappingForm({
                 </span>
                 <span className='truncate max-w-[200px]'>{item.name}</span>
                 {item.isDuplicate && (
-                  <span className='text-[10px] font-bold text-amber-600' title='Duplicate name'>
+                  <span
+                    className='text-[10px] font-bold text-amber-600'
+                    title='Duplicate name'
+                  >
                     (dup)
                   </span>
                 )}

@@ -139,23 +139,6 @@ export function BulkLevelsForm({
 
   return (
     <div className='flex flex-col gap-5'>
-      {/* Switch to single banner */}
-      {onSwitchToSingle && (
-        <div className='flex items-center justify-between rounded-xl bg-bg-weak-50 px-3.5 py-2 text-paragraph-xs ring-1 ring-inset ring-stroke-soft-200'>
-          <div className='flex items-center gap-2 text-text-sub-600'>
-            <RiStackLine className='size-4 text-primary-base shrink-0' />
-            <span>Only need to create a single administrative level?</span>
-          </div>
-          <button
-            type='button'
-            onClick={onSwitchToSingle}
-            className='font-semibold text-primary-base hover:underline'
-          >
-            Switch to single mode
-          </button>
-        </div>
-      )}
-
       {/* Associated Election Selector */}
       <div className='flex flex-col gap-1.5'>
         <div className='flex items-center justify-between'>

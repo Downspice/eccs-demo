@@ -8,7 +8,7 @@ import {
   type LevelMappingItem,
 } from '@/services/level-mappings';
 import { useGetLevels, type LevelItem } from '@/services/levels';
-import { RiNodeTree, RiStackLine } from '@remixicon/react';
+import { RiAddLine, RiNodeTree, RiStackLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -268,38 +268,56 @@ export function CreateBulkLevelMappingModal({
             />
           </Modal.Body>
 
-          <Modal.Footer>
-            <Button.Root
-              type='button'
-              variant='neutral'
-              mode='stroke'
-              size='small'
-              onClick={handleClose}
-              disabled={createLevelMappingsBulk.isPending}
-            >
-              Cancel
-            </Button.Root>
-            <Button.Root
-              type='submit'
-              variant='primary'
-              mode='filled'
-              size='small'
-              disabled={
-                createLevelMappingsBulk.isPending ||
-                parsedCount === 0 ||
-                !formik.values.levelId ||
-                !formik.values.electionId
-              }
-            >
-              <Button.Icon as={RiStackLine} />
-              <span>
-                {createLevelMappingsBulk.isPending
-                  ? 'Creating units...'
-                  : parsedCount > 0
-                    ? `Create ${parsedCount} ${parsedCount === 1 ? 'Unit' : 'Units'}`
-                    : 'Create Units in Bulk'}
-              </span>
-            </Button.Root>
+          <Modal.Footer className='justify-between'>
+            <div>
+              {onSwitchToSingle && (
+                <Button.Root
+                  type='button'
+                  variant='neutral'
+                  mode='stroke'
+                  size='small'
+                  onClick={onSwitchToSingle}
+                  disabled={createLevelMappingsBulk.isPending}
+                >
+                  <Button.Icon as={RiAddLine} />
+                  <span>Switch to Single</span>
+                </Button.Root>
+              )}
+            </div>
+
+            <div className='flex items-center gap-2'>
+              <Button.Root
+                type='button'
+                variant='neutral'
+                mode='stroke'
+                size='small'
+                onClick={handleClose}
+                disabled={createLevelMappingsBulk.isPending}
+              >
+                Cancel
+              </Button.Root>
+              <Button.Root
+                type='submit'
+                variant='primary'
+                mode='filled'
+                size='small'
+                disabled={
+                  createLevelMappingsBulk.isPending ||
+                  parsedCount === 0 ||
+                  !formik.values.levelId ||
+                  !formik.values.electionId
+                }
+              >
+                <Button.Icon as={RiStackLine} />
+                <span>
+                  {createLevelMappingsBulk.isPending
+                    ? 'Creating units...'
+                    : parsedCount > 0
+                      ? `Create ${parsedCount} ${parsedCount === 1 ? 'Unit' : 'Units'}`
+                      : 'Create Units in Bulk'}
+                </span>
+              </Button.Root>
+            </div>
           </Modal.Footer>
         </form>
       </Modal.Content>

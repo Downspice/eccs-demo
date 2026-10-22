@@ -8,7 +8,7 @@ import {
   useUpdateLevelsBulk,
   type LevelItem,
 } from '@/services/levels';
-import { RiStackLine } from '@remixicon/react';
+import { RiAddLine, RiStackLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -163,38 +163,56 @@ export function CreateBulkLevelsModal({
             />
           </Modal.Body>
 
-          <Modal.Footer>
-            <Button.Root
-              type='button'
-              variant='neutral'
-              mode='stroke'
-              size='small'
-              onClick={handleClose}
-              disabled={updateLevelsBulk.isPending}
-            >
-              Cancel
-            </Button.Root>
-            <Button.Root
-              type='submit'
-              variant='primary'
-              mode='filled'
-              size='small'
-              disabled={
-                updateLevelsBulk.isPending ||
-                validCount === 0 ||
-                !formik.values.electionId ||
-                !formik.isValid
-              }
-            >
-              <Button.Icon as={RiStackLine} />
-              <span>
-                {updateLevelsBulk.isPending
-                  ? 'Saving levels...'
-                  : validCount > 0
-                    ? `Create ${validCount} ${validCount === 1 ? 'Level' : 'Levels'}`
-                    : 'Create Levels in Bulk'}
-              </span>
-            </Button.Root>
+          <Modal.Footer className='justify-between'>
+            <div>
+              {onSwitchToSingle && (
+                <Button.Root
+                  type='button'
+                  variant='neutral'
+                  mode='stroke'
+                  size='small'
+                  onClick={onSwitchToSingle}
+                  disabled={updateLevelsBulk.isPending}
+                >
+                  <Button.Icon as={RiAddLine} />
+                  <span>Switch to Single</span>
+                </Button.Root>
+              )}
+            </div>
+
+            <div className='flex items-center gap-2'>
+              <Button.Root
+                type='button'
+                variant='neutral'
+                mode='stroke'
+                size='small'
+                onClick={handleClose}
+                disabled={updateLevelsBulk.isPending}
+              >
+                Cancel
+              </Button.Root>
+              <Button.Root
+                type='submit'
+                variant='primary'
+                mode='filled'
+                size='small'
+                disabled={
+                  updateLevelsBulk.isPending ||
+                  validCount === 0 ||
+                  !formik.values.electionId ||
+                  !formik.isValid
+                }
+              >
+                <Button.Icon as={RiStackLine} />
+                <span>
+                  {updateLevelsBulk.isPending
+                    ? 'Saving levels...'
+                    : validCount > 0
+                      ? `Create ${validCount} ${validCount === 1 ? 'Level' : 'Levels'}`
+                      : 'Create Levels in Bulk'}
+                </span>
+              </Button.Root>
+            </div>
           </Modal.Footer>
         </form>
       </Modal.Content>
