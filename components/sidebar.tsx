@@ -212,7 +212,7 @@ export default function Sidebar({
         className={cn(
           'fixed left-0 top-0 z-40 hidden h-full overflow-hidden border-r border-stroke-soft-200 bg-bg-white-0 transition-all duration-300 lg:block',
           {
-            'w-18': collapsed,
+            'w-20': collapsed,
             'w-64': !collapsed,
           },
         )}
@@ -264,7 +264,7 @@ export default function Sidebar({
       {/* Spacer to offset fixed sidebar on desktop */}
       <div
         className={cn('hidden shrink-0 transition-all duration-300 lg:block', {
-          'w-18': collapsed,
+          'w-20': collapsed,
           'w-64': !collapsed,
         })}
       />
