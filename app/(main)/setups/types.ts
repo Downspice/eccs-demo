@@ -20,6 +20,13 @@ export type PoliticalPartyFormData = CreatePoliticalPartyPayload;
 export type CandidateFormData = CreateCandidatePayload;
 export type LevelMappingFormData = CreateLevelMappingPayload;
 
+export interface BulkLevelMappingFormData {
+  electionId: string;
+  levelId: string;
+  upper_level_id?: string | null;
+  namesText: string;
+}
+
 export interface SetupCategoryTab {
   id: string;
   label: string;
@@ -57,6 +64,7 @@ export type CandidateModalState =
 export type LevelMappingModalState =
   | { type: null }
   | { type: 'create'; parentItem?: LevelMappingItem | null }
+  | { type: 'bulk-create'; parentItem?: LevelMappingItem | null }
   | { type: 'update'; item: LevelMappingItem }
   | { type: 'view'; item: LevelMappingItem }
   | { type: 'delete'; item: LevelMappingItem };

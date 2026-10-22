@@ -74,16 +74,34 @@ export function useCreateLevelMapping() {
   );
 }
 
+export interface CreateBulkLevelMappingsPayload {
+  electionId: string;
+  items: Array<{
+    name: string;
+    levelId: string;
+    upper_level_id?: string | null;
+    electionId?: string;
+  }>;
+}
+
+export type BulkLevelMappingInput =
+  | CreateBulkLevelMappingsPayload
+  | CreateLevelMappingPayload[];
+
 export function useCreateLevelMappingsBulk() {
-  return useBaseMutation<LevelMappingItem[], CreateLevelMappingPayload[]>(
+  return useBaseMutation<LevelMappingItem[], BulkLevelMappingInput>(
     ['create-level-mappings-bulk'],
     (payload) => {
-      const electionId = payload[0]?.electionId;
+      const electionId = Array.isArray(payload)
+        ? payload[0]?.electionId
+        : payload.electionId;
       return `/level-mapping/election/${electionId}/bulk`;
     },
     'post',
     (payload) => {
-      const electionId = payload[0]?.electionId;
+      const electionId = Array.isArray(payload)
+        ? payload[0]?.electionId
+        : payload.electionId;
       return [
         ['level-mappings'],
         ['level-mappings', electionId],
@@ -91,13 +109,18 @@ export function useCreateLevelMappingsBulk() {
       ];
     },
     {
-      transformPayload: (payload) =>
-        payload.map((item) => ({
+      transformPayload: (payload) => {
+        const rawItems = Array.isArray(payload) ? payload : payload.items;
+        const electionId = Array.isArray(payload)
+          ? payload[0]?.electionId
+          : payload.electionId;
+        return rawItems.map((item) => ({
           name: item.name.trim(),
           levelId: item.levelId,
-          electionId: item.electionId,
+          electionId: item.electionId || electionId,
           upper_level_id: item.upper_level_id || null,
-        })),
+        }));
+      },
     },
   );
 }

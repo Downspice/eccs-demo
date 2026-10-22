@@ -151,3 +151,4 @@ export { CreateElectionModal } from './create-election';
 export { CreatePoliticalPartyModal } from './create-political-party';
 export { CreateCandidateModal } from './create-candidate';
 export { CreateLevelMappingModal } from './create-level-mapping';
+export { CreateBulkLevelMappingModal } from './create-bulk-level-mapping';

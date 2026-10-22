@@ -8,7 +8,7 @@ import {
   type LevelMappingItem,
 } from '@/services/level-mappings';
 import { useGetLevels, type LevelItem } from '@/services/levels';
-import { RiNodeTree } from '@remixicon/react';
+import { RiNodeTree, RiStackLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -25,6 +25,7 @@ interface CreateLevelMappingModalProps {
   parentItem?: LevelMappingItem | null;
   onClose: () => void;
   onSuccess?: (item: LevelMappingItem) => void;
+  onSwitchToBulk?: () => void;
 }
 
 export const levelMappingValidationSchema = Yup.object().shape({
@@ -49,6 +50,7 @@ export function CreateLevelMappingModal({
   parentItem,
   onClose,
   onSuccess,
+  onSwitchToBulk,
 }: CreateLevelMappingModalProps) {
   const createLevelMapping = useCreateLevelMapping();
   const { data: rawElections } = useGetElections();
@@ -213,6 +215,22 @@ export function CreateLevelMappingModal({
           />
 
           <Modal.Body className='py-5'>
+            {onSwitchToBulk && (
+              <div className='mb-4 flex items-center justify-between rounded-xl bg-bg-weak-50 px-3.5 py-2 text-paragraph-xs ring-1 ring-inset ring-stroke-soft-200'>
+                <div className='flex items-center gap-2 text-text-sub-600'>
+                  <RiStackLine className='size-4 text-primary-base shrink-0' />
+                  <span>Have a list of multiple units to create?</span>
+                </div>
+                <button
+                  type='button'
+                  onClick={onSwitchToBulk}
+                  className='font-semibold text-primary-base hover:underline'
+                >
+                  Switch to bulk mode
+                </button>
+              </div>
+            )}
+
             {parentItem && (
               <div className='mb-4 flex items-center justify-between rounded-lg bg-bg-weak-50 p-2.5 ring-1 ring-inset ring-stroke-soft-200'>
                 <div className='flex items-center gap-2 min-w-0'>

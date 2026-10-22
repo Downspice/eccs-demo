@@ -25,6 +25,7 @@ import {
   RiGitForkLine,
   RiGroupLine,
   RiSearchLine,
+  RiStackLine,
   RiTableLine,
 } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
@@ -41,6 +42,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import * as Table from '@/components/ui/table';
 
 import {
+  CreateBulkLevelMappingModal,
   CreateCandidateModal,
   CreateElectionModal,
   CreateLevelMappingModal,
@@ -791,15 +793,33 @@ export default function SetupsPage() {
                   <span>New Level</span>
                 </Button.Root>
               ) : activeModule === 'level-mapping' ? (
-                <Button.Root
-                  variant='primary'
-                  mode='filled'
-                  size='small'
-                  onClick={() => setLevelMappingModalState({ type: 'create' })}
-                >
-                  <Button.Icon as={RiAddLine} />
-                  <span>New Mapping</span>
-                </Button.Root>
+                <div className='flex items-center gap-2'>
+                  <Button.Root
+                    variant='neutral'
+                    mode='stroke'
+                    size='small'
+                    onClick={() =>
+                      setLevelMappingModalState({
+                        type: 'bulk-create',
+                        parentItem: null,
+                      })
+                    }
+                  >
+                    <Button.Icon as={RiStackLine} />
+                    <span>Bulk Add</span>
+                  </Button.Root>
+                  <Button.Root
+                    variant='primary'
+                    mode='filled'
+                    size='small'
+                    onClick={() =>
+                      setLevelMappingModalState({ type: 'create' })
+                    }
+                  >
+                    <Button.Icon as={RiAddLine} />
+                    <span>New Mapping</span>
+                  </Button.Root>
+                </div>
               ) : activeModule === 'candidates' ? (
                 <Button.Root
                   variant='primary'
@@ -1872,6 +1892,35 @@ export default function SetupsPage() {
             : null
         }
         onClose={() => setLevelMappingModalState({ type: null })}
+        onSwitchToBulk={() =>
+          setLevelMappingModalState({
+            type: 'bulk-create',
+            parentItem:
+              levelMappingModalState.type === 'create'
+                ? levelMappingModalState.parentItem
+                : null,
+          })
+        }
+      />
+
+      <CreateBulkLevelMappingModal
+        open={levelMappingModalState.type === 'bulk-create'}
+        defaultElectionId={activeElectionId}
+        parentItem={
+          levelMappingModalState.type === 'bulk-create'
+            ? levelMappingModalState.parentItem
+            : null
+        }
+        onClose={() => setLevelMappingModalState({ type: null })}
+        onSwitchToSingle={() =>
+          setLevelMappingModalState({
+            type: 'create',
+            parentItem:
+              levelMappingModalState.type === 'bulk-create'
+                ? levelMappingModalState.parentItem
+                : null,
+          })
+        }
       />
 
       <UpdateLevelMappingModal
