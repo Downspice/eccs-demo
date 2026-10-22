@@ -29,6 +29,7 @@ interface LevelMappingFormProps {
   setFieldValue: (field: string, value: any) => void;
   disabled?: boolean;
   parentItem?: LevelMappingItem | null;
+  mappingId?: string;
 }
 
 export function LevelMappingForm({
@@ -40,6 +41,7 @@ export function LevelMappingForm({
   setFieldValue,
   disabled,
   parentItem,
+  mappingId,
 }: LevelMappingFormProps) {
   const { data: rawElections, isLoading: isElectionsLoading } =
     useGetElections();
@@ -242,7 +244,9 @@ export function LevelMappingForm({
             onBlur={() =>
               handleBlur({ target: { name: 'upper_level_id' } } as any)
             }
-            items={existingUnits.filter((u) => u.id !== values.id)}
+            items={existingUnits.filter(
+              (u) => !mappingId || u.id !== mappingId,
+            )}
             placeholder='None (Top-Level Jurisdiction)'
             disabled={disabled}
             hasError={Boolean(touched.upper_level_id && errors.upper_level_id)}

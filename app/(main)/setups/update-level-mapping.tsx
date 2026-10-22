@@ -81,6 +81,7 @@ export function UpdateLevelMappingModal({
               handleBlur={formik.handleBlur}
               setFieldValue={formik.setFieldValue}
               disabled={updateLevelMapping.isPending}
+              mappingId={item?.id}
             />
           </Modal.Body>
 

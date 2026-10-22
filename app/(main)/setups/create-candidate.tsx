@@ -69,7 +69,6 @@ export function CreateCandidateModal({
     onSubmit: (values) => {
       createCandidate.mutate(
         {
-          id: crypto.randomUUID(),
           name: values.name.trim(),
           electionId: values.electionId.trim(),
           politicalPartyId: values.politicalPartyId.trim(),

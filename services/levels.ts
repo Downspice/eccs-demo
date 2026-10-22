@@ -25,7 +25,6 @@ export interface LevelItem {
 }
 
 export interface CreateLevelPayload {
-  id?: string;
   name: string;
   description?: string;
   levelRank: number;
@@ -92,7 +91,6 @@ export function useCreateLevel() {
     {
       transformPayload: (payload) => [
         {
-          id: payload.id || crypto.randomUUID(),
           name: payload.name.trim(),
           description: payload.description?.trim() || '',
           levelRank: Number(payload.levelRank),

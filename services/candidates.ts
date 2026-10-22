@@ -20,7 +20,6 @@ export interface CandidateItem {
 }
 
 export interface CreateCandidatePayload {
-  id?: string;
   name: string;
   politicalPartyId: string;
   electionId: string;
@@ -71,7 +70,6 @@ export function useCreateCandidate() {
     {
       transformPayload: (payload) => [
         {
-          id: payload.id || crypto.randomUUID(),
           name: payload.name.trim(),
           politicalPartyId: payload.politicalPartyId,
           electionId: payload.electionId,

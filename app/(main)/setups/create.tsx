@@ -77,7 +77,6 @@ export function CreateSetupModal({
     onSubmit: (values) => {
       createLevel.mutate(
         {
-          id: crypto.randomUUID(),
           name: values.name.trim(),
           description: values.description?.trim() || '',
           levelRank: Number(values.levelRank),

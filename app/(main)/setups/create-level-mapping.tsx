@@ -159,7 +159,6 @@ export function CreateLevelMappingModal({
     onSubmit: (values) => {
       createLevelMapping.mutate(
         {
-          id: crypto.randomUUID(),
           name: values.name.trim(),
           electionId: values.electionId.trim(),
           levelId: values.levelId.trim(),

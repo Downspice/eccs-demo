@@ -17,7 +17,6 @@ export interface PoliticalPartyItem {
 }
 
 export interface CreatePoliticalPartyPayload {
-  id?: string;
   name: string;
   abbreviation?: string;
   imagePath?: string;
@@ -68,7 +67,6 @@ export function useCreatePoliticalParty() {
     {
       transformPayload: (payload) => {
         const item = {
-          id: payload.id || crypto.randomUUID(),
           name: payload.name.trim(),
           abbreviation:
             payload.abbreviation?.trim() ||

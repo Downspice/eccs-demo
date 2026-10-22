@@ -29,7 +29,6 @@ export interface LevelMappingGroup {
 }
 
 export interface CreateLevelMappingPayload {
-  id?: string;
   name: string;
   levelId: string;
   electionId: string;
@@ -66,7 +65,6 @@ export function useCreateLevelMapping() {
     ],
     {
       transformPayload: (payload) => ({
-        id: payload.id || crypto.randomUUID(),
         name: payload.name.trim(),
         levelId: payload.levelId,
         electionId: payload.electionId,
@@ -91,6 +89,15 @@ export function useCreateLevelMappingsBulk() {
         ['level-mappings', electionId],
         ['level-mappings', 'all'],
       ];
+    },
+    {
+      transformPayload: (payload) =>
+        payload.map((item) => ({
+          name: item.name.trim(),
+          levelId: item.levelId,
+          electionId: item.electionId,
+          upper_level_id: item.upper_level_id || null,
+        })),
     },
   );
 }

@@ -57,6 +57,17 @@ export function useCreateElection() {
     '/elections',
     'post',
     () => [['elections'], ['elections-paginated']],
+    {
+      transformPayload: (payload) => ({
+        name: payload.name.trim(),
+        electionDate: payload.electionDate || undefined,
+        expectedTurnout:
+          payload.expectedTurnout !== '' &&
+          payload.expectedTurnout !== undefined
+            ? Number(payload.expectedTurnout)
+            : undefined,
+      }),
+    },
   );
 }
 
