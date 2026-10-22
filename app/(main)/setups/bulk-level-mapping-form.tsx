@@ -8,26 +8,21 @@ import {
 } from '@/services/level-mappings';
 import { useGetLevels, type LevelItem } from '@/services/levels';
 import {
-  RiAddLine,
   RiArrowRightLine,
   RiCheckLine,
   RiCloseLine,
   RiDeleteBinLine,
   RiErrorWarningLine,
   RiFileList3Line,
-  RiHashtag,
   RiInformationLine,
-  RiMagicLine,
   RiNodeTree,
   RiStackLine,
 } from '@remixicon/react';
 import type { FormikErrors, FormikTouched } from 'formik';
 
 import * as Badge from '@/components/ui/badge';
-import * as Button from '@/components/ui/button';
 import * as CompactButton from '@/components/ui/compact-button';
 import * as Hint from '@/components/ui/hint';
-import * as Input from '@/components/ui/input';
 import * as Label from '@/components/ui/label';
 import * as Select from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -121,12 +116,6 @@ export function BulkLevelMappingForm({
   const { data: rawMappings, isLoading: isMappingsLoading } =
     useGetLevelMappings(values.electionId);
 
-  // Auto-generator panel state
-  const [showGenerator, setShowGenerator] = React.useState(false);
-  const [genPrefix, setGenPrefix] = React.useState('Polling Station ');
-  const [genStart, setGenStart] = React.useState(1);
-  const [genCount, setGenCount] = React.useState(10);
-  const [genPadZeros, setGenPadZeros] = React.useState(true);
 
   const elections = React.useMemo<ElectionItem[]>(() => {
     if (Array.isArray(rawElections)) return rawElections;
@@ -179,12 +168,6 @@ export function BulkLevelMappingForm({
     return analyzeUnitNames(values.namesText);
   }, [values.namesText]);
 
-  // Update default generator prefix when level tier changes
-  React.useEffect(() => {
-    if (selectedLevel?.name) {
-      setGenPrefix(`${selectedLevel.name} `);
-    }
-  }, [selectedLevel?.name]);
 
   // Remove a specific name by index
   const handleRemoveName = (indexToRemove: number) => {
@@ -213,39 +196,6 @@ export function BulkLevelMappingForm({
     setFieldValue('namesText', '');
   };
 
-  // Context-aware sample loader
-  const handleInsertSample = () => {
-    const tierName = selectedLevel?.name || 'Unit';
-    const samples = [
-      `01 - ${tierName} Central`,
-      `02 - ${tierName} North`,
-      `03 - ${tierName} South`,
-      `04 - ${tierName} East`,
-      `05 - ${tierName} West`,
-    ];
-    setFieldValue('namesText', samples.join('\n'));
-  };
-
-  // Sequence generator action
-  const handleGenerateSequence = () => {
-    const count = Math.max(1, Math.min(100, Number(genCount) || 1));
-    const start = Math.max(0, Number(genStart) || 1);
-    const padLength = genPadZeros ? (start + count > 99 ? 3 : 2) : 1;
-
-    const newItems: string[] = [];
-    for (let i = 0; i < count; i++) {
-      const num = start + i;
-      const numStr = genPadZeros
-        ? String(num).padStart(padLength, '0')
-        : String(num);
-      newItems.push(`${genPrefix}${numStr}`);
-    }
-
-    const currentNames = parseUnitNames(values.namesText);
-    const combined = [...currentNames, ...newItems];
-    setFieldValue('namesText', combined.join('\n'));
-    setShowGenerator(false);
-  };
 
   return (
     <div className='flex flex-col gap-5'>
@@ -392,137 +342,7 @@ export function BulkLevelMappingForm({
         </div>
       </div>
 
-      {/* Sequence Auto-Generator Tool (Expandable) */}
-      <div className='rounded-xl border border-stroke-soft-200 bg-bg-weak-50/50 p-3'>
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-1.5 text-label-xs font-semibold text-text-strong-950'>
-            <RiMagicLine className='size-4 text-primary-base' />
-            <span>Productivity Tools</span>
-          </div>
 
-          <div className='flex items-center gap-1.5'>
-            <button
-              type='button'
-              onClick={() => setShowGenerator(!showGenerator)}
-              disabled={disabled}
-              className='inline-flex items-center gap-1 rounded-lg border border-stroke-soft-200 bg-bg-white-0 px-2.5 py-1 text-paragraph-xs font-medium text-text-sub-600 shadow-xs transition-colors hover:border-primary-base hover:text-primary-base'
-            >
-              <RiHashtag className='size-3.5' />
-              <span>
-                {showGenerator ? 'Close Generator' : 'Auto-Generate Sequence'}
-              </span>
-            </button>
-
-            <button
-              type='button'
-              onClick={handleInsertSample}
-              disabled={disabled}
-              className='inline-flex items-center gap-1 rounded-lg border border-stroke-soft-200 bg-bg-white-0 px-2.5 py-1 text-paragraph-xs font-medium text-text-sub-600 shadow-xs transition-colors hover:border-primary-base hover:text-primary-base'
-            >
-              <RiFileList3Line className='size-3.5' />
-              <span>Insert Sample</span>
-            </button>
-          </div>
-        </div>
-
-        {showGenerator && (
-          <div className='mt-3 flex flex-col gap-3 rounded-lg border border-stroke-soft-200 bg-bg-white-0 p-3'>
-            <div className='flex items-center justify-between'>
-              <span className='text-label-xs font-semibold text-text-strong-950'>
-                Quick Sequential Generator
-              </span>
-              <span className='text-[11px] text-text-soft-400'>
-                Generates a numbered series of units instantly
-              </span>
-            </div>
-
-            <div className='grid grid-cols-1 gap-2.5 sm:grid-cols-4'>
-              <div className='flex flex-col gap-1 sm:col-span-2'>
-                <Label.Root className='text-[11px] text-text-soft-400'>
-                  Name Prefix
-                </Label.Root>
-                <Input.Root size='small'>
-                  <Input.Wrapper>
-                    <Input.Input
-                      type='text'
-                      value={genPrefix}
-                      onChange={(e) => setGenPrefix(e.target.value)}
-                      placeholder='e.g. Polling Station '
-                    />
-                  </Input.Wrapper>
-                </Input.Root>
-              </div>
-
-              <div className='flex flex-col gap-1'>
-                <Label.Root className='text-[11px] text-text-soft-400'>
-                  Start #
-                </Label.Root>
-                <Input.Root size='small'>
-                  <Input.Wrapper>
-                    <Input.Input
-                      type='number'
-                      min={0}
-                      value={genStart}
-                      onChange={(e) => setGenStart(Number(e.target.value))}
-                    />
-                  </Input.Wrapper>
-                </Input.Root>
-              </div>
-
-              <div className='flex flex-col gap-1'>
-                <Label.Root className='text-[11px] text-text-soft-400'>
-                  Total Count
-                </Label.Root>
-                <Input.Root size='small'>
-                  <Input.Wrapper>
-                    <Input.Input
-                      type='number'
-                      min={1}
-                      max={100}
-                      value={genCount}
-                      onChange={(e) => setGenCount(Number(e.target.value))}
-                    />
-                  </Input.Wrapper>
-                </Input.Root>
-              </div>
-            </div>
-
-            <div className='flex items-center justify-between pt-1'>
-              <label className='flex items-center gap-1.5 cursor-pointer text-[11px] text-text-sub-600'>
-                <input
-                  type='checkbox'
-                  checked={genPadZeros}
-                  onChange={(e) => setGenPadZeros(e.target.checked)}
-                  className='rounded border-stroke-soft-200 text-primary-base focus:ring-primary-base/20'
-                />
-                <span>Zero-pad numbers (e.g. 01, 02...)</span>
-              </label>
-
-              <div className='flex items-center gap-2'>
-                <Button.Root
-                  type='button'
-                  variant='neutral'
-                  mode='stroke'
-                  size='xsmall'
-                  onClick={() => setShowGenerator(false)}
-                >
-                  Cancel
-                </Button.Root>
-                <Button.Root
-                  type='button'
-                  variant='primary'
-                  mode='filled'
-                  size='xsmall'
-                  onClick={handleGenerateSequence}
-                >
-                  <Button.Icon as={RiAddLine} />
-                  <span>Insert {genCount} Units</span>
-                </Button.Root>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Bulk Unit Names Textarea with Toolbar */}
       <div className='flex flex-col gap-2'>
