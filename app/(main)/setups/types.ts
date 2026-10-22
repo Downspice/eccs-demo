@@ -35,7 +35,7 @@ export interface BulkLevelMappingFormData {
   electionId: string;
   levelId: string;
   upper_level_id?: string | null;
-  namesText: string;
+  names: string[];
 }
 
 export interface SetupCategoryTab {

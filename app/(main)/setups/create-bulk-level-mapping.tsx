@@ -22,10 +22,7 @@ import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
 import { toast } from '@/components/ui/toast';
 
-import {
-  BulkLevelMappingForm,
-  parseUnitNames,
-} from './bulk-level-mapping-form';
+import { BulkLevelMappingForm } from './bulk-level-mapping-form';
 import { NoElectionsAlert } from './no-elections-alert';
 import { NoLevelsAlert } from './no-levels-alert';
 import type { BulkLevelMappingFormData } from './types';
@@ -46,15 +43,14 @@ export const bulkLevelMappingValidationSchema = Yup.object().shape({
   electionId: Yup.string().trim().required('Associated election is required'),
   levelId: Yup.string().trim().required('Hierarchy level tier is required'),
   upper_level_id: Yup.string().nullable(),
-  namesText: Yup.string()
-    .trim()
-    .required('Please enter at least one unit name')
+  names: Yup.array()
+    .of(Yup.string().trim())
     .test(
       'has-valid-names',
       'Please enter at least one valid unit name',
       (val) => {
-        if (!val) return false;
-        return parseUnitNames(val).length > 0;
+        if (!val || !Array.isArray(val)) return false;
+        return val.some((n) => typeof n === 'string' && n.trim().length > 0);
       },
     ),
 });
@@ -63,7 +59,7 @@ const INITIAL_FORM_DATA: BulkLevelMappingFormData = {
   electionId: '',
   levelId: '',
   upper_level_id: '',
-  namesText: '',
+  names: [''],
 };
 
 export function CreateBulkLevelMappingModal({
@@ -183,7 +179,7 @@ export function CreateBulkLevelMappingModal({
       electionId: targetElectionId,
       levelId: suggestedLevelId || '',
       upper_level_id: parentItem?.id || '',
-      namesText: '',
+      names: [''],
     };
   }, [targetElectionId, suggestedLevelId, parentItem]);
 
@@ -194,10 +190,12 @@ export function CreateBulkLevelMappingModal({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      const names = parseUnitNames(values.namesText);
-      if (names.length === 0) return;
+      const validNames = values.names
+        .map((n) => n.trim())
+        .filter((n) => n.length > 0);
+      if (validNames.length === 0) return;
 
-      const items = names.map((name) => ({
+      const items = validNames.map((name) => ({
         name,
         levelId: values.levelId,
         electionId: values.electionId,
@@ -248,7 +246,9 @@ export function CreateBulkLevelMappingModal({
     onClose();
   };
 
-  const parsedCount = parseUnitNames(formik.values.namesText).length;
+  const validNamesCount = formik.values.names.filter(
+    (n) => typeof n === 'string' && n.trim().length > 0,
+  ).length;
 
   return (
     <Modal.Root open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
@@ -428,7 +428,7 @@ export function CreateBulkLevelMappingModal({
                   size='small'
                   disabled={
                     createLevelMappingsBulk.isPending ||
-                    parsedCount === 0 ||
+                    validNamesCount === 0 ||
                     !formik.values.levelId ||
                     !formik.values.electionId
                   }
@@ -437,8 +437,8 @@ export function CreateBulkLevelMappingModal({
                   <span>
                     {createLevelMappingsBulk.isPending
                       ? 'Creating units...'
-                      : parsedCount > 0
-                        ? `Create ${parsedCount} ${parsedCount === 1 ? 'Unit' : 'Units'}`
+                      : validNamesCount > 0
+                        ? `Create ${validNamesCount} ${validNamesCount === 1 ? 'Unit' : 'Units'}`
                         : 'Create Units in Bulk'}
                   </span>
                 </Button.Root>

@@ -8,25 +8,22 @@ import {
 } from '@/services/level-mappings';
 import { useGetLevels, type LevelItem } from '@/services/levels';
 import {
+  RiAddLine,
   RiArrowRightLine,
-  RiCheckLine,
-  RiCloseLine,
   RiDeleteBinLine,
-  RiErrorWarningLine,
-  RiFileList3Line,
   RiInformationLine,
   RiNodeTree,
-  RiStackLine,
 } from '@remixicon/react';
 import type { FormikErrors, FormikTouched } from 'formik';
 
 import * as Badge from '@/components/ui/badge';
+import * as Button from '@/components/ui/button';
 import * as CompactButton from '@/components/ui/compact-button';
 import * as Hint from '@/components/ui/hint';
+import * as Input from '@/components/ui/input';
 import * as Label from '@/components/ui/label';
 import * as Select from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import * as Textarea from '@/components/ui/textarea';
 import { LevelMappingSearchSelect } from '@/components/level-mapping-search-select';
 
 import { InlineNoLevelsBanner } from './no-levels-alert';
@@ -45,67 +42,14 @@ interface BulkLevelMappingFormProps {
   onOpenCreateLevel?: () => void;
 }
 
-export function parseUnitNames(text: string): string[] {
-  if (!text) return [];
-  return text
-    .split(/[\n,]+/)
-    .map((name) => name.trim())
-    .filter((name) => name.length > 0);
-}
-
-export interface ParsedItemInfo {
-  name: string;
-  isDuplicate: boolean;
-  firstIndex: number;
-}
-
-export function analyzeUnitNames(text: string): {
-  items: ParsedItemInfo[];
-  uniqueCount: number;
-  duplicateCount: number;
-  duplicateNames: string[];
-} {
-  const rawList = parseUnitNames(text);
-  const seenMap = new Map<string, number>();
-  const duplicatesSet = new Set<string>();
-
-  rawList.forEach((name, idx) => {
-    const key = name.toLowerCase();
-    if (seenMap.has(key)) {
-      duplicatesSet.add(name);
-    } else {
-      seenMap.set(key, idx);
-    }
-  });
-
-  const items: ParsedItemInfo[] = rawList.map((name, idx) => {
-    const key = name.toLowerCase();
-    const firstIdx = seenMap.get(key) ?? idx;
-    return {
-      name,
-      isDuplicate: firstIdx !== idx,
-      firstIndex: firstIdx,
-    };
-  });
-
-  return {
-    items,
-    uniqueCount: seenMap.size,
-    duplicateCount: rawList.length - seenMap.size,
-    duplicateNames: Array.from(duplicatesSet),
-  };
-}
-
 export function BulkLevelMappingForm({
   values,
   errors,
   touched,
-  handleChange,
   handleBlur,
   setFieldValue,
   disabled,
   parentItem,
-  onSwitchToSingle,
   onOpenCreateLevel,
 }: BulkLevelMappingFormProps) {
   const { data: rawElections, isLoading: isElectionsLoading } =
@@ -115,7 +59,6 @@ export function BulkLevelMappingForm({
   );
   const { data: rawMappings, isLoading: isMappingsLoading } =
     useGetLevelMappings(values.electionId);
-
 
   const elections = React.useMemo<ElectionItem[]>(() => {
     if (Array.isArray(rawElections)) return rawElections;
@@ -163,50 +106,77 @@ export function BulkLevelMappingForm({
     return existingUnits.find((u) => u.id === values.upper_level_id) || null;
   }, [parentItem, values.upper_level_id, existingUnits]);
 
-  // Detailed analysis of names (counts, duplicates)
-  const analysis = React.useMemo(() => {
-    return analyzeUnitNames(values.namesText);
-  }, [values.namesText]);
-
-
-  // Remove a specific name by index
-  const handleRemoveName = (indexToRemove: number) => {
-    const rawList = parseUnitNames(values.namesText);
-    const updated = rawList.filter((_, idx) => idx !== indexToRemove);
-    setFieldValue('namesText', updated.join('\n'));
+  // Row manipulation helpers
+  const handleAddRow = () => {
+    setFieldValue('names', [...(values.names || []), '']);
   };
 
-  // Remove duplicates automatically
-  const handleDeduplicate = () => {
-    const rawList = parseUnitNames(values.namesText);
-    const seen = new Set<string>();
-    const uniqueList: string[] = [];
-    rawList.forEach((name) => {
-      const key = name.toLowerCase();
-      if (!seen.has(key)) {
-        seen.add(key);
-        uniqueList.push(name);
+  const handleAddRowAfter = (index: number) => {
+    const current = [...(values.names || [''])];
+    current.splice(index + 1, 0, '');
+    setFieldValue('names', current);
+  };
+
+  const handleRemoveRow = (indexToRemove: number) => {
+    if (!values.names || values.names.length <= 1) {
+      setFieldValue('names', ['']);
+      return;
+    }
+    const updated = values.names.filter((_, idx) => idx !== indexToRemove);
+    setFieldValue('names', updated);
+  };
+
+  const handleNameChange = (index: number, val: string) => {
+    const updated = [...(values.names || [''])];
+    updated[index] = val;
+    setFieldValue('names', updated);
+  };
+
+  const handlePaste = (
+    index: number,
+    e: React.ClipboardEvent<HTMLInputElement>,
+  ) => {
+    const text = e.clipboardData.getData('text');
+    if (text && (text.includes('\n') || text.includes(','))) {
+      e.preventDefault();
+      const pasted = text
+        .split(/[\n,]+/)
+        .map((n) => n.trim())
+        .filter((n) => n.length > 0);
+
+      if (pasted.length > 0) {
+        const current = [...(values.names || [''])];
+        current.splice(index, 1, ...pasted);
+        setFieldValue('names', current);
       }
-    });
-    setFieldValue('namesText', uniqueList.join('\n'));
+    }
   };
 
-  // Clear all parsed names
   const handleClearAll = () => {
-    setFieldValue('namesText', '');
+    setFieldValue('names', ['']);
   };
 
+  const filledCount =
+    values.names?.filter((n) => typeof n === 'string' && n.trim().length > 0)
+      .length || 0;
 
   return (
     <div className='flex flex-col gap-5'>
       {/* Target Hierarchy & Location Card */}
-      <div className='rounded-xl border border-stroke-soft-200 bg-bg-weak-50/40 p-3.5'>
-        <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
-          {/* Election Selection */}
+      <div className='rounded-xl border border-stroke-soft-200 bg-bg-weak-50/50 p-3.5'>
+        <div className='flex items-center gap-1.5 text-label-xs font-semibold text-text-strong-950 mb-3'>
+          <RiNodeTree className='size-4 text-primary-base' />
+          <span>Hierarchy Placement</span>
+        </div>
+
+        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
+          {/* Associated Election */}
           <div className='flex flex-col gap-1.5'>
-            <Label.Root htmlFor='electionId'>
-              Associated Election <span className='text-red-500'>*</span>
-            </Label.Root>
+            <div className='flex items-center justify-between'>
+              <Label.Root htmlFor='electionId'>
+                Associated Election <span className='text-red-500'>*</span>
+              </Label.Root>
+            </div>
             {isElectionsLoading ? (
               <Skeleton className='h-10 w-full rounded-lg' />
             ) : (
@@ -220,7 +190,7 @@ export function BulkLevelMappingForm({
                 disabled={disabled || Boolean(parentItem)}
               >
                 <Select.Trigger id='electionId' className='w-full'>
-                  <Select.Value placeholder='Select election...' />
+                  <Select.Value placeholder='Select an election...' />
                 </Select.Trigger>
                 <Select.Content>
                   {elections.map((elec) => (
@@ -239,15 +209,15 @@ export function BulkLevelMappingForm({
             )}
           </div>
 
-          {/* Level Tier Selection */}
+          {/* Level Tier Selector */}
           <div className='flex flex-col gap-1.5'>
             <div className='flex items-center justify-between'>
               <Label.Root htmlFor='levelId'>
                 Target Level Tier <span className='text-red-500'>*</span>
               </Label.Root>
-              {selectedLevel?.levelRank !== undefined && (
+              {selectedLevel && (
                 <Badge.Root variant='lighter' color='blue' size='small'>
-                  Tier {selectedLevel.levelRank}
+                  Rank {selectedLevel.levelRank ?? 1}
                 </Badge.Root>
               )}
             </div>
@@ -316,15 +286,12 @@ export function BulkLevelMappingForm({
                 handleBlur({ target: { name: 'upper_level_id' } } as any)
               }
               items={existingUnits}
-              placeholder='None (Top-Level Jurisdiction)'
               disabled={disabled || Boolean(parentItem)}
-              allowClear
-              clearLabel='None (Top-Level Jurisdiction)'
-              searchPlaceholder='Search parent unit by name or tier...'
+              placeholder='None (Top-Level Jurisdiction)'
             />
           )}
 
-          {/* Real-time Hierarchy Breadcrumb Path */}
+          {/* Hierarchy Path Preview */}
           <div className='mt-2 flex flex-wrap items-center gap-1.5 rounded-lg bg-bg-white-0 px-2.5 py-1.5 text-[11px] ring-1 ring-inset ring-stroke-soft-200'>
             <span className='text-text-soft-400 font-medium'>Placement:</span>
             <span className='font-medium text-text-strong-950'>
@@ -342,149 +309,133 @@ export function BulkLevelMappingForm({
         </div>
       </div>
 
-
-
-      {/* Bulk Unit Names Textarea with Toolbar */}
-      <div className='flex flex-col gap-2'>
+      {/* Dynamic Unit Names List with + buttons */}
+      <div className='flex flex-col gap-2.5'>
         <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <Label.Root htmlFor='namesText'>
-              Unit Names List <span className='text-red-500'>*</span>
-            </Label.Root>
-
-            {analysis.items.length > 0 && (
-              <Badge.Root
-                variant='light'
-                color={analysis.duplicateCount > 0 ? 'orange' : 'blue'}
-                size='small'
-                className='font-semibold'
-              >
-                {analysis.items.length}{' '}
-                {analysis.items.length === 1 ? 'unit' : 'units'} parsed
-              </Badge.Root>
-            )}
-          </div>
-
-          <div className='flex items-center gap-2'>
-            {analysis.duplicateCount > 0 && (
-              <button
-                type='button'
-                onClick={handleDeduplicate}
-                disabled={disabled}
-                className='inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 hover:text-amber-800 underline'
-                title='Remove duplicate names'
-              >
-                <RiErrorWarningLine className='size-3.5' />
-                <span>Remove {analysis.duplicateCount} Duplicates</span>
-              </button>
-            )}
-
-            {analysis.items.length > 0 && (
-              <button
-                type='button'
-                onClick={handleClearAll}
-                disabled={disabled}
-                className='text-[11px] font-medium text-text-soft-400 hover:text-red-600 transition-colors'
-              >
-                Clear all
-              </button>
-            )}
-          </div>
+          <Label.Root>
+            Unit Names List ({filledCount}){' '}
+            <span className='text-red-500'>*</span>
+          </Label.Root>
+          <span className='text-paragraph-xs text-text-soft-400'>
+            Click + or press Enter to add another input field
+          </span>
         </div>
 
-        <Textarea.Root
-          simple
-          id='namesText'
-          name='namesText'
-          rows={5}
-          value={values.namesText}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          disabled={disabled}
-          hasError={Boolean(touched.namesText && errors.namesText)}
-          placeholder={`Enter one unit name per line or separated by commas:\n01 - Polling Station Central\n02 - Polling Station North\n03 - Polling Station South`}
-          className='font-mono text-paragraph-xs leading-relaxed'
-        />
+        <div className='flex flex-col gap-2 max-h-[320px] overflow-y-auto pr-1'>
+          {(values.names || ['']).map((name, index) => {
+            const hasError =
+              touched.names &&
+              errors.names &&
+              !name.trim() &&
+              index === 0 &&
+              (values.names || []).every((n) => !n.trim());
 
-        {touched.namesText && errors.namesText ? (
+            return (
+              <div
+                key={`unit-input-${index}`}
+                className='flex items-center gap-2 group'
+              >
+                <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-bg-weak-50 text-[11px] font-semibold text-text-sub-600 ring-1 ring-inset ring-stroke-soft-200'>
+                  {index + 1}
+                </div>
+
+                <div className='flex-1'>
+                  <Input.Root size='small'>
+                    <Input.Wrapper hasError={Boolean(hasError)}>
+                      <Input.Input
+                        type='text'
+                        placeholder={
+                          selectedLevel?.name
+                            ? `e.g. ${selectedLevel.name} ${index + 1}`
+                            : `e.g. Unit Name ${index + 1}`
+                        }
+                        value={name}
+                        onChange={(e) =>
+                          handleNameChange(index, e.target.value)
+                        }
+                        onBlur={handleBlur}
+                        name={`names.${index}`}
+                        disabled={disabled}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddRowAfter(index);
+                          }
+                        }}
+                        onPaste={(e) => handlePaste(index, e)}
+                        autoFocus={
+                          index > 0 && index === (values.names?.length || 1) - 1
+                        }
+                      />
+                    </Input.Wrapper>
+                  </Input.Root>
+                </div>
+
+                <div className='flex items-center gap-1 shrink-0'>
+                  <CompactButton.Root
+                    type='button'
+                    variant='stroke'
+                    onClick={() => handleAddRowAfter(index)}
+                    disabled={disabled}
+                    className='size-8 text-primary-base hover:bg-primary-base/10 hover:border-primary-base/40'
+                    title='Add input field below (+)'
+                  >
+                    <CompactButton.Icon as={RiAddLine} className='size-4' />
+                  </CompactButton.Root>
+
+                  {(values.names?.length || 0) > 1 && (
+                    <CompactButton.Root
+                      type='button'
+                      variant='stroke'
+                      onClick={() => handleRemoveRow(index)}
+                      disabled={disabled}
+                      className='size-8 text-text-soft-400 hover:text-red-600 hover:border-red-200'
+                      title='Remove this unit'
+                    >
+                      <CompactButton.Icon
+                        as={RiDeleteBinLine}
+                        className='size-4'
+                      />
+                    </CompactButton.Root>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {touched.names && errors.names && typeof errors.names === 'string' && (
           <Hint.Root hasError>
             <Hint.Icon as={RiInformationLine} />
-            {errors.namesText as string}
+            {errors.names}
           </Hint.Root>
-        ) : (
-          <div className='flex items-center justify-between text-[11px] text-text-soft-400'>
-            <span>
-              Tip: Paste from spreadsheets, CSVs, or text documents. Empty lines
-              are cleaned automatically.
-            </span>
-            <span>
-              {analysis.uniqueCount} unique{' '}
-              {analysis.uniqueCount === 1 ? 'entry' : 'entries'}
-            </span>
-          </div>
         )}
-      </div>
 
-      {/* Live Parsed Units Cards & Preview */}
-      {analysis.items.length > 0 && (
-        <div className='flex flex-col gap-2 rounded-xl border border-stroke-soft-200 bg-bg-weak-50/50 p-3.5'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-1.5 text-label-xs font-semibold text-text-strong-950'>
-              <RiFileList3Line className='size-4 text-primary-base' />
-              <span>Parsed Preview ({analysis.items.length})</span>
-            </div>
+        <div className='flex items-center justify-between pt-1'>
+          <Button.Root
+            type='button'
+            variant='neutral'
+            mode='stroke'
+            size='small'
+            onClick={handleAddRow}
+            disabled={disabled}
+          >
+            <Button.Icon as={RiAddLine} />
+            <span>Add Another Unit Field</span>
+          </Button.Root>
 
-            <div className='flex items-center gap-2'>
-              {analysis.duplicateCount > 0 && (
-                <span className='inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-200'>
-                  <RiErrorWarningLine className='size-3 text-amber-600' />
-                  {analysis.duplicateCount} duplicate{' '}
-                  {analysis.duplicateCount === 1 ? 'item' : 'items'}
-                </span>
-              )}
-              <span className='text-[11px] text-text-soft-400'>
-                Click ✕ to remove any entry
-              </span>
-            </div>
-          </div>
-
-          <div className='flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1'>
-            {analysis.items.map((item, index) => (
-              <span
-                key={`${item.name}-${index}`}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-paragraph-xs font-medium shadow-2xs ring-1 ring-inset transition-colors ${
-                  item.isDuplicate
-                    ? 'bg-amber-50/80 text-amber-900 ring-amber-200'
-                    : 'bg-bg-white-0 text-text-strong-950 ring-stroke-soft-200 hover:border-stroke-sub-300'
-                }`}
-              >
-                <span className='text-[10px] text-text-soft-400 font-mono'>
-                  #{index + 1}
-                </span>
-                <span className='truncate max-w-[200px]'>{item.name}</span>
-                {item.isDuplicate && (
-                  <span
-                    className='text-[10px] font-bold text-amber-600'
-                    title='Duplicate name'
-                  >
-                    (dup)
-                  </span>
-                )}
-                {!disabled && (
-                  <button
-                    type='button'
-                    onClick={() => handleRemoveName(index)}
-                    className='rounded-sm p-0.5 text-text-soft-400 hover:bg-bg-weak-100 hover:text-red-600 transition-colors'
-                    title='Remove this unit'
-                  >
-                    <RiCloseLine className='size-3' />
-                  </button>
-                )}
-              </span>
-            ))}
-          </div>
+          {(values.names?.length || 0) > 1 && (
+            <button
+              type='button'
+              onClick={handleClearAll}
+              disabled={disabled}
+              className='text-[11px] font-medium text-text-sub-600 hover:text-red-600 transition-colors'
+            >
+              Clear all
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
