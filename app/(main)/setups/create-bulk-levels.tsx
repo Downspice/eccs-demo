@@ -2,7 +2,12 @@
 
 import * as React from 'react';
 import { useGetElections, type ElectionItem } from '@/services/elections';
-import { useUpdateLevelsBulk, type LevelItem } from '@/services/levels';
+import {
+  getAvailableRanks,
+  useGetLevels,
+  useUpdateLevelsBulk,
+  type LevelItem,
+} from '@/services/levels';
 import { RiStackLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -39,11 +44,6 @@ export const bulkLevelsValidationSchema = Yup.object().shape({
     .min(1, 'Please configure at least one level tier'),
 });
 
-const DEFAULT_ROWS: BulkLevelRow[] = [
-  { levelRank: 1, name: '', description: '' },
-  { levelRank: 2, name: '', description: '' },
-];
-
 export function CreateBulkLevelsModal({
   open,
   defaultElectionId,
@@ -67,11 +67,38 @@ export function CreateBulkLevelsModal({
   }, [rawElections]);
 
   const initialElectionId = defaultElectionId || elections[0]?.id || '';
+  const { data: rawLevels } = useGetLevels(initialElectionId);
+
+  const existingLevels = React.useMemo<LevelItem[]>(() => {
+    if (Array.isArray(rawLevels)) return rawLevels;
+    if (
+      rawLevels &&
+      typeof rawLevels === 'object' &&
+      Array.isArray((rawLevels as { data?: LevelItem[] }).data)
+    ) {
+      return (rawLevels as { data: LevelItem[] }).data;
+    }
+    return [];
+  }, [rawLevels]);
+
+  const existingRanks = React.useMemo(() => {
+    return existingLevels
+      .map((l) => Number(l.levelRank))
+      .filter((r) => !isNaN(r) && r > 0);
+  }, [existingLevels]);
+
+  const initialRows = React.useMemo<BulkLevelRow[]>(() => {
+    const ranks = getAvailableRanks(existingRanks, 2);
+    return [
+      { levelRank: ranks[0] ?? 1, name: '', description: '' },
+      { levelRank: ranks[1] ?? 2, name: '', description: '' },
+    ];
+  }, [existingRanks]);
 
   const formik = useFormik<BulkLevelsFormData>({
     initialValues: {
       electionId: initialElectionId,
-      levels: DEFAULT_ROWS,
+      levels: initialRows,
     },
     enableReinitialize: true,
     validationSchema: bulkLevelsValidationSchema,

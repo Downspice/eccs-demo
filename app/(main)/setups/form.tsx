@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useGetElections, type ElectionItem } from '@/services/elections';
+import { useGetLevels, type LevelItem } from '@/services/levels';
 import type { FormikErrors, FormikTouched } from 'formik';
 
 import * as Hint from '@/components/ui/hint';
@@ -34,6 +35,7 @@ export function SetupForm({
 }: SetupFormProps) {
   const { data: rawElections, isLoading: isElectionsLoading } =
     useGetElections();
+  const { data: rawLevels } = useGetLevels(values.electionId);
 
   const elections = React.useMemo<ElectionItem[]>(() => {
     if (Array.isArray(rawElections)) return rawElections;
@@ -46,6 +48,24 @@ export function SetupForm({
     }
     return [];
   }, [rawElections]);
+
+  const existingLevels = React.useMemo<LevelItem[]>(() => {
+    if (Array.isArray(rawLevels)) return rawLevels;
+    if (
+      rawLevels &&
+      typeof rawLevels === 'object' &&
+      Array.isArray((rawLevels as { data?: LevelItem[] }).data)
+    ) {
+      return (rawLevels as { data: LevelItem[] }).data;
+    }
+    return [];
+  }, [rawLevels]);
+
+  const existingRanks = React.useMemo(() => {
+    return existingLevels
+      .map((l) => Number(l.levelRank))
+      .filter((r) => !isNaN(r) && r > 0);
+  }, [existingLevels]);
 
   return (
     <div className='flex flex-col gap-4'>
@@ -96,9 +116,13 @@ export function SetupForm({
               />
             </Input.Wrapper>
           </Input.Root>
-          {touched.levelRank && errors.levelRank && (
+          {touched.levelRank && errors.levelRank ? (
             <Hint.Root hasError>{errors.levelRank}</Hint.Root>
-          )}
+          ) : existingRanks.length > 0 ? (
+            <span className='text-[11px] text-text-soft-400'>
+              Existing ranks: {existingRanks.sort((a, b) => a - b).join(', ')}
+            </span>
+          ) : null}
         </div>
       </div>
 

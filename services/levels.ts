@@ -39,6 +39,53 @@ export interface UpdateLevelPayload {
   electionId: string;
 }
 
+/**
+ * Calculates the lowest positive integer (>= 1) not present in takenRanks.
+ * E.g., if existing ranks are [1, 3], returns 2.
+ * If existing ranks are [1, 2, 3], returns 4.
+ * If existing ranks are [], returns 1.
+ */
+export function getNextAvailableRank(
+  takenRanks: Array<number | undefined | null>,
+): number {
+  const set = new Set<number>();
+  takenRanks.forEach((r) => {
+    if (typeof r === 'number' && !isNaN(r) && r > 0) {
+      set.add(Math.floor(r));
+    }
+  });
+  let candidate = 1;
+  while (set.has(candidate)) {
+    candidate++;
+  }
+  return candidate;
+}
+
+/**
+ * Calculates N available positive ranks not present in takenRanks, filling gaps first.
+ */
+export function getAvailableRanks(
+  takenRanks: Array<number | undefined | null>,
+  count: number,
+): number[] {
+  const set = new Set<number>();
+  takenRanks.forEach((r) => {
+    if (typeof r === 'number' && !isNaN(r) && r > 0) {
+      set.add(Math.floor(r));
+    }
+  });
+  const result: number[] = [];
+  let candidate = 1;
+  while (result.length < count) {
+    if (!set.has(candidate)) {
+      result.push(candidate);
+      set.add(candidate);
+    }
+    candidate++;
+  }
+  return result;
+}
+
 // --- Queries ---
 
 export function useGetLevels(electionId?: string) {

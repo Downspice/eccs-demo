@@ -3,6 +3,12 @@
 import * as React from 'react';
 import { useGetElections, type ElectionItem } from '@/services/elections';
 import {
+  getAvailableRanks,
+  getNextAvailableRank,
+  useGetLevels,
+  type LevelItem,
+} from '@/services/levels';
+import {
   RiAddLine,
   RiDeleteBinLine,
   RiInformationLine,
@@ -42,6 +48,9 @@ export function BulkLevelsForm({
 }: BulkLevelsFormProps) {
   const { data: rawElections, isLoading: isElectionsLoading } =
     useGetElections();
+  const { data: rawLevels, isLoading: isLevelsLoading } = useGetLevels(
+    values.electionId,
+  );
 
   const elections = React.useMemo<ElectionItem[]>(() => {
     if (Array.isArray(rawElections)) return rawElections;
@@ -55,11 +64,56 @@ export function BulkLevelsForm({
     return [];
   }, [rawElections]);
 
+  const existingLevels = React.useMemo<LevelItem[]>(() => {
+    if (Array.isArray(rawLevels)) return rawLevels;
+    if (
+      rawLevels &&
+      typeof rawLevels === 'object' &&
+      Array.isArray((rawLevels as { data?: LevelItem[] }).data)
+    ) {
+      return (rawLevels as { data: LevelItem[] }).data;
+    }
+    return [];
+  }, [rawLevels]);
+
+  const existingRanks = React.useMemo(() => {
+    return existingLevels
+      .map((l) => Number(l.levelRank))
+      .filter((r) => !isNaN(r) && r > 0);
+  }, [existingLevels]);
+
+  const lastElectionRef = React.useRef(values.electionId);
+
+  // When target election changes, automatically re-populate the ranks to fill available gaps for that election
+  React.useEffect(() => {
+    if (!values.electionId) return;
+    const electionChanged = lastElectionRef.current !== values.electionId;
+    lastElectionRef.current = values.electionId;
+
+    if (electionChanged) {
+      const availableRanks = getAvailableRanks(
+        existingRanks,
+        values.levels.length,
+      );
+      setFieldValue(
+        'levels',
+        values.levels.map((lvl, idx) => ({
+          ...lvl,
+          levelRank: availableRanks[idx] ?? idx + 1,
+        })),
+      );
+    }
+  }, [values.electionId, existingRanks, values.levels, setFieldValue]);
+
   const handleAddRow = () => {
-    const nextRank =
-      values.levels.length > 0
-        ? Math.max(...values.levels.map((l) => Number(l.levelRank) || 0)) + 1
-        : 1;
+    // Find all occupied ranks: backend levels + currently assigned ranks in form
+    const occupiedRanks = [
+      ...existingRanks,
+      ...values.levels
+        .map((l) => Number(l.levelRank))
+        .filter((r) => !isNaN(r) && r > 0),
+    ];
+    const nextRank = getNextAvailableRank(occupiedRanks);
 
     setFieldValue('levels', [
       ...values.levels,
@@ -73,11 +127,12 @@ export function BulkLevelsForm({
 
   const handleRemoveRow = (indexToRemove: number) => {
     if (values.levels.length <= 1) return;
-    const updated = values.levels.filter((_, idx) => idx !== indexToRemove);
-    // Re-index ranks sequentially
-    const reindexed = updated.map((item, idx) => ({
+    const remaining = values.levels.filter((_, idx) => idx !== indexToRemove);
+    // Re-assign available ranks filling remaining gaps
+    const availableRanks = getAvailableRanks(existingRanks, remaining.length);
+    const reindexed = remaining.map((item, idx) => ({
       ...item,
-      levelRank: idx + 1,
+      levelRank: availableRanks[idx] ?? idx + 1,
     }));
     setFieldValue('levels', reindexed);
   };
@@ -138,6 +193,23 @@ export function BulkLevelsForm({
             <Hint.Icon as={RiInformationLine} />
             {errors.electionId as string}
           </Hint.Root>
+        )}
+
+        {/* Info on existing levels & gaps */}
+        {existingLevels.length > 0 && (
+          <div className='mt-1 flex items-center gap-2 rounded-lg bg-bg-weak-50 px-3 py-2 text-paragraph-xs ring-1 ring-inset ring-stroke-soft-200 text-text-sub-600'>
+            <RiInformationLine className='size-4 text-primary-base shrink-0' />
+            <span>
+              Existing levels in this election:{' '}
+              <strong className='font-semibold text-text-strong-950'>
+                {existingLevels
+                  .sort((a, b) => (a.levelRank ?? 0) - (b.levelRank ?? 0))
+                  .map((l) => `Rank ${l.levelRank} (${l.name})`)
+                  .join(', ')}
+              </strong>
+              . Ranks are pre-populated to fill any missing numbers.
+            </span>
+          </div>
         )}
       </div>
 

@@ -2,7 +2,12 @@
 
 import * as React from 'react';
 import { useGetElections, type ElectionItem } from '@/services/elections';
-import { useCreateLevel, type LevelItem } from '@/services/levels';
+import {
+  getNextAvailableRank,
+  useCreateLevel,
+  useGetLevels,
+  type LevelItem,
+} from '@/services/levels';
 import { RiAddLine, RiStackLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -93,6 +98,45 @@ export function CreateSetupModal({
       );
     },
   });
+
+  const selectedElectionId = formik.values.electionId || initialElectionId;
+  const { data: rawLevels } = useGetLevels(selectedElectionId);
+
+  const existingLevels = React.useMemo<LevelItem[]>(() => {
+    if (Array.isArray(rawLevels)) return rawLevels;
+    if (
+      rawLevels &&
+      typeof rawLevels === 'object' &&
+      Array.isArray((rawLevels as { data?: LevelItem[] }).data)
+    ) {
+      return (rawLevels as { data: LevelItem[] }).data;
+    }
+    return [];
+  }, [rawLevels]);
+
+  const nextAvailableRank = React.useMemo(() => {
+    return getNextAvailableRank(existingLevels.map((l) => l.levelRank));
+  }, [existingLevels]);
+
+  const lastElectionRef = React.useRef(selectedElectionId);
+
+  // Automatically pre-populate levelRank with gap-filling rank on modal open or when election changes
+  React.useEffect(() => {
+    if (open) {
+      const electionChanged = lastElectionRef.current !== selectedElectionId;
+      lastElectionRef.current = selectedElectionId;
+
+      if (!formik.touched.levelRank || electionChanged) {
+        formik.setFieldValue('levelRank', nextAvailableRank);
+      }
+    }
+  }, [
+    open,
+    selectedElectionId,
+    nextAvailableRank,
+    formik.touched.levelRank,
+    formik.setFieldValue,
+  ]);
 
   const handleClose = () => {
     formik.resetForm();
