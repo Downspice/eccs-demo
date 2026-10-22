@@ -250,7 +250,8 @@ export function BulkLevelMappingForm({
           </span>
         )}
         <p className='text-paragraph-xs text-text-soft-400'>
-          All batch units will be attached under this parent unit in the organogram.
+          All batch units will be attached under this parent unit in the
+          organogram.
         </p>
       </div>
 
@@ -266,7 +267,8 @@ export function BulkLevelMappingForm({
                 size='small'
                 className='font-semibold'
               >
-                {parsedNames.length} {parsedNames.length === 1 ? 'unit' : 'units'} parsed
+                {parsedNames.length}{' '}
+                {parsedNames.length === 1 ? 'unit' : 'units'} parsed
               </Badge.Root>
             )}
             <button
@@ -300,7 +302,8 @@ export function BulkLevelMappingForm({
           <div className='flex items-start gap-1 text-[11px] text-text-soft-400'>
             <RiInformationLine className='size-3.5 shrink-0 mt-0.5 text-text-sub-600' />
             <span>
-              Tip: Paste from Excel, CSV, or documents. Empty lines and duplicate whitespace are cleaned automatically.
+              Tip: Paste from Excel, CSV, or documents. Empty lines and
+              duplicate whitespace are cleaned automatically.
             </span>
           </div>
         )}

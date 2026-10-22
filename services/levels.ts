@@ -75,11 +75,46 @@ export function useGetLevel(id?: TId) {
   });
 }
 
+export interface BulkLevelItemPayload {
+  id?: TId;
+  name: string;
+  description?: string;
+  levelRank: number;
+  electionId?: string;
+}
+
+export interface BulkLevelsPayload {
+  electionId: string;
+  levels: BulkLevelItemPayload[];
+}
+
 // --- Mutations ---
 
 export function useCreateLevel() {
   return useBaseMutation<LevelItem, CreateLevelPayload>(
     ['create-level'],
+    '/levels',
+    'post',
+    (payload) => [
+      ['levels'],
+      ['levels', payload.electionId],
+      ['levels', 'election', payload.electionId],
+      ['levels-paginated'],
+    ],
+    {
+      transformPayload: (payload) => ({
+        name: payload.name.trim(),
+        description: payload.description?.trim() || '',
+        levelRank: Number(payload.levelRank),
+        electionId: payload.electionId,
+      }),
+    },
+  );
+}
+
+export function useUpdateLevelsBulk() {
+  return useBaseMutation<LevelItem[], BulkLevelsPayload>(
+    ['update-levels-bulk'],
     (payload) => `/levels/election/${payload.electionId}`,
     'post',
     (payload) => [
@@ -89,17 +124,20 @@ export function useCreateLevel() {
       ['levels-paginated'],
     ],
     {
-      transformPayload: (payload) => [
-        {
-          name: payload.name.trim(),
-          description: payload.description?.trim() || '',
-          levelRank: Number(payload.levelRank),
-          electionId: payload.electionId,
-        },
-      ],
+      transformPayload: (payload) =>
+        payload.levels.map((lvl) => ({
+          ...(lvl.id ? { id: lvl.id } : {}),
+          name: lvl.name.trim(),
+          description: lvl.description?.trim() || '',
+          levelRank: Number(lvl.levelRank),
+          electionId: lvl.electionId || payload.electionId,
+        })),
     },
   );
 }
+
+export const useCreateLevelsBulk = useUpdateLevelsBulk;
+export const useSaveLevelsForElection = useUpdateLevelsBulk;
 
 export function useUpdateLevel() {
   return useBaseMutation<LevelItem, UpdateLevelPayload>(
@@ -152,4 +190,6 @@ export const useGetSetupsPaginated = useGetLevelsPaginated;
 export const useGetSetup = useGetLevel;
 export const useCreateSetup = useCreateLevel;
 export const useUpdateSetup = useUpdateLevel;
+export const useCreateSetupsBulk = useCreateLevelsBulk;
+export const useUpdateSetupsBulk = useUpdateLevelsBulk;
 export const useDeleteSetup = useDeleteLevel;

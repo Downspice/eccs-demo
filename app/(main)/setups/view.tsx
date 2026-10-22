@@ -48,7 +48,7 @@ export function ViewSetupModal({
                 Associated Election
               </span>
               <p className='text-label-sm font-semibold text-text-strong-950 mt-0.5'>
-                {item.electionName || 'National Level'}
+                {item.electionName || '-'}
               </p>
             </div>
           </div>

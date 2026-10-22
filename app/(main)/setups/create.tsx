@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useGetElections, type ElectionItem } from '@/services/elections';
 import { useCreateLevel, type LevelItem } from '@/services/levels';
-import { RiAddLine } from '@remixicon/react';
+import { RiAddLine, RiStackLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -18,6 +18,7 @@ interface CreateSetupModalProps {
   defaultElectionId?: string;
   onClose: () => void;
   onSuccess?: (item: LevelItem) => void;
+  onSwitchToBulk?: () => void;
 }
 
 export const levelValidationSchema = Yup.object().shape({
@@ -47,6 +48,7 @@ export function CreateSetupModal({
   defaultElectionId,
   onClose,
   onSuccess,
+  onSwitchToBulk,
 }: CreateSetupModalProps) {
   const createLevel = useCreateLevel();
   const { data: rawElections } = useGetElections();
@@ -108,6 +110,22 @@ export function CreateSetupModal({
           />
 
           <Modal.Body className='py-5'>
+            {onSwitchToBulk && (
+              <div className='mb-4 flex items-center justify-between rounded-xl bg-bg-weak-50 px-3.5 py-2 text-paragraph-xs ring-1 ring-inset ring-stroke-soft-200'>
+                <div className='flex items-center gap-2 text-text-sub-600'>
+                  <RiStackLine className='size-4 text-primary-base shrink-0' />
+                  <span>Configuring multiple levels for this election?</span>
+                </div>
+                <button
+                  type='button'
+                  onClick={onSwitchToBulk}
+                  className='font-semibold text-primary-base hover:underline'
+                >
+                  Switch to bulk mode
+                </button>
+              </div>
+            )}
+
             <SetupForm
               values={formik.values}
               errors={formik.errors}
@@ -152,3 +170,4 @@ export { CreatePoliticalPartyModal } from './create-political-party';
 export { CreateCandidateModal } from './create-candidate';
 export { CreateLevelMappingModal } from './create-level-mapping';
 export { CreateBulkLevelMappingModal } from './create-bulk-level-mapping';
+export { CreateBulkLevelsModal } from './create-bulk-levels';

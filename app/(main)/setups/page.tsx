@@ -43,6 +43,7 @@ import * as Table from '@/components/ui/table';
 
 import {
   CreateBulkLevelMappingModal,
+  CreateBulkLevelsModal,
   CreateCandidateModal,
   CreateElectionModal,
   CreateLevelMappingModal,
@@ -783,15 +784,26 @@ export default function SetupsPage() {
 
             <div>
               {activeModule === 'levels' ? (
-                <Button.Root
-                  variant='primary'
-                  mode='filled'
-                  size='small'
-                  onClick={() => setModalState({ type: 'create' })}
-                >
-                  <Button.Icon as={RiAddLine} />
-                  <span>New Level</span>
-                </Button.Root>
+                <div className='flex items-center gap-2'>
+                  <Button.Root
+                    variant='neutral'
+                    mode='stroke'
+                    size='small'
+                    onClick={() => setModalState({ type: 'bulk-create' })}
+                  >
+                    <Button.Icon as={RiStackLine} />
+                    <span>Bulk Add</span>
+                  </Button.Root>
+                  <Button.Root
+                    variant='primary'
+                    mode='filled'
+                    size='small'
+                    onClick={() => setModalState({ type: 'create' })}
+                  >
+                    <Button.Icon as={RiAddLine} />
+                    <span>New Level</span>
+                  </Button.Root>
+                </div>
               ) : activeModule === 'level-mapping' ? (
                 <div className='flex items-center gap-2'>
                   <Button.Root
@@ -1118,7 +1130,7 @@ export default function SetupsPage() {
                             {/* Associated Election */}
                             <Table.Cell>
                               <span className='text-paragraph-xs text-text-sub-600'>
-                                {item.electionName || 'National Level'}
+                                {item.electionName || '-'}
                               </span>
                             </Table.Cell>
 
@@ -1861,6 +1873,14 @@ export default function SetupsPage() {
         open={modalState.type === 'create'}
         defaultElectionId={activeElectionId}
         onClose={() => setModalState({ type: null })}
+        onSwitchToBulk={() => setModalState({ type: 'bulk-create' })}
+      />
+
+      <CreateBulkLevelsModal
+        open={modalState.type === 'bulk-create'}
+        defaultElectionId={activeElectionId}
+        onClose={() => setModalState({ type: null })}
+        onSwitchToSingle={() => setModalState({ type: 'create' })}
       />
 
       <UpdateSetupModal
