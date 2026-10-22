@@ -18,6 +18,7 @@ import * as Select from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LevelMappingSearchSelect } from '@/components/level-mapping-search-select';
 
+import { InlineNoLevelsBanner } from './no-levels-alert';
 import type { LevelMappingFormData } from './types';
 
 interface LevelMappingFormProps {
@@ -30,6 +31,7 @@ interface LevelMappingFormProps {
   disabled?: boolean;
   parentItem?: LevelMappingItem | null;
   mappingId?: string;
+  onOpenCreateLevel?: () => void;
 }
 
 export function LevelMappingForm({
@@ -42,6 +44,7 @@ export function LevelMappingForm({
   disabled,
   parentItem,
   mappingId,
+  onOpenCreateLevel,
 }: LevelMappingFormProps) {
   const { data: rawElections, isLoading: isElectionsLoading } =
     useGetElections();
@@ -62,6 +65,10 @@ export function LevelMappingForm({
     }
     return [];
   }, [rawElections]);
+
+  const selectedElection = React.useMemo(() => {
+    return elections.find((e) => e.id === values.electionId);
+  }, [elections, values.electionId]);
 
   const levels = React.useMemo<LevelItem[]>(() => {
     if (Array.isArray(rawLevels)) return rawLevels;
@@ -202,21 +209,10 @@ export function LevelMappingForm({
             </Select.Content>
           </Select.Root>
         ) : (
-          <Input.Root hasError={Boolean(touched.levelId && errors.levelId)}>
-            <Input.Wrapper>
-              <input
-                id='levelId'
-                name='levelId'
-                type='text'
-                disabled={disabled}
-                placeholder='Enter Level Tier'
-                value={values.levelId}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className='w-full bg-transparent px-3 py-2 text-paragraph-sm text-text-strong-950 placeholder:text-text-soft-400 focus:outline-none disabled:opacity-50'
-              />
-            </Input.Wrapper>
-          </Input.Root>
+          <InlineNoLevelsBanner
+            electionName={selectedElection?.name}
+            onOpenCreateLevel={onOpenCreateLevel}
+          />
         )}
         {touched.levelId && errors.levelId && (
           <Hint.Root hasError>{errors.levelId}</Hint.Root>

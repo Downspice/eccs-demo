@@ -27,6 +27,7 @@ import {
   parseUnitNames,
 } from './bulk-level-mapping-form';
 import { NoElectionsAlert } from './no-elections-alert';
+import { NoLevelsAlert } from './no-levels-alert';
 import type { BulkLevelMappingFormData } from './types';
 
 interface CreateBulkLevelMappingModalProps {
@@ -37,6 +38,8 @@ interface CreateBulkLevelMappingModalProps {
   onSuccess?: (items: LevelMappingItem[]) => void;
   onSwitchToSingle?: () => void;
   onOpenCreateElection?: () => void;
+  onOpenCreateLevel?: () => void;
+  onOpenCreateBulkLevels?: () => void;
 }
 
 export const bulkLevelMappingValidationSchema = Yup.object().shape({
@@ -71,6 +74,8 @@ export function CreateBulkLevelMappingModal({
   onSuccess,
   onSwitchToSingle,
   onOpenCreateElection,
+  onOpenCreateLevel,
+  onOpenCreateBulkLevels,
 }: CreateBulkLevelMappingModalProps) {
   const createLevelMappingsBulk = useCreateLevelMappingsBulk();
   const { data: rawElections, isLoading: isElectionsLoading } =
@@ -93,7 +98,12 @@ export function CreateBulkLevelMappingModal({
   const targetElectionId =
     parentItem?.electionId || defaultElectionId || elections[0]?.id || '';
 
-  const { data: rawLevels } = useGetLevels(targetElectionId);
+  const targetElection = React.useMemo(() => {
+    return elections.find((e) => e.id === targetElectionId);
+  }, [elections, targetElectionId]);
+
+  const { data: rawLevels, isLoading: isLevelsLoading } =
+    useGetLevels(targetElectionId);
   const { data: rawMappings } = useGetLevelMappings(targetElectionId);
 
   const levels = React.useMemo<LevelItem[]>(() => {
@@ -107,6 +117,13 @@ export function CreateBulkLevelMappingModal({
     }
     return [];
   }, [rawLevels]);
+
+  const hasNoLevels =
+    !isElectionsLoading &&
+    !isLevelsLoading &&
+    !hasNoElections &&
+    Boolean(targetElectionId) &&
+    levels.length === 0;
 
   // Determine immediate subordinate tier when parentItem is given
   const suggestedLevelId = React.useMemo(() => {
@@ -258,6 +275,13 @@ export function CreateBulkLevelMappingModal({
                 onOpenCreateElection={onOpenCreateElection}
                 onClose={handleClose}
               />
+            ) : hasNoLevels ? (
+              <NoLevelsAlert
+                electionName={targetElection?.name}
+                onOpenCreateLevel={onOpenCreateLevel}
+                onOpenCreateBulkLevels={onOpenCreateBulkLevels}
+                onClose={handleClose}
+              />
             ) : (
               <>
                 {parentItem && (
@@ -294,6 +318,7 @@ export function CreateBulkLevelMappingModal({
                   disabled={createLevelMappingsBulk.isPending}
                   parentItem={parentItem}
                   onSwitchToSingle={onSwitchToSingle}
+                  onOpenCreateLevel={onOpenCreateLevel}
                 />
               </>
             )}
@@ -325,6 +350,47 @@ export function CreateBulkLevelMappingModal({
                   <span>Create Election First</span>
                 </Button.Root>
               )}
+            </Modal.Footer>
+          ) : hasNoLevels ? (
+            <Modal.Footer>
+              <Button.Root
+                type='button'
+                variant='neutral'
+                mode='stroke'
+                size='small'
+                onClick={handleClose}
+              >
+                Cancel
+              </Button.Root>
+              {onOpenCreateBulkLevels ? (
+                <Button.Root
+                  type='button'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  onClick={() => {
+                    handleClose();
+                    onOpenCreateBulkLevels();
+                  }}
+                >
+                  <Button.Icon as={RiStackLine} />
+                  <span>Bulk Add Levels First</span>
+                </Button.Root>
+              ) : onOpenCreateLevel ? (
+                <Button.Root
+                  type='button'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  onClick={() => {
+                    handleClose();
+                    onOpenCreateLevel();
+                  }}
+                >
+                  <Button.Icon as={RiAddLine} />
+                  <span>Add Level First</span>
+                </Button.Root>
+              ) : null}
             </Modal.Footer>
           ) : (
             <Modal.Footer className='justify-between'>

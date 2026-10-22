@@ -1271,12 +1271,31 @@ export default function SetupsPage() {
                               className='py-12 text-center'
                             >
                               <p className='text-label-sm font-semibold text-text-strong-950'>
-                                No level mappings found
+                                {filteredLevels.length === 0
+                                  ? 'No administrative levels configured'
+                                  : 'No level mappings found'}
                               </p>
-                              <p className='text-paragraph-xs text-text-sub-600 mt-1'>
-                                Try adjusting your search criteria or register a
-                                new territorial mapping.
+                              <p className='text-paragraph-xs text-text-sub-600 mt-1 max-w-sm mx-auto'>
+                                {filteredLevels.length === 0
+                                  ? 'You need to add administrative levels (e.g. Region, District, Polling Station) before you can create territorial mappings.'
+                                  : 'Try adjusting your search criteria or register a new territorial mapping.'}
                               </p>
+                              {filteredLevels.length === 0 && (
+                                <div className='mt-4 flex items-center justify-center gap-2'>
+                                  <Button.Root
+                                    type='button'
+                                    variant='primary'
+                                    mode='filled'
+                                    size='small'
+                                    onClick={() =>
+                                      setModalState({ type: 'create' })
+                                    }
+                                  >
+                                    <Button.Icon as={RiAddLine} />
+                                    <span>Add Level First</span>
+                                  </Button.Root>
+                                </div>
+                              )}
                             </Table.Cell>
                           </Table.Row>
                         ) : (
@@ -1924,6 +1943,8 @@ export default function SetupsPage() {
           })
         }
         onOpenCreateElection={() => setElectionModalState({ type: 'create' })}
+        onOpenCreateLevel={() => setModalState({ type: 'create' })}
+        onOpenCreateBulkLevels={() => setModalState({ type: 'bulk-create' })}
       />
 
       <CreateBulkLevelMappingModal
@@ -1945,6 +1966,8 @@ export default function SetupsPage() {
           })
         }
         onOpenCreateElection={() => setElectionModalState({ type: 'create' })}
+        onOpenCreateLevel={() => setModalState({ type: 'create' })}
+        onOpenCreateBulkLevels={() => setModalState({ type: 'bulk-create' })}
       />
 
       <UpdateLevelMappingModal

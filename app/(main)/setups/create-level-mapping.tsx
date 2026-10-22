@@ -8,7 +8,12 @@ import {
   type LevelMappingItem,
 } from '@/services/level-mappings';
 import { useGetLevels, type LevelItem } from '@/services/levels';
-import { RiCalendarEventLine, RiNodeTree, RiStackLine } from '@remixicon/react';
+import {
+  RiAddLine,
+  RiCalendarEventLine,
+  RiNodeTree,
+  RiStackLine,
+} from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -19,6 +24,7 @@ import { toast } from '@/components/ui/toast';
 
 import { LevelMappingForm } from './level-mapping-form';
 import { NoElectionsAlert } from './no-elections-alert';
+import { NoLevelsAlert } from './no-levels-alert';
 import type { LevelMappingFormData } from './types';
 
 interface CreateLevelMappingModalProps {
@@ -29,6 +35,8 @@ interface CreateLevelMappingModalProps {
   onSuccess?: (item: LevelMappingItem) => void;
   onSwitchToBulk?: () => void;
   onOpenCreateElection?: () => void;
+  onOpenCreateLevel?: () => void;
+  onOpenCreateBulkLevels?: () => void;
 }
 
 export const levelMappingValidationSchema = Yup.object().shape({
@@ -55,6 +63,8 @@ export function CreateLevelMappingModal({
   onSuccess,
   onSwitchToBulk,
   onOpenCreateElection,
+  onOpenCreateLevel,
+  onOpenCreateBulkLevels,
 }: CreateLevelMappingModalProps) {
   const createLevelMapping = useCreateLevelMapping();
   const { data: rawElections, isLoading: isElectionsLoading } =
@@ -77,7 +87,12 @@ export function CreateLevelMappingModal({
   const targetElectionId =
     parentItem?.electionId || defaultElectionId || elections[0]?.id || '';
 
-  const { data: rawLevels } = useGetLevels(targetElectionId);
+  const targetElection = React.useMemo(() => {
+    return elections.find((e) => e.id === targetElectionId);
+  }, [elections, targetElectionId]);
+
+  const { data: rawLevels, isLoading: isLevelsLoading } =
+    useGetLevels(targetElectionId);
   const { data: rawMappings } = useGetLevelMappings(targetElectionId);
 
   const levels = React.useMemo<LevelItem[]>(() => {
@@ -91,6 +106,13 @@ export function CreateLevelMappingModal({
     }
     return [];
   }, [rawLevels]);
+
+  const hasNoLevels =
+    !isElectionsLoading &&
+    !isLevelsLoading &&
+    !hasNoElections &&
+    Boolean(targetElectionId) &&
+    levels.length === 0;
 
   // Determine immediate subordinate tier to prefill levelId when parentItem is given
   const suggestedLevelId = React.useMemo(() => {
@@ -234,6 +256,13 @@ export function CreateLevelMappingModal({
                 onOpenCreateElection={onOpenCreateElection}
                 onClose={handleClose}
               />
+            ) : hasNoLevels ? (
+              <NoLevelsAlert
+                electionName={targetElection?.name}
+                onOpenCreateLevel={onOpenCreateLevel}
+                onOpenCreateBulkLevels={onOpenCreateBulkLevels}
+                onClose={handleClose}
+              />
             ) : (
               <>
                 {parentItem && (
@@ -268,6 +297,7 @@ export function CreateLevelMappingModal({
                   setFieldValue={formik.setFieldValue}
                   disabled={createLevelMapping.isPending}
                   parentItem={parentItem}
+                  onOpenCreateLevel={onOpenCreateLevel}
                 />
               </>
             )}
@@ -297,6 +327,33 @@ export function CreateLevelMappingModal({
                 >
                   <Button.Icon as={RiCalendarEventLine} />
                   <span>Create Election First</span>
+                </Button.Root>
+              )}
+            </Modal.Footer>
+          ) : hasNoLevels ? (
+            <Modal.Footer>
+              <Button.Root
+                type='button'
+                variant='neutral'
+                mode='stroke'
+                size='small'
+                onClick={handleClose}
+              >
+                Cancel
+              </Button.Root>
+              {onOpenCreateLevel && (
+                <Button.Root
+                  type='button'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  onClick={() => {
+                    handleClose();
+                    onOpenCreateLevel();
+                  }}
+                >
+                  <Button.Icon as={RiAddLine} />
+                  <span>Add Level First</span>
                 </Button.Root>
               )}
             </Modal.Footer>

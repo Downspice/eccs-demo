@@ -34,6 +34,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import * as Textarea from '@/components/ui/textarea';
 import { LevelMappingSearchSelect } from '@/components/level-mapping-search-select';
 
+import { InlineNoLevelsBanner } from './no-levels-alert';
 import type { BulkLevelMappingFormData } from './types';
 
 interface BulkLevelMappingFormProps {
@@ -46,6 +47,7 @@ interface BulkLevelMappingFormProps {
   disabled?: boolean;
   parentItem?: LevelMappingItem | null;
   onSwitchToSingle?: () => void;
+  onOpenCreateLevel?: () => void;
 }
 
 export function parseUnitNames(text: string): string[] {
@@ -109,6 +111,7 @@ export function BulkLevelMappingForm({
   disabled,
   parentItem,
   onSwitchToSingle,
+  onOpenCreateLevel,
 }: BulkLevelMappingFormProps) {
   const { data: rawElections, isLoading: isElectionsLoading } =
     useGetElections();
@@ -300,6 +303,11 @@ export function BulkLevelMappingForm({
             </div>
             {isLevelsLoading ? (
               <Skeleton className='h-10 w-full rounded-lg' />
+            ) : values.electionId && levels.length === 0 ? (
+              <InlineNoLevelsBanner
+                electionName={selectedElection?.name}
+                onOpenCreateLevel={onOpenCreateLevel}
+              />
             ) : (
               <Select.Root
                 value={values.levelId}
