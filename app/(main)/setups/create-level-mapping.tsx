@@ -8,7 +8,7 @@ import {
   type LevelMappingItem,
 } from '@/services/level-mappings';
 import { useGetLevels, type LevelItem } from '@/services/levels';
-import { RiNodeTree, RiStackLine } from '@remixicon/react';
+import { RiCalendarEventLine, RiNodeTree, RiStackLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -17,6 +17,7 @@ import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
 
 import { LevelMappingForm } from './level-mapping-form';
+import { NoElectionsAlert } from './no-elections-alert';
 import type { LevelMappingFormData } from './types';
 
 interface CreateLevelMappingModalProps {
@@ -26,6 +27,7 @@ interface CreateLevelMappingModalProps {
   onClose: () => void;
   onSuccess?: (item: LevelMappingItem) => void;
   onSwitchToBulk?: () => void;
+  onOpenCreateElection?: () => void;
 }
 
 export const levelMappingValidationSchema = Yup.object().shape({
@@ -51,9 +53,11 @@ export function CreateLevelMappingModal({
   onClose,
   onSuccess,
   onSwitchToBulk,
+  onOpenCreateElection,
 }: CreateLevelMappingModalProps) {
   const createLevelMapping = useCreateLevelMapping();
-  const { data: rawElections } = useGetElections();
+  const { data: rawElections, isLoading: isElectionsLoading } =
+    useGetElections();
 
   const elections = React.useMemo<ElectionItem[]>(() => {
     if (Array.isArray(rawElections)) return rawElections;
@@ -66,6 +70,8 @@ export function CreateLevelMappingModal({
     }
     return [];
   }, [rawElections]);
+
+  const hasNoElections = !isElectionsLoading && elections.length === 0;
 
   const targetElectionId =
     parentItem?.electionId || defaultElectionId || elections[0]?.id || '';
@@ -215,82 +221,121 @@ export function CreateLevelMappingModal({
           />
 
           <Modal.Body className='py-5'>
-            {parentItem && (
-              <div className='mb-4 flex items-center justify-between rounded-lg bg-bg-weak-50 p-2.5 ring-1 ring-inset ring-stroke-soft-200'>
-                <div className='flex items-center gap-2 min-w-0'>
-                  <RiNodeTree className='size-4 text-primary-base shrink-0' />
-                  <div className='truncate text-paragraph-xs text-text-sub-600'>
-                    <span>Parent jurisdiction: </span>
-                    <strong className='font-semibold text-text-strong-950'>
-                      {parentItem.name}
-                    </strong>
-                    {parentItem.levelName && (
-                      <span className='text-text-soft-400'>
-                        {' '}
-                        ({parentItem.levelName})
-                      </span>
-                    )}
+            {hasNoElections ? (
+              <NoElectionsAlert
+                entityName='jurisdiction mappings'
+                onOpenCreateElection={onOpenCreateElection}
+                onClose={handleClose}
+              />
+            ) : (
+              <>
+                {parentItem && (
+                  <div className='mb-4 flex items-center justify-between rounded-lg bg-bg-weak-50 p-2.5 ring-1 ring-inset ring-stroke-soft-200'>
+                    <div className='flex items-center gap-2 min-w-0'>
+                      <RiNodeTree className='size-4 text-primary-base shrink-0' />
+                      <div className='truncate text-paragraph-xs text-text-sub-600'>
+                        <span>Parent jurisdiction: </span>
+                        <strong className='font-semibold text-text-strong-950'>
+                          {parentItem.name}
+                        </strong>
+                        {parentItem.levelName && (
+                          <span className='text-text-soft-400'>
+                            {' '}
+                            ({parentItem.levelName})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Badge.Root variant='lighter' color='blue' size='small'>
+                      Sub-unit
+                    </Badge.Root>
                   </div>
-                </div>
-                <Badge.Root variant='lighter' color='blue' size='small'>
-                  Sub-unit
-                </Badge.Root>
-              </div>
-            )}
+                )}
 
-            <LevelMappingForm
-              values={formik.values}
-              errors={formik.errors}
-              touched={formik.touched}
-              handleChange={formik.handleChange}
-              handleBlur={formik.handleBlur}
-              setFieldValue={formik.setFieldValue}
-              disabled={createLevelMapping.isPending}
-              parentItem={parentItem}
-            />
+                <LevelMappingForm
+                  values={formik.values}
+                  errors={formik.errors}
+                  touched={formik.touched}
+                  handleChange={formik.handleChange}
+                  handleBlur={formik.handleBlur}
+                  setFieldValue={formik.setFieldValue}
+                  disabled={createLevelMapping.isPending}
+                  parentItem={parentItem}
+                />
+              </>
+            )}
           </Modal.Body>
 
-          <Modal.Footer className='justify-between'>
-            <div>
-              {onSwitchToBulk && (
-                <Button.Root
-                  type='button'
-                  variant='neutral'
-                  mode='stroke'
-                  size='small'
-                  onClick={onSwitchToBulk}
-                  disabled={createLevelMapping.isPending}
-                >
-                  <Button.Icon as={RiStackLine} />
-                  <span>Switch to Bulk</span>
-                </Button.Root>
-              )}
-            </div>
-
-            <div className='flex items-center gap-2'>
+          {hasNoElections ? (
+            <Modal.Footer>
               <Button.Root
                 type='button'
                 variant='neutral'
                 mode='stroke'
                 size='small'
                 onClick={handleClose}
-                disabled={createLevelMapping.isPending}
               >
                 Cancel
               </Button.Root>
-              <Button.Root
-                type='submit'
-                variant='primary'
-                mode='filled'
-                size='small'
-                disabled={createLevelMapping.isPending || !formik.isValid}
-              >
-                {createLevelMapping.isPending
-                  ? 'Creating...'
-                  : 'Create Mapping'}
-              </Button.Root>
-            </div>
-          </Modal.Footer>
+              {onOpenCreateElection && (
+                <Button.Root
+                  type='button'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  onClick={() => {
+                    handleClose();
+                    onOpenCreateElection();
+                  }}
+                >
+                  <Button.Icon as={RiCalendarEventLine} />
+                  <span>Create Election First</span>
+                </Button.Root>
+              )}
+            </Modal.Footer>
+          ) : (
+            <Modal.Footer className='justify-between'>
+              <div>
+                {onSwitchToBulk && (
+                  <Button.Root
+                    type='button'
+                    variant='neutral'
+                    mode='stroke'
+                    size='small'
+                    onClick={onSwitchToBulk}
+                    disabled={createLevelMapping.isPending}
+                  >
+                    <Button.Icon as={RiStackLine} />
+                    <span>Switch to Bulk</span>
+                  </Button.Root>
+                )}
+              </div>
+
+              <div className='flex items-center gap-2'>
+                <Button.Root
+                  type='button'
+                  variant='neutral'
+                  mode='stroke'
+                  size='small'
+                  onClick={handleClose}
+                  disabled={createLevelMapping.isPending}
+                >
+                  Cancel
+                </Button.Root>
+                <Button.Root
+                  type='submit'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  disabled={createLevelMapping.isPending || !formik.isValid}
+                >
+                  {createLevelMapping.isPending
+                    ? 'Creating...'
+                    : 'Create Mapping'}
+                </Button.Root>
+              </div>
+            </Modal.Footer>
+          )}
         </form>
       </Modal.Content>
     </Modal.Root>

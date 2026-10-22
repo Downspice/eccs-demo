@@ -1874,6 +1874,7 @@ export default function SetupsPage() {
         defaultElectionId={activeElectionId}
         onClose={() => setModalState({ type: null })}
         onSwitchToBulk={() => setModalState({ type: 'bulk-create' })}
+        onOpenCreateElection={() => setElectionModalState({ type: 'create' })}
       />
 
       <CreateBulkLevelsModal
@@ -1881,6 +1882,7 @@ export default function SetupsPage() {
         defaultElectionId={activeElectionId}
         onClose={() => setModalState({ type: null })}
         onSwitchToSingle={() => setModalState({ type: 'create' })}
+        onOpenCreateElection={() => setElectionModalState({ type: 'create' })}
       />
 
       <UpdateSetupModal
@@ -1921,6 +1923,7 @@ export default function SetupsPage() {
                 : null,
           })
         }
+        onOpenCreateElection={() => setElectionModalState({ type: 'create' })}
       />
 
       <CreateBulkLevelMappingModal
@@ -1941,6 +1944,7 @@ export default function SetupsPage() {
                 : null,
           })
         }
+        onOpenCreateElection={() => setElectionModalState({ type: 'create' })}
       />
 
       <UpdateLevelMappingModal
@@ -1979,6 +1983,7 @@ export default function SetupsPage() {
         open={candidateModalState.type === 'create'}
         defaultElectionId={activeElectionId}
         onClose={() => setCandidateModalState({ type: null })}
+        onOpenCreateElection={() => setElectionModalState({ type: 'create' })}
       />
 
       <UpdateCandidateModal

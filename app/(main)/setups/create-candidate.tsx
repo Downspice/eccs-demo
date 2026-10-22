@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useCreateCandidate, type CandidateItem } from '@/services/candidates';
 import { useGetElections, type ElectionItem } from '@/services/elections';
-import { RiUserAddLine } from '@remixicon/react';
+import { RiCalendarEventLine, RiUserAddLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -11,6 +11,7 @@ import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
 
 import { CandidateForm } from './candidate-form';
+import { NoElectionsAlert } from './no-elections-alert';
 import type { CandidateFormData } from './types';
 
 interface CreateCandidateModalProps {
@@ -18,6 +19,7 @@ interface CreateCandidateModalProps {
   defaultElectionId?: string;
   onClose: () => void;
   onSuccess?: (item: CandidateItem) => void;
+  onOpenCreateElection?: () => void;
 }
 
 export const candidateValidationSchema = Yup.object().shape({
@@ -39,9 +41,11 @@ export function CreateCandidateModal({
   defaultElectionId,
   onClose,
   onSuccess,
+  onOpenCreateElection,
 }: CreateCandidateModalProps) {
   const createCandidate = useCreateCandidate();
-  const { data: rawElections } = useGetElections();
+  const { data: rawElections, isLoading: isElectionsLoading } =
+    useGetElections();
 
   const elections = React.useMemo<ElectionItem[]>(() => {
     if (Array.isArray(rawElections)) return rawElections;
@@ -54,6 +58,8 @@ export function CreateCandidateModal({
     }
     return [];
   }, [rawElections]);
+
+  const hasNoElections = !isElectionsLoading && elections.length === 0;
 
   const initialElectionId = defaultElectionId || elections[0]?.id || '';
 
@@ -101,15 +107,23 @@ export function CreateCandidateModal({
           />
 
           <Modal.Body className='py-5'>
-            <CandidateForm
-              values={formik.values}
-              errors={formik.errors}
-              touched={formik.touched}
-              handleChange={formik.handleChange}
-              handleBlur={formik.handleBlur}
-              setFieldValue={formik.setFieldValue}
-              disabled={createCandidate.isPending}
-            />
+            {hasNoElections ? (
+              <NoElectionsAlert
+                entityName='candidates'
+                onOpenCreateElection={onOpenCreateElection}
+                onClose={handleClose}
+              />
+            ) : (
+              <CandidateForm
+                values={formik.values}
+                errors={formik.errors}
+                touched={formik.touched}
+                handleChange={formik.handleChange}
+                handleBlur={formik.handleBlur}
+                setFieldValue={formik.setFieldValue}
+                disabled={createCandidate.isPending}
+              />
+            )}
           </Modal.Body>
 
           <Modal.Footer>
@@ -123,15 +137,35 @@ export function CreateCandidateModal({
             >
               Cancel
             </Button.Root>
-            <Button.Root
-              type='submit'
-              variant='primary'
-              mode='filled'
-              size='small'
-              disabled={createCandidate.isPending || !formik.isValid}
-            >
-              {createCandidate.isPending ? 'Registering...' : 'Add Candidate'}
-            </Button.Root>
+            {hasNoElections && onOpenCreateElection ? (
+              <Button.Root
+                type='button'
+                variant='primary'
+                mode='filled'
+                size='small'
+                onClick={() => {
+                  handleClose();
+                  onOpenCreateElection();
+                }}
+              >
+                <Button.Icon as={RiCalendarEventLine} />
+                <span>Create Election First</span>
+              </Button.Root>
+            ) : (
+              <Button.Root
+                type='submit'
+                variant='primary'
+                mode='filled'
+                size='small'
+                disabled={
+                  hasNoElections ||
+                  createCandidate.isPending ||
+                  !formik.isValid
+                }
+              >
+                {createCandidate.isPending ? 'Registering...' : 'Add Candidate'}
+              </Button.Root>
+            )}
           </Modal.Footer>
         </form>
       </Modal.Content>

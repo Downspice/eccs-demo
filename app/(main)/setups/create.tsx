@@ -8,7 +8,7 @@ import {
   useGetLevels,
   type LevelItem,
 } from '@/services/levels';
-import { RiAddLine, RiStackLine } from '@remixicon/react';
+import { RiAddLine, RiCalendarEventLine, RiStackLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -16,6 +16,7 @@ import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
 
 import { SetupForm } from './form';
+import { NoElectionsAlert } from './no-elections-alert';
 import type { SetupFormData } from './types';
 
 interface CreateSetupModalProps {
@@ -24,6 +25,7 @@ interface CreateSetupModalProps {
   onClose: () => void;
   onSuccess?: (item: LevelItem) => void;
   onSwitchToBulk?: () => void;
+  onOpenCreateElection?: () => void;
 }
 
 export const levelValidationSchema = Yup.object().shape({
@@ -54,9 +56,10 @@ export function CreateSetupModal({
   onClose,
   onSuccess,
   onSwitchToBulk,
+  onOpenCreateElection,
 }: CreateSetupModalProps) {
   const createLevel = useCreateLevel();
-  const { data: rawElections } = useGetElections();
+  const { data: rawElections, isLoading: isElectionsLoading } = useGetElections();
 
   const elections = React.useMemo<ElectionItem[]>(() => {
     if (Array.isArray(rawElections)) return rawElections;
@@ -69,6 +72,8 @@ export function CreateSetupModal({
     }
     return [];
   }, [rawElections]);
+
+  const hasNoElections = !isElectionsLoading && elections.length === 0;
 
   const initialElectionId = defaultElectionId || elections[0]?.id || '';
 
@@ -154,56 +159,93 @@ export function CreateSetupModal({
           />
 
           <Modal.Body className='py-5'>
-            <SetupForm
-              values={formik.values}
-              errors={formik.errors}
-              touched={formik.touched}
-              handleChange={formik.handleChange}
-              handleBlur={formik.handleBlur}
-              setFieldValue={formik.setFieldValue}
-              disabled={createLevel.isPending}
-            />
+            {hasNoElections ? (
+              <NoElectionsAlert
+                entityName='administrative levels'
+                onOpenCreateElection={onOpenCreateElection}
+                onClose={handleClose}
+              />
+            ) : (
+              <SetupForm
+                values={formik.values}
+                errors={formik.errors}
+                touched={formik.touched}
+                handleChange={formik.handleChange}
+                handleBlur={formik.handleBlur}
+                setFieldValue={formik.setFieldValue}
+                disabled={createLevel.isPending}
+              />
+            )}
           </Modal.Body>
 
-          <Modal.Footer className='justify-between'>
-            <div>
-              {onSwitchToBulk && (
-                <Button.Root
-                  type='button'
-                  variant='neutral'
-                  mode='stroke'
-                  size='small'
-                  onClick={onSwitchToBulk}
-                  disabled={createLevel.isPending}
-                >
-                  <Button.Icon as={RiStackLine} />
-                  <span>Switch to Bulk</span>
-                </Button.Root>
-              )}
-            </div>
-
-            <div className='flex items-center gap-2'>
+          {hasNoElections ? (
+            <Modal.Footer>
               <Button.Root
                 type='button'
                 variant='neutral'
                 mode='stroke'
                 size='small'
                 onClick={handleClose}
-                disabled={createLevel.isPending}
               >
                 Cancel
               </Button.Root>
-              <Button.Root
-                type='submit'
-                variant='primary'
-                mode='filled'
-                size='small'
-                disabled={createLevel.isPending || !formik.isValid}
-              >
-                {createLevel.isPending ? 'Saving...' : 'Create Level'}
-              </Button.Root>
-            </div>
-          </Modal.Footer>
+              {onOpenCreateElection && (
+                <Button.Root
+                  type='button'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  onClick={() => {
+                    handleClose();
+                    onOpenCreateElection();
+                  }}
+                >
+                  <Button.Icon as={RiCalendarEventLine} />
+                  <span>Create Election First</span>
+                </Button.Root>
+              )}
+            </Modal.Footer>
+          ) : (
+            <Modal.Footer className='justify-between'>
+              <div>
+                {onSwitchToBulk && (
+                  <Button.Root
+                    type='button'
+                    variant='neutral'
+                    mode='stroke'
+                    size='small'
+                    onClick={onSwitchToBulk}
+                    disabled={createLevel.isPending}
+                  >
+                    <Button.Icon as={RiStackLine} />
+                    <span>Switch to Bulk</span>
+                  </Button.Root>
+                )}
+              </div>
+
+              <div className='flex items-center gap-2'>
+                <Button.Root
+                  type='button'
+                  variant='neutral'
+                  mode='stroke'
+                  size='small'
+                  onClick={handleClose}
+                  disabled={createLevel.isPending}
+                >
+                  Cancel
+                </Button.Root>
+                <Button.Root
+                  type='submit'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  disabled={createLevel.isPending || !formik.isValid}
+                >
+                  {createLevel.isPending ? 'Saving...' : 'Create Level'}
+                </Button.Root>
+              </div>
+            </Modal.Footer>
+          )}
         </form>
       </Modal.Content>
     </Modal.Root>

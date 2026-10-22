@@ -8,7 +8,7 @@ import {
   useUpdateLevelsBulk,
   type LevelItem,
 } from '@/services/levels';
-import { RiAddLine, RiStackLine } from '@remixicon/react';
+import { RiAddLine, RiCalendarEventLine, RiStackLine } from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -16,6 +16,7 @@ import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
 
 import { BulkLevelsForm } from './bulk-levels-form';
+import { NoElectionsAlert } from './no-elections-alert';
 import type { BulkLevelRow, BulkLevelsFormData } from './types';
 
 interface CreateBulkLevelsModalProps {
@@ -24,6 +25,7 @@ interface CreateBulkLevelsModalProps {
   onClose: () => void;
   onSuccess?: (items: LevelItem[]) => void;
   onSwitchToSingle?: () => void;
+  onOpenCreateElection?: () => void;
 }
 
 export const bulkLevelsValidationSchema = Yup.object().shape({
@@ -50,9 +52,11 @@ export function CreateBulkLevelsModal({
   onClose,
   onSuccess,
   onSwitchToSingle,
+  onOpenCreateElection,
 }: CreateBulkLevelsModalProps) {
   const updateLevelsBulk = useUpdateLevelsBulk();
-  const { data: rawElections } = useGetElections();
+  const { data: rawElections, isLoading: isElectionsLoading } =
+    useGetElections();
 
   const elections = React.useMemo<ElectionItem[]>(() => {
     if (Array.isArray(rawElections)) return rawElections;
@@ -65,6 +69,8 @@ export function CreateBulkLevelsModal({
     }
     return [];
   }, [rawElections]);
+
+  const hasNoElections = !isElectionsLoading && elections.length === 0;
 
   const initialElectionId = defaultElectionId || elections[0]?.id || '';
   const { data: rawLevels } = useGetLevels(initialElectionId);
@@ -151,69 +157,106 @@ export function CreateBulkLevelsModal({
           />
 
           <Modal.Body className='py-5'>
-            <BulkLevelsForm
-              values={formik.values}
-              errors={formik.errors}
-              touched={formik.touched}
-              handleChange={formik.handleChange}
-              handleBlur={formik.handleBlur}
-              setFieldValue={formik.setFieldValue}
-              disabled={updateLevelsBulk.isPending}
-              onSwitchToSingle={onSwitchToSingle}
-            />
+            {hasNoElections ? (
+              <NoElectionsAlert
+                entityName='administrative levels'
+                onOpenCreateElection={onOpenCreateElection}
+                onClose={handleClose}
+              />
+            ) : (
+              <BulkLevelsForm
+                values={formik.values}
+                errors={formik.errors}
+                touched={formik.touched}
+                handleChange={formik.handleChange}
+                handleBlur={formik.handleBlur}
+                setFieldValue={formik.setFieldValue}
+                disabled={updateLevelsBulk.isPending}
+                onSwitchToSingle={onSwitchToSingle}
+              />
+            )}
           </Modal.Body>
 
-          <Modal.Footer className='justify-between'>
-            <div>
-              {onSwitchToSingle && (
-                <Button.Root
-                  type='button'
-                  variant='neutral'
-                  mode='stroke'
-                  size='small'
-                  onClick={onSwitchToSingle}
-                  disabled={updateLevelsBulk.isPending}
-                >
-                  <Button.Icon as={RiAddLine} />
-                  <span>Switch to Single</span>
-                </Button.Root>
-              )}
-            </div>
-
-            <div className='flex items-center gap-2'>
+          {hasNoElections ? (
+            <Modal.Footer>
               <Button.Root
                 type='button'
                 variant='neutral'
                 mode='stroke'
                 size='small'
                 onClick={handleClose}
-                disabled={updateLevelsBulk.isPending}
               >
                 Cancel
               </Button.Root>
-              <Button.Root
-                type='submit'
-                variant='primary'
-                mode='filled'
-                size='small'
-                disabled={
-                  updateLevelsBulk.isPending ||
-                  validCount === 0 ||
-                  !formik.values.electionId ||
-                  !formik.isValid
-                }
-              >
-                <Button.Icon as={RiStackLine} />
-                <span>
-                  {updateLevelsBulk.isPending
-                    ? 'Saving levels...'
-                    : validCount > 0
-                      ? `Create ${validCount} ${validCount === 1 ? 'Level' : 'Levels'}`
-                      : 'Create Levels in Bulk'}
-                </span>
-              </Button.Root>
-            </div>
-          </Modal.Footer>
+              {onOpenCreateElection && (
+                <Button.Root
+                  type='button'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  onClick={() => {
+                    handleClose();
+                    onOpenCreateElection();
+                  }}
+                >
+                  <Button.Icon as={RiCalendarEventLine} />
+                  <span>Create Election First</span>
+                </Button.Root>
+              )}
+            </Modal.Footer>
+          ) : (
+            <Modal.Footer className='justify-between'>
+              <div>
+                {onSwitchToSingle && (
+                  <Button.Root
+                    type='button'
+                    variant='neutral'
+                    mode='stroke'
+                    size='small'
+                    onClick={onSwitchToSingle}
+                    disabled={updateLevelsBulk.isPending}
+                  >
+                    <Button.Icon as={RiAddLine} />
+                    <span>Switch to Single</span>
+                  </Button.Root>
+                )}
+              </div>
+
+              <div className='flex items-center gap-2'>
+                <Button.Root
+                  type='button'
+                  variant='neutral'
+                  mode='stroke'
+                  size='small'
+                  onClick={handleClose}
+                  disabled={updateLevelsBulk.isPending}
+                >
+                  Cancel
+                </Button.Root>
+                <Button.Root
+                  type='submit'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  disabled={
+                    updateLevelsBulk.isPending ||
+                    validCount === 0 ||
+                    !formik.values.electionId ||
+                    !formik.isValid
+                  }
+                >
+                  <Button.Icon as={RiStackLine} />
+                  <span>
+                    {updateLevelsBulk.isPending
+                      ? 'Saving levels...'
+                      : validCount > 0
+                        ? `Create ${validCount} ${validCount === 1 ? 'Level' : 'Levels'}`
+                        : 'Create Levels in Bulk'}
+                  </span>
+                </Button.Root>
+              </div>
+            </Modal.Footer>
+          )}
         </form>
       </Modal.Content>
     </Modal.Root>

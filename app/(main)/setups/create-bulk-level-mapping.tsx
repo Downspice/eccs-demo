@@ -8,7 +8,12 @@ import {
   type LevelMappingItem,
 } from '@/services/level-mappings';
 import { useGetLevels, type LevelItem } from '@/services/levels';
-import { RiAddLine, RiNodeTree, RiStackLine } from '@remixicon/react';
+import {
+  RiAddLine,
+  RiCalendarEventLine,
+  RiNodeTree,
+  RiStackLine,
+} from '@remixicon/react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -20,6 +25,7 @@ import {
   BulkLevelMappingForm,
   parseUnitNames,
 } from './bulk-level-mapping-form';
+import { NoElectionsAlert } from './no-elections-alert';
 import type { BulkLevelMappingFormData } from './types';
 
 interface CreateBulkLevelMappingModalProps {
@@ -29,6 +35,7 @@ interface CreateBulkLevelMappingModalProps {
   onClose: () => void;
   onSuccess?: (items: LevelMappingItem[]) => void;
   onSwitchToSingle?: () => void;
+  onOpenCreateElection?: () => void;
 }
 
 export const bulkLevelMappingValidationSchema = Yup.object().shape({
@@ -62,9 +69,11 @@ export function CreateBulkLevelMappingModal({
   onClose,
   onSuccess,
   onSwitchToSingle,
+  onOpenCreateElection,
 }: CreateBulkLevelMappingModalProps) {
   const createLevelMappingsBulk = useCreateLevelMappingsBulk();
-  const { data: rawElections } = useGetElections();
+  const { data: rawElections, isLoading: isElectionsLoading } =
+    useGetElections();
 
   const elections = React.useMemo<ElectionItem[]>(() => {
     if (Array.isArray(rawElections)) return rawElections;
@@ -77,6 +86,8 @@ export function CreateBulkLevelMappingModal({
     }
     return [];
   }, [rawElections]);
+
+  const hasNoElections = !isElectionsLoading && elections.length === 0;
 
   const targetElectionId =
     parentItem?.electionId || defaultElectionId || elections[0]?.id || '';
@@ -231,94 +242,133 @@ export function CreateBulkLevelMappingModal({
           />
 
           <Modal.Body className='py-5'>
-            {parentItem && (
-              <div className='mb-4 flex items-center justify-between rounded-xl bg-primary-base/5 p-3 ring-1 ring-inset ring-primary-base/20'>
-                <div className='flex items-center gap-2.5 min-w-0'>
-                  <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-base/10 text-primary-base'>
-                    <RiNodeTree className='size-4' />
+            {hasNoElections ? (
+              <NoElectionsAlert
+                entityName='jurisdiction mappings'
+                onOpenCreateElection={onOpenCreateElection}
+                onClose={handleClose}
+              />
+            ) : (
+              <>
+                {parentItem && (
+                  <div className='mb-4 flex items-center justify-between rounded-xl bg-primary-base/5 p-3 ring-1 ring-inset ring-primary-base/20'>
+                    <div className='flex items-center gap-2.5 min-w-0'>
+                      <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-base/10 text-primary-base'>
+                        <RiNodeTree className='size-4' />
+                      </div>
+                      <div className='truncate text-paragraph-xs text-text-sub-600'>
+                        <span>Parent jurisdiction: </span>
+                        <strong className='font-semibold text-text-strong-950 text-paragraph-sm'>
+                          {parentItem.name}
+                        </strong>
+                        {parentItem.levelName && (
+                          <span className='ml-1 text-text-soft-400'>
+                            ({parentItem.levelName})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Badge.Root variant='lighter' color='blue' size='small'>
+                      Parent Attached
+                    </Badge.Root>
                   </div>
-                  <div className='truncate text-paragraph-xs text-text-sub-600'>
-                    <span>Parent jurisdiction: </span>
-                    <strong className='font-semibold text-text-strong-950 text-paragraph-sm'>
-                      {parentItem.name}
-                    </strong>
-                    {parentItem.levelName && (
-                      <span className='ml-1 text-text-soft-400'>
-                        ({parentItem.levelName})
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <Badge.Root variant='lighter' color='blue' size='small'>
-                  Parent Attached
-                </Badge.Root>
-              </div>
-            )}
+                )}
 
-            <BulkLevelMappingForm
-              values={formik.values}
-              errors={formik.errors}
-              touched={formik.touched}
-              handleChange={formik.handleChange}
-              handleBlur={formik.handleBlur}
-              setFieldValue={formik.setFieldValue}
-              disabled={createLevelMappingsBulk.isPending}
-              parentItem={parentItem}
-              onSwitchToSingle={onSwitchToSingle}
-            />
+                <BulkLevelMappingForm
+                  values={formik.values}
+                  errors={formik.errors}
+                  touched={formik.touched}
+                  handleChange={formik.handleChange}
+                  handleBlur={formik.handleBlur}
+                  setFieldValue={formik.setFieldValue}
+                  disabled={createLevelMappingsBulk.isPending}
+                  parentItem={parentItem}
+                  onSwitchToSingle={onSwitchToSingle}
+                />
+              </>
+            )}
           </Modal.Body>
 
-          <Modal.Footer className='justify-between'>
-            <div>
-              {onSwitchToSingle && (
-                <Button.Root
-                  type='button'
-                  variant='neutral'
-                  mode='stroke'
-                  size='small'
-                  onClick={onSwitchToSingle}
-                  disabled={createLevelMappingsBulk.isPending}
-                >
-                  <Button.Icon as={RiAddLine} />
-                  <span>Switch to Single</span>
-                </Button.Root>
-              )}
-            </div>
-
-            <div className='flex items-center gap-2'>
+          {hasNoElections ? (
+            <Modal.Footer>
               <Button.Root
                 type='button'
                 variant='neutral'
                 mode='stroke'
                 size='small'
                 onClick={handleClose}
-                disabled={createLevelMappingsBulk.isPending}
               >
                 Cancel
               </Button.Root>
-              <Button.Root
-                type='submit'
-                variant='primary'
-                mode='filled'
-                size='small'
-                disabled={
-                  createLevelMappingsBulk.isPending ||
-                  parsedCount === 0 ||
-                  !formik.values.levelId ||
-                  !formik.values.electionId
-                }
-              >
-                <Button.Icon as={RiStackLine} />
-                <span>
-                  {createLevelMappingsBulk.isPending
-                    ? 'Creating units...'
-                    : parsedCount > 0
-                      ? `Create ${parsedCount} ${parsedCount === 1 ? 'Unit' : 'Units'}`
-                      : 'Create Units in Bulk'}
-                </span>
-              </Button.Root>
-            </div>
-          </Modal.Footer>
+              {onOpenCreateElection && (
+                <Button.Root
+                  type='button'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  onClick={() => {
+                    handleClose();
+                    onOpenCreateElection();
+                  }}
+                >
+                  <Button.Icon as={RiCalendarEventLine} />
+                  <span>Create Election First</span>
+                </Button.Root>
+              )}
+            </Modal.Footer>
+          ) : (
+            <Modal.Footer className='justify-between'>
+              <div>
+                {onSwitchToSingle && (
+                  <Button.Root
+                    type='button'
+                    variant='neutral'
+                    mode='stroke'
+                    size='small'
+                    onClick={onSwitchToSingle}
+                    disabled={createLevelMappingsBulk.isPending}
+                  >
+                    <Button.Icon as={RiAddLine} />
+                    <span>Switch to Single</span>
+                  </Button.Root>
+                )}
+              </div>
+
+              <div className='flex items-center gap-2'>
+                <Button.Root
+                  type='button'
+                  variant='neutral'
+                  mode='stroke'
+                  size='small'
+                  onClick={handleClose}
+                  disabled={createLevelMappingsBulk.isPending}
+                >
+                  Cancel
+                </Button.Root>
+                <Button.Root
+                  type='submit'
+                  variant='primary'
+                  mode='filled'
+                  size='small'
+                  disabled={
+                    createLevelMappingsBulk.isPending ||
+                    parsedCount === 0 ||
+                    !formik.values.levelId ||
+                    !formik.values.electionId
+                  }
+                >
+                  <Button.Icon as={RiStackLine} />
+                  <span>
+                    {createLevelMappingsBulk.isPending
+                      ? 'Creating units...'
+                      : parsedCount > 0
+                        ? `Create ${parsedCount} ${parsedCount === 1 ? 'Unit' : 'Units'}`
+                        : 'Create Units in Bulk'}
+                  </span>
+                </Button.Root>
+              </div>
+            </Modal.Footer>
+          )}
         </form>
       </Modal.Content>
     </Modal.Root>
