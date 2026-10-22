@@ -3,19 +3,11 @@
 import * as React from 'react';
 import type { CandidateItem } from '@/services/candidates';
 import type { LevelMappingItem } from '@/services/level-mappings';
-import {
-  RiAlertLine,
-  RiCheckLine,
-  RiInformationLine,
-  RiUser3Line,
-} from '@remixicon/react';
 import type { FormikErrors, FormikTouched } from 'formik';
 
-import * as Badge from '@/components/ui/badge';
 import * as Hint from '@/components/ui/hint';
 import * as Input from '@/components/ui/input';
 import * as Label from '@/components/ui/label';
-import * as Switch from '@/components/ui/switch';
 import { LevelMappingSearchSelect } from '@/components/level-mapping-search-select';
 
 export interface CollationFormCandidateVote {
@@ -278,36 +270,6 @@ export function CollationForm({
             {spoiltCount.toLocaleString()} rejected
           </p>
         </div>
-      </div>
-
-      {/* Verification Status Switch */}
-      <div className='flex items-center justify-between rounded-xl border border-stroke-soft-200 bg-bg-white-0 p-4'>
-        <div className='flex flex-col gap-0.5'>
-          <div className='flex items-center gap-2'>
-            <span className='text-label-sm font-semibold text-text-strong-950'>
-              Verified & Certified Result
-            </span>
-            {values.status ? (
-              <Badge.Root variant='lighter' color='green' size='small'>
-                Certified
-              </Badge.Root>
-            ) : (
-              <Badge.Root variant='lighter' color='orange' size='small'>
-                Provisional
-              </Badge.Root>
-            )}
-          </div>
-          <p className='text-paragraph-xs text-text-sub-600'>
-            Check to immediately certify this result into official election
-            aggregates.
-          </p>
-        </div>
-
-        <Switch.Root
-          checked={values.status}
-          onCheckedChange={(checked) => setFieldValue('status', checked)}
-          disabled={disabled}
-        />
       </div>
     </div>
   );
