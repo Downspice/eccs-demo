@@ -10,7 +10,6 @@ import { useGetLevels, type LevelItem } from '@/services/levels';
 import {
   RiAddLine,
   RiArrowRightLine,
-  RiCheckLine,
   RiDeleteBinLine,
   RiInformationLine,
   RiNodeTree,
@@ -163,163 +162,160 @@ export function BulkLevelMappingForm({
 
   return (
     <div className='flex flex-col gap-5'>
-      {/* Target Hierarchy & Location Card */}
-      <div className='rounded-xl border border-stroke-soft-200 bg-bg-weak-50/50 p-3.5'>
-        <div className='flex items-center gap-1.5 text-label-xs font-semibold text-text-strong-950 mb-3'>
-          <RiNodeTree className='size-4 text-primary-base' />
-          <span>Hierarchy Placement</span>
-        </div>
-
-        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
-          {/* Associated Election */}
-          <div className='flex flex-col gap-1.5'>
-            <div className='flex items-center justify-between'>
-              <Label.Root htmlFor='electionId'>
-                Associated Election <span className='text-red-500'>*</span>
-              </Label.Root>
-            </div>
-            {isElectionsLoading ? (
-              <Skeleton className='h-10 w-full rounded-lg' />
-            ) : (
-              <Select.Root
-                value={values.electionId}
-                onValueChange={(val) => {
-                  setFieldValue('electionId', val);
-                  setFieldValue('levelId', '');
-                  setFieldValue('upper_level_id', '');
-                }}
-                disabled={disabled || Boolean(parentItem)}
-              >
-                <Select.Trigger id='electionId' className='w-full'>
-                  <Select.Value placeholder='Select an election...' />
-                </Select.Trigger>
-                <Select.Content>
-                  {elections.map((elec) => (
-                    <Select.Item key={elec.id} value={elec.id}>
-                      {elec.name}
-                    </Select.Item>
-                  ))}
-                </Select.Content>
-              </Select.Root>
-            )}
-            {touched.electionId && errors.electionId && (
-              <Hint.Root hasError>
-                <Hint.Icon as={RiInformationLine} />
-                {errors.electionId as string}
-              </Hint.Root>
-            )}
+      {/* Target Hierarchy & Location Card (hidden when adding directly under an organogram parent) */}
+      {!parentItem && (
+        <div className='rounded-xl border border-stroke-soft-200 bg-bg-weak-50/50 p-3.5'>
+          <div className='flex items-center gap-1.5 text-label-xs font-semibold text-text-strong-950 mb-3'>
+            <RiNodeTree className='size-4 text-primary-base' />
+            <span>Hierarchy Placement</span>
           </div>
 
-          {/* Level Tier Selector */}
-          <div className='flex flex-col gap-1.5'>
-            <div className='flex items-center justify-between'>
-              <Label.Root htmlFor='levelId'>
-                Target Level Tier <span className='text-red-500'>*</span>
-              </Label.Root>
-              {selectedLevel && (
-                <Badge.Root variant='lighter' color='blue' size='small'>
-                  Rank {selectedLevel.levelRank ?? 1}
-                </Badge.Root>
+          <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
+            {/* Associated Election */}
+            <div className='flex flex-col gap-1.5'>
+              <div className='flex items-center justify-between'>
+                <Label.Root htmlFor='electionId'>
+                  Associated Election <span className='text-red-500'>*</span>
+                </Label.Root>
+              </div>
+              {isElectionsLoading ? (
+                <Skeleton className='h-10 w-full rounded-lg' />
+              ) : (
+                <Select.Root
+                  value={values.electionId}
+                  onValueChange={(val) => {
+                    setFieldValue('electionId', val);
+                    setFieldValue('levelId', '');
+                    setFieldValue('upper_level_id', '');
+                  }}
+                  disabled={disabled || Boolean(parentItem)}
+                >
+                  <Select.Trigger id='electionId' className='w-full'>
+                    <Select.Value placeholder='Select an election...' />
+                  </Select.Trigger>
+                  <Select.Content>
+                    {elections.map((elec) => (
+                      <Select.Item key={elec.id} value={elec.id}>
+                        {elec.name}
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Root>
+              )}
+              {touched.electionId && errors.electionId && (
+                <Hint.Root hasError>
+                  <Hint.Icon as={RiInformationLine} />
+                  {errors.electionId as string}
+                </Hint.Root>
               )}
             </div>
-            {isLevelsLoading ? (
-              <Skeleton className='h-10 w-full rounded-lg' />
-            ) : values.electionId && levels.length === 0 ? (
-              <InlineNoLevelsBanner
-                electionName={selectedElection?.name}
-                onOpenCreateLevel={onOpenCreateLevel}
-              />
-            ) : (
-              <Select.Root
-                value={values.levelId}
-                onValueChange={(val) => setFieldValue('levelId', val)}
-                disabled={
-                  disabled ||
-                  !values.electionId ||
-                  levels.length === 0 ||
-                  Boolean(parentItem)
-                }
-              >
-                <Select.Trigger id='levelId' className='w-full'>
-                  <Select.Value
-                    placeholder={
-                      !values.electionId
-                        ? 'Select election first'
-                        : levels.length === 0
-                          ? 'No levels configured'
-                          : 'Select level tier...'
-                    }
-                  />
-                </Select.Trigger>
-                <Select.Content>
-                  {levels.map((lvl) => (
-                    <Select.Item key={lvl.id} value={lvl.id}>
-                      {lvl.name}{' '}
-                      {lvl.levelRank !== undefined && `(Tier ${lvl.levelRank})`}
-                    </Select.Item>
-                  ))}
-                </Select.Content>
-              </Select.Root>
-            )}
-            {touched.levelId && errors.levelId && (
-              <Hint.Root hasError>
-                <Hint.Icon as={RiInformationLine} />
-                {errors.levelId as string}
-              </Hint.Root>
-            )}
-            {parentItem && values.levelId && (
-              <span className='inline-flex items-center gap-1 text-[11px] font-medium text-text-sub-600'>
-                <RiCheckLine className='size-3.5 text-primary-base' />
-                Subordinate tier locked to {parentItem.name}
+
+            {/* Level Tier Selector */}
+            <div className='flex flex-col gap-1.5'>
+              <div className='flex items-center justify-between'>
+                <Label.Root htmlFor='levelId'>
+                  Target Level Tier <span className='text-red-500'>*</span>
+                </Label.Root>
+                {selectedLevel && (
+                  <Badge.Root variant='lighter' color='blue' size='small'>
+                    Rank {selectedLevel.levelRank ?? 1}
+                  </Badge.Root>
+                )}
+              </div>
+              {isLevelsLoading ? (
+                <Skeleton className='h-10 w-full rounded-lg' />
+              ) : values.electionId && levels.length === 0 ? (
+                <InlineNoLevelsBanner
+                  electionName={selectedElection?.name}
+                  onOpenCreateLevel={onOpenCreateLevel}
+                />
+              ) : (
+                <Select.Root
+                  value={values.levelId}
+                  onValueChange={(val) => setFieldValue('levelId', val)}
+                  disabled={
+                    disabled ||
+                    !values.electionId ||
+                    levels.length === 0 ||
+                    Boolean(parentItem)
+                  }
+                >
+                  <Select.Trigger id='levelId' className='w-full'>
+                    <Select.Value
+                      placeholder={
+                        !values.electionId
+                          ? 'Select election first'
+                          : levels.length === 0
+                            ? 'No levels configured'
+                            : 'Select level tier...'
+                      }
+                    />
+                  </Select.Trigger>
+                  <Select.Content>
+                    {levels.map((lvl) => (
+                      <Select.Item key={lvl.id} value={lvl.id}>
+                        {lvl.name}{' '}
+                        {lvl.levelRank !== undefined &&
+                          `(Tier ${lvl.levelRank})`}
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Root>
+              )}
+              {touched.levelId && errors.levelId && (
+                <Hint.Root hasError>
+                  <Hint.Icon as={RiInformationLine} />
+                  {errors.levelId as string}
+                </Hint.Root>
+              )}
+            </div>
+          </div>
+
+          {/* Parent / Upper Level Unit Selector */}
+          <div className='mt-3.5 flex flex-col gap-1.5 border-t border-stroke-soft-200/70 pt-3'>
+            <div className='flex items-center justify-between'>
+              <Label.Root htmlFor='upper_level_id'>
+                Parent Jurisdiction (Optional)
+              </Label.Root>
+              <span className='text-[11px] text-text-soft-400'>
+                Leaves empty for top-level jurisdictional root
               </span>
+            </div>
+
+            {isMappingsLoading ? (
+              <Skeleton className='h-10 w-full rounded-lg' />
+            ) : (
+              <LevelMappingSearchSelect
+                id='upper_level_id'
+                value={values.upper_level_id || ''}
+                onChange={(val) => setFieldValue('upper_level_id', val)}
+                onBlur={() =>
+                  handleBlur({ target: { name: 'upper_level_id' } } as any)
+                }
+                items={existingUnits}
+                disabled={disabled || Boolean(parentItem)}
+                placeholder='None (Top-Level Jurisdiction)'
+              />
             )}
+
+            {/* Hierarchy Path Preview */}
+            <div className='mt-2 flex flex-wrap items-center gap-1.5 rounded-lg bg-bg-white-0 px-2.5 py-1.5 text-[11px] ring-1 ring-inset ring-stroke-soft-200'>
+              <span className='text-text-soft-400 font-medium'>Placement:</span>
+              <span className='font-medium text-text-strong-950'>
+                {selectedElection?.name || 'Election'}
+              </span>
+              <RiArrowRightLine className='size-3 text-text-soft-400 shrink-0' />
+              <span className='font-medium text-text-sub-600'>
+                {selectedParent ? selectedParent.name : 'Top-Level Root'}
+              </span>
+              <RiArrowRightLine className='size-3 text-text-soft-400 shrink-0' />
+              <Badge.Root variant='lighter' color='blue' size='small'>
+                {selectedLevel ? selectedLevel.name : 'Selecting tier...'}
+              </Badge.Root>
+            </div>
           </div>
         </div>
-
-        {/* Parent / Upper Level Unit Selector */}
-        <div className='mt-3.5 flex flex-col gap-1.5 border-t border-stroke-soft-200/70 pt-3'>
-          <div className='flex items-center justify-between'>
-            <Label.Root htmlFor='upper_level_id'>
-              Parent Jurisdiction (Optional)
-            </Label.Root>
-            <span className='text-[11px] text-text-soft-400'>
-              Leaves empty for top-level jurisdictional root
-            </span>
-          </div>
-
-          {isMappingsLoading ? (
-            <Skeleton className='h-10 w-full rounded-lg' />
-          ) : (
-            <LevelMappingSearchSelect
-              id='upper_level_id'
-              value={values.upper_level_id || ''}
-              onChange={(val) => setFieldValue('upper_level_id', val)}
-              onBlur={() =>
-                handleBlur({ target: { name: 'upper_level_id' } } as any)
-              }
-              items={existingUnits}
-              disabled={disabled || Boolean(parentItem)}
-              placeholder='None (Top-Level Jurisdiction)'
-            />
-          )}
-
-          {/* Hierarchy Path Preview */}
-          <div className='mt-2 flex flex-wrap items-center gap-1.5 rounded-lg bg-bg-white-0 px-2.5 py-1.5 text-[11px] ring-1 ring-inset ring-stroke-soft-200'>
-            <span className='text-text-soft-400 font-medium'>Placement:</span>
-            <span className='font-medium text-text-strong-950'>
-              {selectedElection?.name || 'Election'}
-            </span>
-            <RiArrowRightLine className='size-3 text-text-soft-400 shrink-0' />
-            <span className='font-medium text-text-sub-600'>
-              {selectedParent ? selectedParent.name : 'Top-Level Root'}
-            </span>
-            <RiArrowRightLine className='size-3 text-text-soft-400 shrink-0' />
-            <Badge.Root variant='lighter' color='blue' size='small'>
-              {selectedLevel ? selectedLevel.name : 'Selecting tier...'}
-            </Badge.Root>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Dynamic Unit Names List with + buttons */}
       <div className='flex flex-col gap-2.5'>
