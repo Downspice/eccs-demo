@@ -214,7 +214,7 @@ export function CreateBulkLevelMappingModal({
 
   return (
     <Modal.Root open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
-      <Modal.Content className='max-w-[560px]'>
+      <Modal.Content className='max-w-[720px]'>
         <form onSubmit={formik.handleSubmit}>
           <Modal.Header
             icon={RiStackLine}
@@ -232,17 +232,18 @@ export function CreateBulkLevelMappingModal({
 
           <Modal.Body className='py-5'>
             {parentItem && (
-              <div className='mb-4 flex items-center justify-between rounded-lg bg-bg-weak-50 p-2.5 ring-1 ring-inset ring-stroke-soft-200'>
-                <div className='flex items-center gap-2 min-w-0'>
-                  <RiNodeTree className='size-4 text-primary-base shrink-0' />
+              <div className='mb-4 flex items-center justify-between rounded-xl bg-primary-base/5 p-3 ring-1 ring-inset ring-primary-base/20'>
+                <div className='flex items-center gap-2.5 min-w-0'>
+                  <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary-base/10 text-primary-base'>
+                    <RiNodeTree className='size-4' />
+                  </div>
                   <div className='truncate text-paragraph-xs text-text-sub-600'>
                     <span>Parent jurisdiction: </span>
-                    <strong className='font-semibold text-text-strong-950'>
+                    <strong className='font-semibold text-text-strong-950 text-paragraph-sm'>
                       {parentItem.name}
                     </strong>
                     {parentItem.levelName && (
-                      <span className='text-text-soft-400'>
-                        {' '}
+                      <span className='ml-1 text-text-soft-400'>
                         ({parentItem.levelName})
                       </span>
                     )}
