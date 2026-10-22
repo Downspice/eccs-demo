@@ -14,6 +14,7 @@ import * as Yup from 'yup';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import { BulkLevelsForm } from './bulk-levels-form';
 import { NoElectionsAlert } from './no-elections-alert';
@@ -129,8 +130,17 @@ export function CreateBulkLevelsModal({
         },
         {
           onSuccess: (newItems) => {
+            const count = Array.isArray(newItems)
+              ? newItems.length
+              : validLevels.length;
+            toast.success(
+              `${count} ${count === 1 ? 'level' : 'levels'} created successfully`,
+            );
             onSuccess?.(newItems);
             handleClose();
+          },
+          onError: (error) => {
+            toast.error(error, 'Failed to create bulk levels');
           },
         },
       );

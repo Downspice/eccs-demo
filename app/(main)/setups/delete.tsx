@@ -6,6 +6,7 @@ import { RiDeleteBinLine } from '@remixicon/react';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 interface DeleteSetupModalProps {
   item: LevelItem | null;
@@ -29,8 +30,14 @@ export function DeleteSetupModal({
       { id: item.id, electionId: item.electionId },
       {
         onSuccess: () => {
+          toast.success('Level deleted successfully', {
+            description: `"${item.name}" has been removed.`,
+          });
           onSuccess?.(item.id);
           onClose();
+        },
+        onError: (error) => {
+          toast.error(error, 'Failed to delete level');
         },
       },
     );

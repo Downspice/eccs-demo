@@ -15,6 +15,7 @@ import * as Yup from 'yup';
 import * as Badge from '@/components/ui/badge';
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import { LevelMappingForm } from './level-mapping-form';
 import { NoElectionsAlert } from './no-elections-alert';
@@ -174,8 +175,14 @@ export function CreateLevelMappingModal({
         },
         {
           onSuccess: (newItem) => {
+            toast.success('Jurisdiction mapping created', {
+              description: `"${newItem.name || values.name.trim()}" has been mapped.`,
+            });
             onSuccess?.(newItem);
             handleClose();
+          },
+          onError: (error) => {
+            toast.error(error, 'Failed to create jurisdiction mapping');
           },
         },
       );

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { RiAlertLine, RiCalendarEventLine } from '@remixicon/react';
+
 import * as Button from '@/components/ui/button';
 
 interface NoElectionsAlertProps {
@@ -31,7 +32,8 @@ export function NoElectionsAlert({
       </h3>
 
       <p className='mt-1 max-w-sm text-paragraph-xs text-text-sub-600 sm:text-paragraph-sm'>
-        Creating {entityName} requires an existing election. Please create an election first before continuing.
+        Creating {entityName} requires an existing election. Please create an
+        election first before continuing.
       </p>
 
       {onOpenCreateElection && (

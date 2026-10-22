@@ -20,6 +20,7 @@ import * as Yup from 'yup';
 import * as Badge from '@/components/ui/badge';
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import {
   BulkLevelMappingForm,
@@ -193,8 +194,17 @@ export function CreateBulkLevelMappingModal({
         },
         {
           onSuccess: (newItems) => {
+            const count = Array.isArray(newItems)
+              ? newItems.length
+              : items.length;
+            toast.success(
+              `${count} ${count === 1 ? 'jurisdiction unit' : 'jurisdiction units'} created successfully`,
+            );
             onSuccess?.(newItems);
             handleClose();
+          },
+          onError: (error) => {
+            toast.error(error, 'Failed to create bulk jurisdiction mappings');
           },
         },
       );

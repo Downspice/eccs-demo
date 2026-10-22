@@ -14,6 +14,7 @@ import * as Yup from 'yup';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import { SetupForm } from './form';
 import { NoElectionsAlert } from './no-elections-alert';
@@ -59,7 +60,8 @@ export function CreateSetupModal({
   onOpenCreateElection,
 }: CreateSetupModalProps) {
   const createLevel = useCreateLevel();
-  const { data: rawElections, isLoading: isElectionsLoading } = useGetElections();
+  const { data: rawElections, isLoading: isElectionsLoading } =
+    useGetElections();
 
   const elections = React.useMemo<ElectionItem[]>(() => {
     if (Array.isArray(rawElections)) return rawElections;
@@ -96,8 +98,14 @@ export function CreateSetupModal({
         },
         {
           onSuccess: (newItem) => {
+            toast.success('Level created successfully', {
+              description: `"${newItem.name || values.name.trim()}" has been added.`,
+            });
             onSuccess?.(newItem);
             handleClose();
+          },
+          onError: (error) => {
+            toast.error(error, 'Failed to create level');
           },
         },
       );

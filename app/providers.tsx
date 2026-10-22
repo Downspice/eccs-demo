@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider as JotaiProvider } from 'jotai';
 
+import { Toaster } from '@/components/ui/toast';
+
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   const [queryClient] = React.useState(
     () =>
@@ -39,6 +41,7 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
           disableHoverableContent
         >
           {children}
+          <Toaster />
         </TooltipProvider>
       </JotaiProvider>
       <ReactQueryDevtools initialIsOpen={false} />

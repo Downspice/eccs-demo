@@ -13,6 +13,7 @@ import * as Yup from 'yup';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import { CollationForm, type CollationFormData } from './collation-form';
 
@@ -104,11 +105,16 @@ export function RecordCollationModal({
           results: normalizedResults,
         });
 
+        toast.success('Collation record submitted successfully', {
+          description: `Results for station recorded with ${totalVotes.toLocaleString()} votes.`,
+        });
+
         resetForm();
         onClose();
         onSuccess?.(res);
       } catch (err) {
         console.error('Failed to submit station collation:', err);
+        toast.error(err, 'Failed to record collation');
       }
     },
   });

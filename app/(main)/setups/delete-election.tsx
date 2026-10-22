@@ -6,6 +6,7 @@ import { RiDeleteBinLine } from '@remixicon/react';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 interface DeleteElectionModalProps {
   item: ElectionItem | null;
@@ -29,8 +30,14 @@ export function DeleteElectionModal({
       { id: item.id },
       {
         onSuccess: () => {
+          toast.success('Election deleted successfully', {
+            description: `"${item.name}" has been removed.`,
+          });
           onSuccess?.(item.id);
           onClose();
+        },
+        onError: (error) => {
+          toast.error(error, 'Failed to delete election');
         },
       },
     );

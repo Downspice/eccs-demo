@@ -10,6 +10,7 @@ import { useFormik } from 'formik';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import { levelMappingValidationSchema } from './create-level-mapping';
 import { LevelMappingForm } from './level-mapping-form';
@@ -54,8 +55,14 @@ export function UpdateLevelMappingModal({
         },
         {
           onSuccess: (updated) => {
+            toast.success('Jurisdiction mapping updated', {
+              description: `"${values.name.trim()}" has been updated.`,
+            });
             onSuccess?.(updated || { ...item, ...values });
             onClose();
+          },
+          onError: (error) => {
+            toast.error(error, 'Failed to update jurisdiction mapping');
           },
         },
       );

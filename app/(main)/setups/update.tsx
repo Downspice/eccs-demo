@@ -8,6 +8,7 @@ import { useFormik } from 'formik';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import { levelValidationSchema } from './create';
 import { SetupForm } from './form';
@@ -74,8 +75,14 @@ export function UpdateSetupModal({
         },
         {
           onSuccess: (updated) => {
+            toast.success('Level updated successfully', {
+              description: `"${values.name.trim()}" has been updated.`,
+            });
             onSuccess?.(updated || { ...item, ...values });
             onClose();
+          },
+          onError: (error) => {
+            toast.error(error, 'Failed to update level');
           },
         },
       );

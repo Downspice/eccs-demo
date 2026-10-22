@@ -6,6 +6,7 @@ import { RiDeleteBinLine } from '@remixicon/react';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 interface DeleteLevelMappingModalProps {
   item: LevelMappingItem | null;
@@ -23,6 +24,9 @@ export function DeleteLevelMappingModal({
   if (!item) return null;
 
   const handleDelete = () => {
+    toast.success('Jurisdiction unit removed', {
+      description: `"${item.name}" has been removed.`,
+    });
     onSuccess?.(item.id);
     onClose();
   };

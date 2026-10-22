@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import { electionValidationSchema } from './create-election';
 import { ElectionForm } from './election-form';
@@ -53,8 +54,14 @@ export function UpdateElectionModal({
         },
         {
           onSuccess: (updated) => {
+            toast.success('Election updated successfully', {
+              description: `"${values.name.trim()}" has been updated.`,
+            });
             onSuccess?.(updated || { ...item, ...values });
             onClose();
+          },
+          onError: (error) => {
+            toast.error(error, 'Failed to update election');
           },
         },
       );

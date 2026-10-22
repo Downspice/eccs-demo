@@ -9,6 +9,7 @@ import * as Yup from 'yup';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import { CandidateForm } from './candidate-form';
 import { NoElectionsAlert } from './no-elections-alert';
@@ -83,8 +84,14 @@ export function CreateCandidateModal({
         },
         {
           onSuccess: (newItem) => {
+            toast.success('Candidate registered successfully', {
+              description: `"${newItem.name || values.name.trim()}" has been registered.`,
+            });
             onSuccess?.(newItem);
             handleClose();
+          },
+          onError: (error) => {
+            toast.error(error, 'Failed to register candidate');
           },
         },
       );
@@ -158,9 +165,7 @@ export function CreateCandidateModal({
                 mode='filled'
                 size='small'
                 disabled={
-                  hasNoElections ||
-                  createCandidate.isPending ||
-                  !formik.isValid
+                  hasNoElections || createCandidate.isPending || !formik.isValid
                 }
               >
                 {createCandidate.isPending ? 'Registering...' : 'Add Candidate'}

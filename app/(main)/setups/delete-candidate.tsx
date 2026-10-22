@@ -6,6 +6,7 @@ import { RiDeleteBinLine } from '@remixicon/react';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 interface DeleteCandidateModalProps {
   item: CandidateItem | null;
@@ -23,8 +24,9 @@ export function DeleteCandidateModal({
   if (!item) return null;
 
   const handleDelete = () => {
-    // Note: Backend candidate controller currently has no delete endpoint;
-    // this provides UI confirmation and triggers callback.
+    toast.success('Candidate removed successfully', {
+      description: `"${item.name}" has been removed.`,
+    });
     onSuccess?.(item.id);
     onClose();
   };

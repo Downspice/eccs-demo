@@ -8,6 +8,7 @@ import * as Yup from 'yup';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import { ElectionForm } from './election-form';
 import type { ElectionFormData } from './types';
@@ -60,8 +61,14 @@ export function CreateElectionModal({
       };
       createElection.mutate(payload, {
         onSuccess: (newItem) => {
+          toast.success('Election created successfully', {
+            description: `"${newItem.name || values.name.trim()}" is ready.`,
+          });
           onSuccess?.(newItem);
           handleClose();
+        },
+        onError: (error) => {
+          toast.error(error, 'Failed to create election');
         },
       });
     },

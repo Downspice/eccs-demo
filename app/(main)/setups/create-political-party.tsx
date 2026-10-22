@@ -11,6 +11,7 @@ import * as Yup from 'yup';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 import { PoliticalPartyForm } from './political-party-form';
 import type { PoliticalPartyFormData } from './types';
@@ -59,8 +60,14 @@ export function CreatePoliticalPartyModal({
         },
         {
           onSuccess: (newItem) => {
+            toast.success('Political party registered', {
+              description: `"${newItem.name || values.name.trim()}" has been registered.`,
+            });
             onSuccess?.(newItem);
             handleClose();
+          },
+          onError: (error) => {
+            toast.error(error, 'Failed to create political party');
           },
         },
       );

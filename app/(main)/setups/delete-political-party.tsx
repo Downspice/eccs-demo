@@ -9,6 +9,7 @@ import { RiDeleteBinLine } from '@remixicon/react';
 
 import * as Button from '@/components/ui/button';
 import * as Modal from '@/components/ui/modal';
+import { toast } from '@/components/ui/toast';
 
 interface DeletePoliticalPartyModalProps {
   item: PoliticalPartyItem | null;
@@ -32,8 +33,14 @@ export function DeletePoliticalPartyModal({
       { id: item.id },
       {
         onSuccess: () => {
+          toast.success('Political party removed', {
+            description: `"${item.name}" has been deleted.`,
+          });
           onSuccess?.(item.id);
           onClose();
+        },
+        onError: (error) => {
+          toast.error(error, 'Failed to delete political party');
         },
       },
     );
