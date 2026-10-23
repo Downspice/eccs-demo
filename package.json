@@ -3,6 +3,7 @@
   "description": "ECCS Demo - AlignUI Template with Next.js",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.33.4",
   "author": {
     "name": "Joseph Awer",
     "email": "joseph.awer@gmail.com",
@@ -70,6 +71,7 @@
     "sonner": "^2.0.8",
     "tailwind-merge": "^2.5.2",
     "tailwind-variants": "^0.2.1",
+    "tailwindcss": "^3.4.14",
     "yup": "^1.7.1"
   },
   "devDependencies": {
@@ -86,7 +88,6 @@
     "eslint-plugin-tailwindcss": "^3.17.5",
     "postcss": "^8",
     "prettier": "^3.3.3",
-    "tailwindcss": "^3.4.14",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5"
   }
